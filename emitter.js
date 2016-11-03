@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -12,8 +12,9 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
-    return {
+    var subscriptions = [];
 
+    return {
         /**
          * Подписаться на событие
          * @param {String} event
@@ -21,7 +22,9 @@ function getEmitter() {
          * @param {Function} handler
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            subscriptions.push({event: event, context: context, handler: handler});
+
+            return this;
         },
 
         /**
@@ -30,7 +33,16 @@ function getEmitter() {
          * @param {Object} context
          */
         off: function (event, context) {
-            console.info(event, context);
+            subscriptions = subscriptions.filter(function (subscription) {
+                var eventIndex = subscription.event.indexOf(event);
+
+                return eventIndex === -1 ||
+                    (subscription.context !== context && eventIndex !== -1) ||
+                    (subscription.event[eventIndex + event.length] !== '.') &&
+                    (subscription.event[eventIndex + event.length] !== undefined);
+            });
+
+            return this;
         },
 
         /**
@@ -38,7 +50,20 @@ function getEmitter() {
          * @param {String} event
          */
         emit: function (event) {
-            console.info(event);
+            var emittedEvents = [event];
+            if (event.split('.')[1] !== undefined) {
+                emittedEvents.push(event.split('.')[0]);
+            }
+
+            emittedEvents.forEach(function (emittedEvent) {
+                subscriptions.forEach(function (subscription) {
+                    if (emittedEvent === subscription.event) {
+                        subscription.handler.call(subscription.context);
+                    }
+                });
+            });
+
+            return this;
         },
 
         /**
