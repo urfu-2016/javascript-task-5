@@ -24,13 +24,13 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            subscriptions.push( {
+            subscriptions.push({
                 event: event,
                 context: context,
                 handler: handler,
                 several: Infinity,
                 through: 1,
-                numberOfEmits: 0 } );
+                numberOfEmits: 0 });
 
             return this;
         },
@@ -90,14 +90,14 @@ function getEmitter() {
          */
         several: function (event, context, handler, times) {
             if (times > 0) {
-                subscriptions.push( {
+                subscriptions.push({
                     event: event,
                     context: context,
                     handler: handler,
                     several: times,
                     through: 1,
                     numberOfEmits: 0
-                } );
+                });
             } else {
                 this.on(event, context, handler);
             }
@@ -117,14 +117,14 @@ function getEmitter() {
          */
         through: function (event, context, handler, frequency) {
             if (frequency > 0) {
-                subscriptions.push( {
+                subscriptions.push({
                     event: event,
                     context: context,
                     handler: handler,
                     several: Infinity,
                     through: 2,
                     numberOfEmits: 0
-                } );
+                });
             } else {
                 this.on(event, context, handler);
             }
