@@ -21,6 +21,7 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @return {Object} this
          */
         on: function (event, context, handler) {
             if (!events[event]) {
@@ -39,6 +40,7 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @return {Object} this
          */
         off: function (event, context) {
             Object.keys(events)
@@ -61,26 +63,12 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
+         * @return {Object} this
          */
         emit: function (event) {
             while (event) {
                 if (events[event]) {
-                    for (var i = 0; i < events[event].length; i++) {
-                        var item = events[event][i];
-                        if (item.times !== undefined) {
-                            if (item.times > 0) {
-                                item.callback.call(item.student);
-                                item.times--;
-                            }
-                        } else if (item.frequency !== undefined) {
-                            if (item.count % item.frequency === 0) {
-                                item.callback.call(item.student);
-                            }
-                            item.count++;
-                        } else {
-                            item.callback.call(item.student);
-                        }
-                    }
+                    performEvent(events[event])
                 }
 
                 var outerEventIndex = event.lastIndexOf('.');
@@ -97,6 +85,7 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @return {Object} this
          */
         several: function (event, context, handler, times) {
             if (times <= 0) {
@@ -123,6 +112,7 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @return {Object} this
          */
         through: function (event, context, handler, frequency) {
             if (frequency <= 0) {
@@ -143,4 +133,22 @@ function getEmitter() {
             return this;
         }
     };
+}
+
+function performEvent(event) {
+    event.forEach(function (item) {
+        if (item.times !== undefined) {
+            if (item.times > 0) {
+                item.callback.call(item.student);
+                item.times--;
+            }
+        } else if (item.frequency !== undefined) {
+            if (item.count % item.frequency === 0) {
+                item.callback.call(item.student);
+            }
+            item.count++;
+        } else {
+            item.callback.call(item.student);
+        }
+    });
 }
