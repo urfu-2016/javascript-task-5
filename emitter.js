@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 var events = {};
 
@@ -47,8 +47,13 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            events[event] = events[event].filter(function (student) {
-                return student.context !== context;
+            Object.keys(events).forEach(function (keyEvents) {
+                if (keyEvents.indexOf(event) === -1) {
+                    return;
+                }
+                events[keyEvents] = events[keyEvents].filter(function (student) {
+                    return student.context !== context;
+                });
             });
 
             return this;
