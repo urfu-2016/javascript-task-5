@@ -37,7 +37,10 @@ function getEmitter() {
          */
         off: function (event, context) {
             subscriptions = subscriptions.filter(function (subscription) {
-                return subscription.event.indexOf(event) !== 0 || subscription.context !== context;
+                return subscription.event.indexOf(event) !== 0 ||
+                    (subscription.context !== context) ||
+                    (subscription.event[event.length] !== '.') &&
+                    (subscription.event[event.length] !== undefined);
             });
 
             return this;
