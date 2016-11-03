@@ -69,8 +69,8 @@ function getEmitter() {
                     if (emittedEvent === subscription.event && subscription.several !== 0) {
                         if (subscription.numberOfEmits % subscription.through === 0) {
                             subscription.handler.call(subscription.context);
-                            subscription.several = subscription.several - 1;
                         }
+                        subscription.several = subscription.several - 1;
                         subscription.numberOfEmits = subscription.numberOfEmits + 1;
                     }
                 });
