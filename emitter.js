@@ -15,14 +15,16 @@ function getEmitter() {
     var subscriptions = [];
 
     return {
+
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            subscriptions.push({event: event, context: context, handler: handler});
+            subscriptions.push({ event: event, context: context, handler: handler });
 
             return this;
         },
@@ -31,6 +33,7 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
             subscriptions = subscriptions.filter(function (subscription) {
@@ -48,6 +51,7 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
             var emittedEvents = [event];
