@@ -70,7 +70,8 @@ function getEmitter() {
         emit: function (event) {
             executeTheEvent(event);
             while (event.indexOf('.') !== -1) {
-                event = event.split('.').slice(0, -1);
+                event = event.split('.').slice(0, -1)
+                .join('.');
                 executeTheEvent(event);
             }
 
