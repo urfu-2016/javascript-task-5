@@ -4,8 +4,17 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
+var events = {};
+
+function executeTheEvent(event) {
+    if (events.hasOwnProperty(event)) {
+        events[event].forEach(function (student) {
+            student.handler.call(student.context);
+        });
+    }
+}
 
 /**
  * Возвращает новый emitter
@@ -19,26 +28,45 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (events.hasOwnProperty(event)) {
+                events[event].push({ context: context, handler: handler });
+            } else {
+                events[event] = [{ context: context, handler: handler }];
+            }
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            events[event] = events[event].filter(function (student) {
+                return student.context !== context;
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            executeTheEvent(event);
+            while (event.indexOf('.') !== -1) {
+                event = event.split('.').slice(0, -1);
+                executeTheEvent(event);
+            }
+
+            return this;
         },
 
         /**
