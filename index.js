@@ -47,20 +47,17 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            if (event.indexOf('.') !== -1) {
-                events[event] = events[event].filter(function (student) {
+            var countDotsInEvent = event.split('.').length - 1;
+            Object.keys(events).forEach(function (keyEvent) {
+                if (keyEvent.split('.').length - 1 < countDotsInEvent ||
+                    keyEvent.split('.').slice(0, countDotsInEvent + 1)
+                    .join('.') !== event) {
+                    return;
+                }
+                events[keyEvent] = events[keyEvent].filter(function (student) {
                     return student.context !== context;
                 });
-            } else {
-                Object.keys(events).forEach(function (keyEvent) {
-                    if (keyEvent.split('.')[0].indexOf(event) === -1) {
-                        return;
-                    }
-                    events[keyEvent] = events[keyEvent].filter(function (student) {
-                        return student.context !== context;
-                    });
-                });
-            }
+            });
 
             return this;
         },
@@ -73,7 +70,8 @@ function getEmitter() {
         emit: function (event) {
             executeTheEvent(event);
             while (event.indexOf('.') !== -1) {
-                event = event.split('.').slice(0, -1);
+                event = event.split('.').slice(0, -1)
+                .join();
                 executeTheEvent(event);
             }
 
