@@ -47,11 +47,14 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            Object.keys(events).forEach(function (keyEvents) {
-                if (keyEvents.indexOf(event) === -1) {
+            var countDotsInEvent = event.split('.').length - 1;
+            Object.keys(events).forEach(function (keyEvent) {
+                if (keyEvent.split('.').length - 1 < countDotsInEvent ||
+                    keyEvent.split('.').slice(0, countDotsInEvent + 1)
+                    .join('.') !== event) {
                     return;
                 }
-                events[keyEvents] = events[keyEvents].filter(function (student) {
+                events[keyEvent] = events[keyEvent].filter(function (student) {
                     return student.context !== context;
                 });
             });
