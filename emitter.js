@@ -122,7 +122,7 @@ function getEmitter() {
                     context: context,
                     handler: handler,
                     several: Infinity,
-                    through: 2,
+                    through: frequency,
                     numberOfEmits: 0
                 });
             } else {
