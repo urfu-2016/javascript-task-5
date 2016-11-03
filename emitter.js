@@ -4,14 +4,22 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
-var events = {};
 
-function executeTheEvent(event) {
+function executeTheEvent(event, events) {
     if (events.hasOwnProperty(event)) {
         events[event].forEach(function (student) {
-            student.handler.call(student.context);
+            if (student.times !== undefined && student.times > 0) {
+                student.handler.call(student.context);
+                student.times = student.times === undefined ? undefined : student.times - 1;
+            } else if (student.frequency !== undefined && student.frequencyCounter %
+                    student.frequency === 0) {
+                student.handler.call(student.context);
+            } else if (student.frequency === undefined && student.times === undefined) {
+                student.handler.call(student.context);
+            }
+            student.frequencyCounter++;
         });
     }
 }
@@ -21,6 +29,8 @@ function executeTheEvent(event) {
  * @returns {Object}
  */
 function getEmitter() {
+    var events = {};
+
     return {
 
         /**
@@ -32,9 +42,21 @@ function getEmitter() {
          */
         on: function (event, context, handler) {
             if (events.hasOwnProperty(event)) {
-                events[event].push({ context: context, handler: handler });
+                events[event].push({
+                    context: context,
+                    handler: handler,
+                    times: undefined,
+                    frequency: undefined,
+                    frequencyCounter: 0
+                });
             } else {
-                events[event] = [{ context: context, handler: handler }];
+                events[event] = [{
+                    context: context,
+                    handler: handler,
+                    times: undefined,
+                    frequency: undefined,
+                    frequencyCounter: 0
+                }];
             }
 
             return this;
@@ -68,11 +90,11 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            executeTheEvent(event);
+            executeTheEvent(event, events);
             while (event.indexOf('.') !== -1) {
                 event = event.split('.').slice(0, -1)
                 .join('.');
-                executeTheEvent(event);
+                executeTheEvent(event, events);
             }
 
             return this;
@@ -85,9 +107,31 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times <= 0) {
+                return this.on(event, context, handler);
+            }
+            if (events.hasOwnProperty(event)) {
+                events[event].push({
+                    context: context,
+                    handler: handler,
+                    times: times,
+                    frequency: undefined,
+                    frequencyCounter: 0
+                });
+            } else {
+                events[event] = [{
+                    context: context,
+                    handler: handler,
+                    times: times,
+                    frequency: undefined,
+                    frequencyCounter: 0
+                }];
+            }
+
+            return this;
         },
 
         /**
@@ -97,9 +141,31 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (frequency <= 0) {
+                return this.on(event, context, handler);
+            }
+            if (events.hasOwnProperty(event)) {
+                events[event].push({
+                    context: context,
+                    handler: handler,
+                    times: undefined,
+                    frequency: frequency,
+                    frequencyCounter: 0
+                });
+            } else {
+                events[event] = [{
+                    context: context,
+                    handler: handler,
+                    times: undefined,
+                    frequency: frequency,
+                    frequencyCounter: 0
+                }];
+            }
+
+            return this;
         }
     };
 }
