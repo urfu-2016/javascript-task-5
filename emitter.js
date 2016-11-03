@@ -55,8 +55,9 @@ function getEmitter() {
          */
         emit: function (event) {
             var emittedEvents = [event];
-            if (event.split('.')[1] !== undefined) {
-                emittedEvents.push(event.split('.')[0]);
+            while (event.lastIndexOf('.') !== -1) {
+                event = event.slice(0, event.lastIndexOf('.'));
+                emittedEvents.push(event);
             }
 
             emittedEvents.forEach(function (emittedEvent) {
