@@ -12,6 +12,8 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var eventsCollection = [];
+
     return {
 
         /**
@@ -19,26 +21,65 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            eventsCollection.push({ event: event, context: context, action: handler,
+            indexOfEvent: 0, countOfEvents: 0, repeatCount: 0 });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            eventsCollection = eventsCollection.filter(function (item) {
+                return ((item.event.split('.')[0] !== event && item.event !== event) ||
+                    item.context !== context);
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
-         */
+         * @returns {Object}
+         * */
         emit: function (event) {
-            console.info(event);
+            var parts = event.split('.');
+
+            eventsCollection.forEach(function (item) {
+                if (item.event === event) {
+                    if (item.countOfEvents === 0 && item.repeatCount === 0 ||
+                        (item.indexOfEvent < item.countOfEvents && item.countOfEvents !== 0) ||
+                        (item.repeatCount !== 0 && (item.indexOfEvent % item.repeatCount) === 0)) {
+                        item.action.call(item.context);
+                    }
+                    item.indexOfEvent ++;
+                }
+
+            });
+            if (parts.length > 1) {
+                eventsCollection.forEach(function (item) {
+                    if (item.event === parts[0]) {
+                        if (item.countOfEvents === 0 && item.repeatCount === 0 ||
+                            (item.indexOfEvent < item.countOfEvents && item.countOfEvents !== 0) ||
+                            (item.repeatCount !== 0 &&
+                            (item.indexOfEvent % item.repeatCount) === 0)) {
+                            item.action.call(item.context);
+                        }
+                        item.indexOfEvent ++;
+                    }
+
+                });
+            }
+
+            return this;
         },
 
         /**
@@ -48,9 +89,13 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            eventsCollection.push({ event: event, context: context, action: handler,
+                indexOfEvent: 0, countOfEvents: (times < 0) ? 0 : times, repeatCount: 0 });
+
+            return this;
         },
 
         /**
@@ -60,9 +105,13 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            eventsCollection.push({ event: event, context: context, action: handler,
+                indexOfEvent: 0, countOfEvents: 0, repeatCount: (frequency < 0) ? 0 : frequency });
+
+            return this;
         }
     };
 }
