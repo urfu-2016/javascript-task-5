@@ -82,7 +82,7 @@ function getEmitter() {
             var events = event.split('.').reduce(function (acc, val) {
                 return acc ? acc.concat([acc[acc.length - 1] + '.' + val]) : [val];
             }, null);
-            console.log(events);
+
             events.reverse().forEach(function (e) {
                 if (eventSubscribers[e]) {
                     eventSubscribers[e].forEach(function (subscriber) {
