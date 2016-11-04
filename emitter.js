@@ -38,8 +38,12 @@ function getEmitter() {
          */
         off: function (event, context) {
             eventsCollection = eventsCollection.filter(function (item) {
-                return ((item.event.split('.')[0] !== event && item.event !== event) ||
-                    item.context !== context);
+                var collectionOfHandlers = pathOfName(item.event);
+                var isLeft = collectionOfHandlers.reduce(function (isOff, index) {
+                    return isOff || index === event;
+                }, false);
+
+                return !isLeft || item.context !== context;
             });
 
             return this;
@@ -51,22 +55,11 @@ function getEmitter() {
          * @returns {Object}
          * */
         emit: function (event) {
-            var parts = event.split('.');
-
-            eventsCollection.forEach(function (item) {
-                if (item.event === event) {
-                    if (item.countOfEvents === 0 && item.repeatCount === 0 ||
-                        (item.indexOfEvent < item.countOfEvents && item.countOfEvents !== 0) ||
-                        (item.repeatCount !== 0 && (item.indexOfEvent % item.repeatCount) === 0)) {
-                        item.action.call(item.context);
-                    }
-                    item.indexOfEvent ++;
-                }
-
-            });
-            if (parts.length > 1) {
+            var collectionOfHandlers = pathOfName(event);
+            collectionOfHandlers = collectionOfHandlers.reverse();
+            collectionOfHandlers.forEach(function (handler) {
                 eventsCollection.forEach(function (item) {
-                    if (item.event === parts[0]) {
+                    if (item.event === handler) {
                         if (item.countOfEvents === 0 && item.repeatCount === 0 ||
                             (item.indexOfEvent < item.countOfEvents && item.countOfEvents !== 0) ||
                             (item.repeatCount !== 0 &&
@@ -75,9 +68,9 @@ function getEmitter() {
                         }
                         item.indexOfEvent ++;
                     }
-
                 });
-            }
+
+            });
 
             return this;
         },
@@ -114,4 +107,16 @@ function getEmitter() {
             return this;
         }
     };
+}
+
+function pathOfName(nameOfEvent) {
+    var parts = nameOfEvent.split('.');
+    var collectionOfHandlers = [];
+    var fullHandler = '';
+    parts.forEach(function (index) {
+        fullHandler += (fullHandler === '') ? index : '.' + index;
+        collectionOfHandlers.push(fullHandler);
+    });
+
+    return collectionOfHandlers;
 }
