@@ -60,12 +60,9 @@ function getEmitter() {
                 return key === event || key.indexOf(event + '.') === 0;
             })
             .forEach(function (key) {
-                if (eventSubscribers[key]) {
-                    var deleteIndex = eventSubscribers[key].findIndex(function (subscriber) {
-                        return subscriber.context === context;
-                    });
-                    eventSubscribers[key].splice(deleteIndex, 1);
-                }
+                eventSubscribers[key] = eventSubscribers[key].filter(function (subscriber) {
+                    return subscriber.context !== context;
+                });
             });
 
             return this;
