@@ -100,8 +100,6 @@ function getEmitter() {
                                         contextObject.emitedTimesCount === 1) {
                                         contextObject.handler.call(contextObject.context);
                                     }
-                                } else {
-                                    this.off(splittedEvent, contextObject);
                                 }
                             }, this);
                     }
