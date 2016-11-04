@@ -60,7 +60,7 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(this.events).forEach(function (eventName) {
-                if (eventName.startsWith(event)) {
+                if (eventName === event || eventName.startsWith(event + '.')) {
                     this.events[eventName] = this.events[eventName].filter(function (callback) {
                         return callback.context !== context;
                     });
@@ -83,9 +83,6 @@ function getEmitter() {
                     this.events[targetEvent].forEach(executeCallback);
                 }
                 targetEvent = targetEvent.substring(0, targetEvent.lastIndexOf('.'));
-            }
-            if (targetEvent in this.events) {
-                this.events[targetEvent].forEach(executeCallback);
             }
 
             return this;
