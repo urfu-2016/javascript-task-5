@@ -44,15 +44,22 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            if (this.eventsArray.hasOwnProperty(event)) {
-                var signedPeople = this.eventsArray[event];
-                signedPeople
-                    .forEach(function (signedContext, index) {
-                        if (signedContext.context === context) {
-                            this.eventsArray[event].splice(index, 1);
-                        }
-                    }, this);
-            }
+
+            Object
+                .keys(this.eventsArray)
+                // Получаем список событий, от которых надо отписаться (включая дочерние)
+                .filter(function (signedEvent) {
+                    return signedEvent.indexOf(event) === 0;
+                })
+                .forEach(function (eventToUnsign) {
+                    var signedPeople = this.eventsArray[eventToUnsign];
+                    signedPeople
+                        .forEach(function (signedContext, index) {
+                            if (signedContext.context === context) {
+                                this.eventsArray[eventToUnsign].splice(index, 1);
+                            }
+                        }, this);
+                }, this);
 
             return this;
         },
