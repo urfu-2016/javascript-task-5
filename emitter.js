@@ -1,66 +1,87 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
+function startEvents(event, events) {
+    if (events.hasOwnProperty(event)) {
+        events[event].forEach(function (student) {
+            student.handler.call(student.context);
+        });
+    }
+}
+
 function getEmitter() {
+    var events = {};
+
     return {
 
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         */
+
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+
+            if (events.hasOwnProperty(event)) {
+                events[event].push({ context: context, handler: handler });
+            } else {
+                events[event] = [{ context: context, handler: handler }];
+            }
+
+
+            return this;
         },
 
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         */
+
         off: function (event, context) {
-            console.info(event, context);
+            // console.log(events['slide.funny'])
+            Object.keys(events).forEach(function (key) {
+
+                // console.log(events.key)
+               // console.log('a')
+                if (event.indexOf('.') > 0) {
+
+                    // console.log(events)
+                    if (key === event) {
+                        // console.log(events[key])
+                        // console.log(events.key)
+                        events[key] = events[key].filter(function (student) {
+
+                            return student.context !== context;
+                        });
+                        // console.log(events[key])
+                    }
+
+                }
+                if (key.indexOf(event) >= 0) {
+                    events[key] = events[key].filter(function (student) {
+                        return student.context !== context;
+                    });
+                }
+
+            });
+
+            return this;
         },
 
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         */
         emit: function (event) {
-            console.info(event);
+            // console.log(events.begin)
+            // console.log(events.slide)
+            // console.log(events.slide.funny)
+            startEvents(event, events);
+            while (event.indexOf('.') !== -1) {
+                event = event.split('.').slice(0, -1)
+                    .join();
+                startEvents(event, events);
+            }
+
+
+            return this;
         },
 
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
+
         several: function (event, context, handler, times) {
             console.info(event, context, handler, times);
         },
 
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
+
         through: function (event, context, handler, frequency) {
             console.info(event, context, handler, frequency);
         }
