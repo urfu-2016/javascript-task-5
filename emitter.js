@@ -49,7 +49,7 @@ function getEmitter() {
                 signedPeople
                     .forEach(function (signedContext, index) {
                         if (signedContext.context === context) {
-                            delete this.eventsArray[event][index];
+                            this.eventsArray[event].splice(index, 1);
                         }
                     }, this);
             }
