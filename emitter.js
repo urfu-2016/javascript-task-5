@@ -15,10 +15,8 @@ function getEmitter() {
     var eventSubscribers = {};
 
     function getEventListener(context, handler, several, through) {
-        several = several || 0;
-        through = through || 0;
-        several = several < 0 ? 0 : several;
-        through = through < 0 ? 0 : through;
+        several = several > 0 ? several : Infinity;
+        through = through > 0 ? through : 1;
 
         return {
             context: context,
@@ -86,9 +84,8 @@ function getEmitter() {
             events.reverse().forEach(function (e) {
                 if (eventSubscribers[e]) {
                     eventSubscribers[e].forEach(function (subscriber) {
-                        if (!subscriber.several && !subscriber.through ||
-                            subscriber.several && subscriber.count < subscriber.several ||
-                            subscriber.through && subscriber.count % subscriber.through === 0) {
+                        if (subscriber.count < subscriber.several &&
+                            subscriber.count % subscriber.through === 0) {
                             subscriber.handler.bind(subscriber.context)();
                         }
                         subscriber.count++;
