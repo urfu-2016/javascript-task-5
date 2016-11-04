@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -31,7 +31,7 @@ function getEmitter() {
             this.eventsArray[event].push({
                 context: context,
                 handler: handler,
-                emitedTimesCount: 0,
+                emitCallsCount: 0,
                 timesToEmit: Infinity,
                 frequency: 1
             });
@@ -88,20 +88,8 @@ function getEmitter() {
                 // Вызываем каждое событие
                 .forEach(function (splittedEvent) {
                     if (this.eventsArray.hasOwnProperty(splittedEvent)) {
-
                         this.eventsArray[splittedEvent]
-                            .forEach(function (contextObject) {
-                                if (contextObject.emitedTimesCount < contextObject.timesToEmit) {
-                                    contextObject.emitedTimesCount++;
-                                    var frequency = contextObject.frequency;
-
-                                    // +1, т.к. начинали с первого (а не просто каждый n-ый)
-                                    if ((contextObject.emitedTimesCount + 1) % frequency === 0 ||
-                                        contextObject.emitedTimesCount === 1) {
-                                        contextObject.handler.call(contextObject.context);
-                                    }
-                                }
-                            }, this);
+                            .forEach(tryToEmit);
                     }
                 }, this);
 
@@ -145,4 +133,16 @@ function getEmitter() {
             return this;
         }
     };
+}
+
+function tryToEmit(contextObject) {
+    if (contextObject.emitCallsCount < contextObject.timesToEmit) {
+        var frequency = contextObject.frequency;
+        var emitCallsCount = contextObject.emitCallsCount;
+        contextObject.emitCallsCount++;
+
+        if (emitCallsCount % frequency === 0 || emitCallsCount === 0) {
+            contextObject.handler.call(contextObject.context);
+        }
+    }
 }
