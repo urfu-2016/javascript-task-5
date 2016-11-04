@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -29,8 +29,11 @@ function getEmitter() {
             }
 
             this.eventsArray[event].push({
-                'context': context,
-                'handler': handler
+                context: context,
+                handler: handler,
+                emitedTimesCount: 0,
+                timesToEmit: Infinity,
+                frequency: 1
             });
 
 
@@ -49,6 +52,7 @@ function getEmitter() {
                 .keys(this.eventsArray)
                 // Получаем список событий, от которых надо отписаться (включая дочерние)
                 .filter(function (signedEvent) {
+                    // Либо это в точности переданное в функцию событие, либо его дочернее
                     return signedEvent.indexOf(event) === 0 &&
                         (event === signedEvent || signedEvent[event.length] === '.');
                 })
@@ -81,14 +85,25 @@ function getEmitter() {
 
                     return eventsSlice.join('.');
                 })
-                // Вызываем каждый событие
+                // Вызываем каждое событие
                 .forEach(function (splittedEvent) {
                     if (this.eventsArray.hasOwnProperty(splittedEvent)) {
 
                         this.eventsArray[splittedEvent]
                             .forEach(function (contextObject) {
-                                contextObject.handler.call(contextObject.context);
-                            });
+                                if (contextObject.emitedTimesCount < contextObject.timesToEmit) {
+                                    contextObject.emitedTimesCount++;
+                                    var frequency = contextObject.frequency;
+
+                                    // +1, т.к. начинали с первого (а не просто каждый n-ый)
+                                    if ((contextObject.emitedTimesCount + 1) % frequency === 0 ||
+                                        contextObject.emitedTimesCount === 1) {
+                                        contextObject.handler.call(contextObject.context);
+                                    }
+                                } else {
+                                    this.off(splittedEvent, contextObject);
+                                }
+                            }, this);
                     }
                 }, this);
 
@@ -105,7 +120,10 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            this.on(event, context, handler);
+            if (times > 0) {
+                this.eventsArray[event][this.eventsArray[event].length - 1].timesToEmit = times;
+            }
 
             return this;
         },
@@ -120,7 +138,11 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            this.on(event, context, handler);
+            if (frequency > 0) {
+                var lastEventIndex = this.eventsArray[event].length;
+                this.eventsArray[event][lastEventIndex - 1].frequency = frequency;
+            }
 
             return this;
         }
