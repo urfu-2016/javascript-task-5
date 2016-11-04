@@ -88,8 +88,10 @@ function getEmitter() {
 
             while (targetEvent) {
                 if (targetEvent in this.events) {
-                    this.events[targetEvent].forEach(executeCallback);
-                    this.events[targetEvent].filter(function (callback) {
+                    var callbacks = this.events[targetEvent];
+
+                    callbacks.forEach(executeCallback);
+                    this.events[targetEvent] = callbacks.filter(function (callback) {
                         return callback.count !== 0;
                     });
                 }
