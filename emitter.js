@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
