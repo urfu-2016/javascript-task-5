@@ -59,9 +59,8 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(eventSubscribers).filter(function (key) {
-                return key.indexOf(event + '.') === 0;
+                return key === event || key.indexOf(event + '.') === 0;
             })
-            .concat([event])
             .forEach(function (key) {
                 if (eventSubscribers[key]) {
                     var deleteIndex = eventSubscribers[key].findIndex(function (subscriber) {
@@ -83,7 +82,7 @@ function getEmitter() {
             var events = event.split('.').reduce(function (acc, val) {
                 return acc ? acc.concat([acc[acc.length - 1] + '.' + val]) : [val];
             }, null);
-
+            console.log(events);
             events.reverse().forEach(function (e) {
                 if (eventSubscribers[e]) {
                     eventSubscribers[e].forEach(function (subscriber) {
