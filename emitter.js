@@ -59,7 +59,7 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(eventSubscribers).filter(function (key) {
-                return key.indexOf(event + '.') !== -1;
+                return key.indexOf(event + '.') === 0;
             })
             .concat([event])
             .forEach(function (key) {
