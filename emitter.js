@@ -49,7 +49,8 @@ function getEmitter() {
                 .keys(this.eventsArray)
                 // Получаем список событий, от которых надо отписаться (включая дочерние)
                 .filter(function (signedEvent) {
-                    return signedEvent.indexOf(event) === 0;
+                    return signedEvent.indexOf(event) === 0 &&
+                        (event === signedEvent || signedEvent[event.length] === '.');
                 })
                 .forEach(function (eventToUnsign) {
                     var signedPeople = this.eventsArray[eventToUnsign];
