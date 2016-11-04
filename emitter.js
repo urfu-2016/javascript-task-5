@@ -7,6 +7,21 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+function executeCallback(callback) {
+    if (callback.count > 0 || callback.currentFrequency === 0) {
+        callback.handler();
+
+        if (callback.count !== -1) {
+            callback.count--;
+        }
+    }
+
+    if (callback.currentFrequency !== -1) {
+        callback.currentFrequency++;
+        callback.currentFrequency %= callback.frequency;
+    }
+}
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
@@ -24,13 +39,12 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler, additional) {
-            additional = additional ? additional : {};
+            additional = additional ? additional : {
+                frequency: -1,
+                count: -1
+            };
             var frequency = additional.frequency;
             var count = additional.count;
-
-            /* -1 значит значение не задано */
-            frequency = frequency ? frequency : -1;
-            count = count ? count : -1;
 
             if (!(event in this.events)) {
                 this.events[event] = [];
@@ -39,7 +53,6 @@ function getEmitter() {
                 context: context,
                 handler: handler.bind(context),
                 count: count,
-                currentCount: 0,
                 frequency: frequency,
                 currentFrequency: 0
             });
@@ -72,29 +85,13 @@ function getEmitter() {
          */
         emit: function (event) {
             var targetEvent = event;
-            var executeCallback = function (callback, index) {
-                if (callback.currentCount < callback.count ||
-                    callback.currentFrequency === 0) {
-                    callback.handler();
-
-                    if (callback.currentCount !== -1) {
-                        callback.currentCount++;
-                    }
-                }
-
-                if (callback.currentFrequency !== -1) {
-                    callback.currentFrequency++;
-                    callback.currentFrequency %= callback.frequency;
-                }
-
-                if (callback.currentCount === callback.count) {
-                    delete this.events[targetEvent][index];
-                }
-            }.bind(this);
 
             while (targetEvent) {
                 if (targetEvent in this.events) {
                     this.events[targetEvent].forEach(executeCallback);
+                    this.events[targetEvent].filter(function (callback) {
+                        return callback.count !== 0;
+                    });
                 }
                 targetEvent = targetEvent.substring(0, targetEvent.lastIndexOf('.'));
             }
@@ -112,7 +109,7 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            var additional = { count: times };
+            var additional = { count: times > 0 ? times : -1 };
 
             return this.on(event, context, handler, additional);
         },
@@ -127,7 +124,7 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            var additional = { frequency: frequency };
+            var additional = { frequency: frequency > 0 ? frequency : -1 };
 
             return this.on(event, context, handler, additional);
         }
