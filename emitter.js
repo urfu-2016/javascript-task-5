@@ -28,6 +28,10 @@ function getEmitter() {
                 this.eventsArray[event] = [];
             }
 
+            // Дефолтное значения для количества вызовов emit = Infinity, т.е. сколько угодно раз
+            // Дефолтная частота вызовов emit = 1, т.е. вызывает каждое событие
+            // emitCallsCount - сколько раз делали попытку вызова handler у этого объекта
+            //      (он мог срабатывать не всегда из-за through)
             this.eventsArray[event].push({
                 context: context,
                 handler: handler,
@@ -57,8 +61,7 @@ function getEmitter() {
                         (event === signedEvent || signedEvent[event.length] === '.');
                 })
                 .forEach(function (eventToUnsign) {
-                    var signedPeople = this.eventsArray[eventToUnsign];
-                    signedPeople
+                    this.eventsArray[eventToUnsign]
                         .forEach(function (signedContext, index) {
                             if (signedContext.context === context) {
                                 this.eventsArray[eventToUnsign].splice(index, 1);
@@ -79,11 +82,11 @@ function getEmitter() {
             var splittedEventsCount = splittedEvents.length;
 
             splittedEvents
-                // Получаем список событий
+                // Получаем список событий (исходное + его родители и т.д.)
                 .map(function (partOfEvent, index) {
-                    var eventsSlice = splittedEvents.slice(0, splittedEventsCount - index);
-
-                    return eventsSlice.join('.');
+                    return splittedEvents
+                        .slice(0, splittedEventsCount - index)
+                        .join('.');
                 })
                 // Вызываем каждое событие
                 .forEach(function (splittedEvent) {
@@ -135,14 +138,14 @@ function getEmitter() {
     };
 }
 
-function tryToEmit(contextObject) {
-    if (contextObject.emitCallsCount < contextObject.timesToEmit) {
-        var frequency = contextObject.frequency;
-        var emitCallsCount = contextObject.emitCallsCount;
-        contextObject.emitCallsCount++;
+function tryToEmit(signer) {
+    if (signer.emitCallsCount < signer.timesToEmit) {
+        var frequency = signer.frequency;
+        var emitCallsCount = signer.emitCallsCount;
+        signer.emitCallsCount++;
 
         if (emitCallsCount % frequency === 0 || emitCallsCount === 0) {
-            contextObject.handler.call(contextObject.context);
+            signer.handler.call(signer.context);
         }
     }
 }
