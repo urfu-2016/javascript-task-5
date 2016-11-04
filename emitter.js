@@ -35,11 +35,11 @@ function getEmitter() {
          */
         off: function (event, context) {
             studentEvents = studentEvents.slice().filter(function (element) {
-                var equalElement = element.nameEvent.indexOf(event) === -1;
-                equalElement = equalElement && element.nameEvent.indexOf(event + '.') === -1;
-                var equalContext = element.context !== context;
+                var notEqualElement = element.nameEvent.indexOf(event) !== 0;
+                var notEndPoint = element.nameEvent.indexOf(event + '.') !== 0;
+                var notEqualContext = element.context !== context;
 
-                return equalElement || equalContext;
+                return notEqualContext || (notEqualElement && notEndPoint);
             });
 
             return this;
