@@ -55,7 +55,7 @@ function getEmitter() {
 
             return this;
         },
-        
+
         several: function (event, context, handler, times) {
             console.info(event, context, handler, times);
         },
