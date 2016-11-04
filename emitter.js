@@ -12,6 +12,30 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var eventSubscribers = {};
+
+    function getEventListener(context, handler, several, through) {
+        several = several || 0;
+        through = through || 0;
+        several = several < 0 ? 0 : several;
+        through = through < 0 ? 0 : through;
+
+        return {
+            context: context,
+            handler: handler,
+            count: 0,
+            several: several,
+            through: through
+        };
+    }
+
+    function addEventListener(event, listener) {
+        if (!eventSubscribers[event]) {
+            eventSubscribers[event] = [];
+        }
+        eventSubscribers[event].push(listener);
+    }
+
     return {
 
         /**
@@ -19,26 +43,61 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            addEventListener(event, getEventListener(context, handler));
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(eventSubscribers).filter(function (key) {
+                return key.indexOf(event + '.') !== -1;
+            })
+            .concat([event])
+            .forEach(function (key) {
+                if (eventSubscribers[key]) {
+                    var deleteIndex = eventSubscribers[key].findIndex(function (subscriber) {
+                        return subscriber.context === context;
+                    });
+                    eventSubscribers[key].splice(deleteIndex, 1);
+                }
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            var events = event.split('.').reduce(function (acc, val) {
+                return acc ? acc.concat([acc[acc.length - 1] + '.' + val]) : [val];
+            }, null);
+
+            events.reverse().forEach(function (e) {
+                if (eventSubscribers[e]) {
+                    eventSubscribers[e].forEach(function (subscriber) {
+                        if (!subscriber.several && !subscriber.through ||
+                            subscriber.several && subscriber.count < subscriber.several ||
+                            subscriber.through && subscriber.count % subscriber.through === 0) {
+                            subscriber.handler.bind(subscriber.context)();
+                        }
+                        subscriber.count++;
+                    });
+                }
+            });
+
+            return this;
         },
 
         /**
@@ -48,9 +107,12 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            addEventListener(event, getEventListener(context, handler, times));
+
+            return this;
         },
 
         /**
@@ -60,9 +122,12 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            addEventListener(event, getEventListener(context, handler, 0, frequency));
+
+            return this;
         }
     };
 }
