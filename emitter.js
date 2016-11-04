@@ -23,8 +23,6 @@ function getEmitter() {
          * @param {Function} handler
          */
         on: function (event, context, handler) {
-            // handler.call(context);
-            // console.info(event, context, handler);
             studentEvents.push(createSubscription(event, context, handler));
 
             return this;
@@ -36,7 +34,6 @@ function getEmitter() {
          * @param {Object} context
          */
         off: function (event, context) {
-            // console.info(event, context);
             studentEvents = studentEvents.slice().filter(function (element) {
                 var equalElement = element.nameEvent.indexOf(event) === -1;
                 equalElement = equalElement && element.nameEvent.indexOf(event + '.') === -1;
@@ -53,7 +50,6 @@ function getEmitter() {
          * @param {String} event
          */
         emit: function (event) {
-            console.info(event);
             var divideEvents = event.split('.');
             var fullEvent = event;
             divideEvents.forEach(function () {
@@ -82,7 +78,6 @@ function getEmitter() {
          * @param {Number} times – сколько раз получить уведомление
          */
         several: function (event, context, handler, times) {
-            // console.info(event, context, handler, times);
             if (times < 1) {
                 this.on(event, context, handler);
             } else {
@@ -103,7 +98,6 @@ function getEmitter() {
          * @param {Number} frequency – как часто уведомлять
          */
         through: function (event, context, handler, frequency) {
-            // console.info(vent, context, handler, frequency);
             if (frequency < 1) {
                 this.on(event, context, handler);
             } else {
