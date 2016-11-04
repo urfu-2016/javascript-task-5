@@ -16,7 +16,7 @@ function executeCallback(callback) {
         }
     }
 
-    if (callback.currentFrequency !== -1) {
+    if (callback.frequency !== -1) {
         callback.currentFrequency++;
         callback.currentFrequency %= callback.frequency;
     }
