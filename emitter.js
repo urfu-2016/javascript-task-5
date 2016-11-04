@@ -75,8 +75,11 @@ function getEmitter() {
          */
         emit: function (event) {
             var events = event.split('.').reduce(function (acc, val) {
-                return acc ? acc.concat([acc[acc.length - 1] + '.' + val]) : [val];
-            }, null);
+                var eventWithNamespace = acc.length ? acc[acc.length - 1] + '.' + val : val;
+                acc.push(eventWithNamespace);
+
+                return acc;
+            }, []);
 
             events.reverse().forEach(function (e) {
                 if (eventSubscribers[e]) {
