@@ -8,8 +8,7 @@ getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function shouldCallHandler(handler) {
-    return (isNaN(handler.maxTimes) || handler.maxTimes > 0) &&
-        (isNaN(handler.frequency) || handler.frequency === handler.currentFrequency);
+    return handler.count < handler.times && handler.count % handler.frequency === 0;
 }
 
 /**
@@ -30,6 +29,9 @@ function getEmitter() {
          */
         on: function (event, context, handler) {
             handler.boundThis = context;
+            handler.count = 0;
+            handler.times = handler.times > 0 ? handler.times : Infinity;
+            handler.frequency = handler.frequency > 0 ? handler.frequency : 1;
 
             if (!eventHandlers[event]) {
                 eventHandlers[event] = [];
@@ -49,7 +51,7 @@ function getEmitter() {
             Object.keys(eventHandlers)
                 .filter(function (key) {
                     return key.indexOf(event) === 0 &&
-                        ['', '.'].indexOf(key.substring(event.length, event.length)) !== -1;
+                        [undefined, '.'].indexOf(key[event.length]) !== -1;
                 })
                 .forEach(function (key) {
                     var handlers = eventHandlers[key];
@@ -75,12 +77,10 @@ function getEmitter() {
                         .filter(shouldCallHandler)
                         .forEach(function (handler) {
                             handler.call(handler.boundThis);
-                            handler.maxTimes--;
-                            handler.currentFrequency = -1;
                         });
                     eventHandlers[event]
                         .forEach(function (handler) {
-                            handler.currentFrequency++;
+                            handler.count++;
                         });
                 }
                 event = event.substring(0, event.lastIndexOf('.'));
@@ -99,7 +99,7 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            handler.maxTimes = times <= 0 ? undefined : times;
+            handler.times = times;
 
             return this.on(event, context, handler);
         },
@@ -114,8 +114,7 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            handler.frequency = (frequency <= 0 ? undefined : frequency) - 1;
-            handler.currentFrequency = handler.frequency;
+            handler.frequency = frequency;
 
             return this.on(event, context, handler);
         }
