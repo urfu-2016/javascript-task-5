@@ -4,8 +4,19 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
+
+
+function getAllEvents(event) {
+    var splitted = event.split('.');
+    var events = [splitted[0]];
+    for (var i = 1; i < splitted.length; i++) {
+        events.push([events[i-1], splitted[i]].join('.'));
+    }
+
+    return events;
+}
 
 /**
  * Возвращает новый emitter
@@ -13,6 +24,7 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
+        _events: [],
 
         /**
          * Подписаться на событие
@@ -21,7 +33,15 @@ function getEmitter() {
          * @param {Function} handler
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!this._events.hasOwnProperty(event)) {
+                this._events[event] = [];
+            }
+            this._events[event].push({
+                context: context,
+                handler: handler.bind(context)
+            });
+
+            return this;
         },
 
         /**
@@ -30,7 +50,22 @@ function getEmitter() {
          * @param {Object} context
          */
         off: function (event, context) {
-            console.info(event, context);
+            var eventsToOff = Object.keys(this._events).filter(
+                function (key) {
+                    return key === event ||
+                        (key.length > event.length &&
+                        key.substr(0, event.length + 1) === event + '.')
+                }
+            );
+            for (var i = 0; i < eventsToOff.length; i++) {
+                this._events[eventsToOff[i]] = this._events[eventsToOff[i]].filter(
+                    function (item) {
+                        return item.context !== context;
+                    }
+                )
+            }
+
+            return this;
         },
 
         /**
@@ -38,7 +73,19 @@ function getEmitter() {
          * @param {String} event
          */
         emit: function (event) {
-            console.info(event);
+            var events = getAllEvents(event).reverse();
+            for (var i = 0; i < events.length; i++) {
+                var currEvent = events[i];
+                if (!this._events[currEvent]) {
+                    continue;
+                }
+                this._events[currEvent].forEach(function (item) {
+                    item.handler();
+                    console.log(item.context);
+                });
+            }
+
+            return this;
         },
 
         /**
