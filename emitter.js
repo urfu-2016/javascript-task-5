@@ -12,7 +12,7 @@ function getAllEvents(event) {
     var splitted = event.split('.');
     var events = [splitted[0]];
     for (var i = 1; i < splitted.length; i++) {
-        events.push([events[i-1], splitted[i]].join('.'));
+        events.push([events[i - 1], splitted[i]].join('.'));
     }
 
     return events;
@@ -31,6 +31,7 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
             if (!this._events.hasOwnProperty(event)) {
@@ -48,13 +49,14 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
             var eventsToOff = Object.keys(this._events).filter(
                 function (key) {
                     return key === event ||
                         (key.length > event.length &&
-                        key.substr(0, event.length + 1) === event + '.')
+                        key.substr(0, event.length + 1) === event + '.');
                 }
             );
             for (var i = 0; i < eventsToOff.length; i++) {
@@ -62,7 +64,7 @@ function getEmitter() {
                     function (item) {
                         return item.context !== context;
                     }
-                )
+                );
             }
 
             return this;
@@ -71,6 +73,7 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
             var events = getAllEvents(event).reverse();
