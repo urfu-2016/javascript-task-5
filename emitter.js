@@ -1,12 +1,19 @@
 'use strict';
 
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function startEvents(event, events) {
     if (events.hasOwnProperty(event)) {
         events[event].forEach(function (student) {
-            student.handler.call(student.context);
+            if (student.frequencyCounter > 0) {
+                student.frequencyCounter--;
+            }
+            if (student.times > 0 && student.frequencyCounter === 0) {
+                student.times--;
+                student.frequencyCounter = student.frequency;
+                student.handler.call(student.context);
+            }
         });
     }
 }
@@ -17,11 +24,7 @@ function getEmitter() {
     return {
 
         on: function (event, context, handler) {
-            if (events.hasOwnProperty(event)) {
-                events[event].push({ context: context, handler: handler });
-            } else {
-                events[event] = [{ context: context, handler: handler }];
-            }
+            addEvent(event, context, handler, events);
 
             return this;
         },
@@ -51,12 +54,78 @@ function getEmitter() {
         },
 
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times < 1) {
+                addEvent(event, context, handler, events);
+
+                return this;
+            }
+            if (events.hasOwnProperty(event)) {
+                events[event].push({
+                    context: context,
+                    handler: handler,
+                    times: times,
+                    frequency: 0,
+                    frequencyCounter: 0
+                });
+            } else {
+                events[event] = [{
+                    context: context,
+                    handler: handler,
+                    times: times,
+                    frequency: 0,
+                    frequencyCounter: 0
+                }];
+            }
+
+            return this;
         },
 
 
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (frequency < 1) {
+                addEvent(event, context, handler, events);
+
+                return this;
+            }
+            if (events.hasOwnProperty(event)) {
+                events[event].push({
+                    context: context,
+                    handler: handler,
+                    times: Infinity,
+                    frequency: frequency,
+                    frequencyCounter: 0
+                });
+            } else {
+                events[event] = [{
+                    context: context,
+                    handler: handler,
+                    times: Infinity,
+                    frequency: frequency,
+                    frequencyCounter: 0
+                }];
+            }
+
+            return this;
         }
     };
+}
+
+function addEvent(event, context, handler, events) {
+    if (events.hasOwnProperty(event)) {
+        events[event].push({
+            context: context,
+            handler: handler,
+            times: Infinity,
+            frequency: 0,
+            frequencyCounter: 0
+        });
+    } else {
+        events[event] = [{
+            context: context,
+            handler: handler,
+            times: Infinity,
+            frequency: 0,
+            frequencyCounter: 0
+        }];
+    }
 }
