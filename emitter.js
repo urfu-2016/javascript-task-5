@@ -7,12 +7,17 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+function shouldCallHandler(handler) {
+    return (isNaN(handler.maxTimes) || handler.maxTimes > 0) &&
+        (isNaN(handler.frequency) || handler.frequency === handler.currentFrequency);
+}
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
-    var events = {};
+    var eventHandlers = {};
 
     return {
 
@@ -24,16 +29,12 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            var boundHandler = handler.bind(context);
-            boundHandler.boundThis = context;
-            Object.assign(boundHandler, handler);
+            handler.boundThis = context;
 
-            if (!events[event]) {
-                events[event] = {
-                    handlers: []
-                };
+            if (!eventHandlers[event]) {
+                eventHandlers[event] = [];
             }
-            events[event].handlers.push(boundHandler);
+            eventHandlers[event].push(handler);
 
             return this;
         },
@@ -45,13 +46,13 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            Object.keys(events)
+            Object.keys(eventHandlers)
                 .filter(function (key) {
                     return key.indexOf(event) === 0 &&
                         ['', '.'].indexOf(key.substring(event.length, event.length)) === 0;
                 })
                 .forEach(function (key) {
-                    var handlers = events[key].handlers;
+                    var handlers = eventHandlers[key];
                     for (var i = 0; i < handlers.length; i++) {
                         if (handlers[i].boundThis === context) {
                             handlers.splice(i, 1);
@@ -69,19 +70,15 @@ function getEmitter() {
          */
         emit: function (event) {
             while (event) {
-                if (events[event]) {
-                    events[event].handlers
-                        .filter(function (handler) {
-                            return (isNaN(handler.maxTimes) || handler.maxTimes > 0) &&
-                                (isNaN(handler.frequency) ||
-                                handler.frequency === handler.currentFrequency);
-                        })
+                if (eventHandlers[event]) {
+                    eventHandlers[event]
+                        .filter(shouldCallHandler)
                         .forEach(function (handler) {
-                            handler();
+                            handler.call(handler.boundThis);
                             handler.maxTimes--;
                             handler.currentFrequency = -1;
                         });
-                    events[event].handlers
+                    eventHandlers[event]
                         .forEach(function (handler) {
                             handler.currentFrequency++;
                         });
@@ -102,7 +99,7 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            handler.maxTimes = times <= 0 ? NaN : times;
+            handler.maxTimes = times <= 0 ? undefined : times;
 
             return this.on(event, context, handler);
         },
