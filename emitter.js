@@ -7,12 +7,43 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-function initEvent(students, miniEvent) {
-    for (var student in students) {
-        if (students.hasOwnProperty(student) &&
-            students[student].hasOwnProperty(miniEvent)) {
-            students[student][miniEvent]();
+function lastEvent(context, event) {
+    var splittedEvent = event.split('.');
+    for (var miniEvent in splittedEvent) {
+        if (context.hasOwnProperty(splittedEvent[miniEvent])) {
+            context = context[splittedEvent[miniEvent]];
         }
+    }
+
+    return context;
+}
+
+/**
+ * @this {Object}
+ * @param {Object} context
+ * @returns {Function}
+ */
+function standartFunc(context) {
+    return {
+        funcs: [],
+
+        func: function () {
+            for (var f in this.funcs) {
+                if (this.funcs.hasOwnProperty(f)) {
+                    this.funcs[f]();
+                }
+            }
+            if (context.hasOwnProperty('funcObj')) {
+                context.funcObj.func();
+            }
+        }
+    };
+}
+
+function execLastEvent(student, event) {
+    var lEvent = lastEvent(student, event);
+    if (lEvent.funcObj) {
+        lEvent.funcObj.func();
     }
 }
 
@@ -22,6 +53,41 @@ function initEvent(students, miniEvent) {
  */
 function getEmitter() {
     var students = [];
+
+    function eventNameSpace(event, context, handler) {
+        var splittedEvent = event.split('.');
+        var miniContext = context;
+        handler = handler.bind(context);
+        var length = splittedEvent.length;
+        for (var i = 0; i < length; i++) {
+            var miniEvent = splittedEvent[i];
+            if (miniContext.hasOwnProperty(miniEvent)) {
+                miniContext = eventExists(miniContext, miniEvent, isLastElem(i, length), handler);
+            } else {
+                miniContext[miniEvent] = {};
+                miniContext[miniEvent].funcObj = standartFunc(miniContext);
+                miniContext[miniEvent].funcObj.funcs = [handler];
+
+                /* .bind(miniContext)(handler.bind(miniContext)); */
+                miniContext[miniEvent].funcObj.funcs[0].funcname = event;
+            }
+        }
+    }
+
+    function isLastElem(i, length) {
+        return i === length - 1;
+    }
+
+    function eventExists(miniContext, miniEvent, isLast, handler) {
+        if (!isLast) {
+            miniContext = miniContext[miniEvent];
+        } else {
+            miniContext[miniEvent].funcObj.funcs
+                .push(standartFunc(handler)); /* handler.bind(miniContext)*/
+        }
+
+        return miniContext;
+    }
 
     return {
 
@@ -36,10 +102,12 @@ function getEmitter() {
             if (students.indexOf(context) === -1) {
                 students.push(context);
             }
-            context[event] = handler.bind(context);
+            eventNameSpace(event, context, handler);
 
             return this;
         },
+
+        offRegExp: /(.*)\.(\w+)$/,
 
         /**
          * Отписаться от события
@@ -48,7 +116,14 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context) {
-            delete context[event];
+            var lastEventSearch = this.offRegExp.exec(event);
+            if (lastEventSearch) {
+                var lEvent = lastEvent(context, lastEventSearch[1]);
+                var property = lastEventSearch[2];
+                delete lEvent[property];
+            } else {
+                delete context[event];
+            }
 
             return this;
         },
@@ -62,10 +137,10 @@ function getEmitter() {
             if (event === 'end') {
                 return this;
             }
-            var splittedEvent = event.split('.');
-            for (var i = 0; i < splittedEvent.length; i++) {
-                var miniEvent = splittedEvent.slice(0, splittedEvent.length - i).join('.');
-                initEvent(students, miniEvent);
+            for (var student in students) {
+                if (students.hasOwnProperty(student)) {
+                    execLastEvent(students[student], event);
+                }
             }
 
             return this;
