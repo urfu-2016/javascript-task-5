@@ -83,7 +83,7 @@ function getEmitter() {
             miniContext = miniContext[miniEvent];
         } else {
             miniContext[miniEvent].funcObj.funcs
-                .push(standartFunc(handler)); /* handler.bind(miniContext)*/
+                .push(handler); /* handler.bind(miniContext)*/
         }
 
         return miniContext;
