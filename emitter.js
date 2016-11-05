@@ -93,7 +93,21 @@ Object.defineProperties(LectureEvent.prototype, {
             }
         }
     },
+    _deepDisable: {
+        value: function (events) {
+            for (var key in events) {
+                if (!events[key]) {
 
+                    return;
+                }
+                events[key].forEach(function (event) {
+                    event._function = false;
+                });
+                this._deepDisable(events[key]._subEvents);
+            }
+        }
+
+    },
     removeEvent: {
         value: function (name, object) {
             if (object !== this._object && this._object !== undefined) {
@@ -101,18 +115,15 @@ Object.defineProperties(LectureEvent.prototype, {
                 return;
             }
             var splitted = name.split('.');
-            if (splitted.length > 1) {
+            if (splitted.length > 0 && splitted[0] !== '') {
                 name = splitted.slice(1, splitted.length).join('.');
                 var subEvents = this._subEvents[splitted[0]];
                 subEvents.forEach(function (subEvent) {
                     subEvent.removeEvent(name, object);
                 });
             } else {
-                this._subEvents[name].forEach(function (subEvent) {
-                    if (subEvent._object === object) {
-                        subEvent._function = undefined;
-                    }
-                });
+                this._function = undefined;
+                this._deepDisable(this._subEvents);
             }
         }
     },
