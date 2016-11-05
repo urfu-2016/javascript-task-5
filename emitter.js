@@ -13,7 +13,7 @@ module.exports = getEmitter;
  */
 function shouldCallHandler(handler) {
     return handler.callsCount < handler.maxCallsCount &&
-        handler.callsCount % handler.callFrequency === 0;
+        !(handler.callsCount % handler.callFrequency);
 }
 
 /**
@@ -33,7 +33,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            handler.boundThis = context;
+            handler.context = context;
             handler.callsCount = 0;
             handler.maxCallsCount = handler.maxCallsCount > 0 ? handler.maxCallsCount : Infinity;
             handler.callFrequency = handler.callFrequency > 0 ? handler.callFrequency : 1;
@@ -59,12 +59,10 @@ function getEmitter() {
                         [undefined, '.'].indexOf(key[event.length]) !== -1;
                 })
                 .forEach(function (key) {
-                    var handlers = eventHandlers[key];
-                    for (var i = 0; i < handlers.length; i++) {
-                        if (handlers[i].boundThis === context) {
-                            handlers.splice(i, 1);
-                        }
-                    }
+                    eventHandlers[key] = eventHandlers[key]
+                        .filter(function (handler) {
+                            return handler.context !== context;
+                        });
                 });
 
             return this;
@@ -76,19 +74,18 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            while (event) {
+            for (; event; event = event.substring(0, event.lastIndexOf('.'))) {
                 if (eventHandlers[event]) {
                     eventHandlers[event]
                         .filter(shouldCallHandler)
                         .forEach(function (handler) {
-                            handler.call(handler.boundThis);
+                            handler.call(handler.context);
                         });
                     eventHandlers[event]
                         .forEach(function (handler) {
                             handler.callsCount++;
                         });
                 }
-                event = event.substring(0, event.lastIndexOf('.'));
             }
 
             return this;
