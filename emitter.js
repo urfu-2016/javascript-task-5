@@ -28,7 +28,8 @@ function getEmitter() {
 
         off: function (event, context) {
             Object.keys(events).forEach(function (key) {
-                if (key.indexOf(event) === 0) {
+                if (event === key.split('.').slice(0, (event.split('.').length))
+                        .join('.') || key.indexOf(event) === 0) {
                     events[key] = events[key].filter(function (student) {
                         return student.context !== context;
                     });
