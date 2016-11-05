@@ -86,7 +86,7 @@ function getEmitter() {
                     eventSubscribers[e].forEach(function (subscriber) {
                         if (subscriber.count < subscriber.several &&
                             subscriber.count % subscriber.through === 0) {
-                            subscriber.handler.bind(subscriber.context)();
+                            subscriber.handler.call(subscriber.context);
                         }
                         subscriber.count++;
                     });
