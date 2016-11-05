@@ -7,6 +7,10 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+/**
+ * @param {Funcation} handler
+ * @returns {Boolean}
+ */
 function shouldCallHandler(handler) {
     return handler.count < handler.times && handler.count % handler.frequency === 0;
 }
