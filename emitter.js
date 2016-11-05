@@ -30,10 +30,10 @@ function getAllParrentNamespaces(fullEventName) {
     });
 }
 
-function isNeedToExec(event, countOfExecutions) {
+function isNeedToExec(event) {
     return (!event.severalParam && !event.throughParam) ||
-        event.severalParam > countOfExecutions ||
-        countOfExecutions % event.throughParam === 0;
+        event.severalParam > event.countOfCalls ||
+        event.countOfCalls % event.throughParam === 0;
 }
 
 /**
@@ -43,14 +43,14 @@ function isNeedToExec(event, countOfExecutions) {
 function getEmitter() {
     return {
         events: {},
-        eventCounters: {},
 
         createEvent: function (eventName, context, handler) {
             handler = handler.bind(context);
             var event = {
                 'eventName': eventName,
                 'context': context,
-                'function': handler
+                'function': handler,
+                'countOfCalls': 0
             };
             if (this.events[eventName] === undefined) {
                 this.events[eventName] = [];
@@ -58,15 +58,6 @@ function getEmitter() {
             this.events[eventName].push(event);
 
             return event;
-        },
-
-        countEventCall: function (fullEventName) {
-            getAllParrentNamespaces(fullEventName).forEach(function (eventName) {
-                if (this.eventCounters[eventName] === undefined) {
-                    this.eventCounters[eventName] = -1;
-                }
-                this.eventCounters[eventName]++;
-            }, this);
         },
 
         /**
@@ -104,13 +95,12 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (eventName) {
-            this.countEventCall(eventName);
             getHandlers(this.events, eventName)
-                .filter(function (event) {
-                    return isNeedToExec(event, this.eventCounters[event.eventName]);
-                }, this)
-                .forEach(function (handler) {
-                    handler.function();
+                .forEach(function (event) {
+                    if (isNeedToExec(event)) {
+                        event.function();
+                    }
+                    event.countOfCalls++;
                 });
 
             return this;
