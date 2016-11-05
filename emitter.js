@@ -55,11 +55,11 @@ function getEmitter() {
             divideEvents.forEach(function () {
                 studentEvents.forEach(function (studentEvent) {
                     if (studentEvent.nameEvent === fullEvent) {
-                        studentEvent.thisCount++;
-                        studentEvent.thisFrequency++;
                         if (studentEvent.perform) {
                             studentEvent.handler.call(studentEvent.context);
                         }
+                        studentEvent.thisCount++;
+                        studentEvent.thisFrequency++;
                     }
                 });
 
@@ -115,12 +115,12 @@ function createSubscription(event, context, handler) {
     return {
         get perform() {
             var correctFriquency = (this.thisFrequency) % this.mustFrequency === 0;
-            var correctCount = this.maxCount >= this.thisCount;
+            var correctCount = this.maxCount > this.thisCount;
 
             return correctFriquency && correctCount;
         },
 
-        thisFrequency: 1,
+        thisFrequency: 0,
         mustFrequency: 1,
         thisCount: 0,
         maxCount: Infinity,
