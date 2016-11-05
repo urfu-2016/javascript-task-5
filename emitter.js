@@ -30,6 +30,12 @@ function getAllParrentNamespaces(fullEventName) {
     });
 }
 
+function isNeedToExec(event, countOfExecutions) {
+    return (!event.severalParam && !event.throughParam) ||
+        event.severalParam > countOfExecutions ||
+        countOfExecutions % event.throughParam === 0;
+}
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
@@ -38,6 +44,7 @@ function getEmitter() {
     return {
         events: {},
         eventCounters: {},
+
         createEvent: function (eventName, context, handler) {
             handler = handler.bind(context);
             var event = {
@@ -93,16 +100,14 @@ function getEmitter() {
 
         /**
          * Уведомить о событии
-         * @param {String} event
+         * @param {String} eventName
          * @returns {Object}
          */
-        emit: function (event) {
-            this.countEventCall(event);
-            getHandlers(this.events, event)
-                .filter(function (handler) {
-                    return (!handler.severalParam && !handler.throughParam) ||
-                        handler.severalParam > this.eventCounters[handler.eventName] ||
-                        this.eventCounters[handler.eventName] % handler.throughParam === 0;
+        emit: function (eventName) {
+            this.countEventCall(eventName);
+            getHandlers(this.events, eventName)
+                .filter(function (event) {
+                    return isNeedToExec(event, this.eventCounters[event.eventName]);
                 }, this)
                 .forEach(function (handler) {
                     handler.function();
