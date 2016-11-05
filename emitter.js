@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 var LectureEvent = function (name, object, func) {
@@ -26,12 +26,10 @@ Object.defineProperties(LectureEvent.prototype, {
         value: function (func, object) {
             if (this._counter === undefined) {
                 func(object);
-
                 return;
             }
             if (this._isSeveral && this._counter > 0) {
                 func(object);
-
                 this._counter -= 1;
             }
             if (this._isThrough) {
@@ -41,9 +39,7 @@ Object.defineProperties(LectureEvent.prototype, {
                 } else {
                     this._counter -= 1;
                 }
-
             }
-
         }
     },
     emit: {
@@ -189,10 +185,10 @@ function getEmitter() {
          */
         off: function (event, context) {
             this._eventHandler.removeEvent(event, context);
-            this._events[event] = this._events[event].filter(function (ev) {
+            // this._events[event] = this._events[event].filter(function (ev) {
 
-                return context !== ev.object;
-            });
+            //     return context !== ev.object;
+            // });
 
             return this;
         },
