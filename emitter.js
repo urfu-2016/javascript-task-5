@@ -4,33 +4,29 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
-var EVENTS = {};
+function getHandlers(events, eventName) {
+    var namespaces = getAllParrentNamespaces(eventName);
+    namespaces.reverse();
 
-function createEvent(context, handler) {
-    handler = handler.bind(context);
-
-    return {
-        'context': context,
-        'function': handler
-    };
+    return namespaces.reduce(function (acc, namespace) {
+        return acc.concat(events[namespace] || []);
+    }, []);
 }
 
-function getHandlers(event) {
-    var result = [];
-    var namespaces = event.split('.');
-    for (var i = namespaces.length; i > 0; i--) {
-        result = result.concat(EVENTS[namespaces.slice(0, i).join('.')] || []);
-    }
-
-    return result;
+function getAllSubNamespaces(events, prefix) {
+    return Object.keys(events).filter(function (eventName) {
+        return eventName.startsWith(prefix);
+    });
 }
 
-function getAllSubNamespaces(prefix) {
-    return Object.keys(EVENTS).filter(function (event) {
-        return event.startsWith(prefix);
+function getAllParrentNamespaces(fullEventName) {
+    var eventNameParts = fullEventName.split('.');
+
+    return eventNameParts.map(function (_, index) {
+        return eventNameParts.slice(0, index + 1).join('.');
     });
 }
 
@@ -40,19 +36,41 @@ function getAllSubNamespaces(prefix) {
  */
 function getEmitter() {
     return {
+        events: {},
+        eventCounters: {},
+        createEvent: function (eventName, context, handler) {
+            handler = handler.bind(context);
+            var event = {
+                'eventName': eventName,
+                'context': context,
+                'function': handler
+            };
+            if (this.events[eventName] === undefined) {
+                this.events[eventName] = [];
+            }
+            this.events[eventName].push(event);
+
+            return event;
+        },
+
+        countEventCall: function (fullEventName) {
+            getAllParrentNamespaces(fullEventName).forEach(function (eventName) {
+                if (this.eventCounters[eventName] === undefined) {
+                    this.eventCounters[eventName] = -1;
+                }
+                this.eventCounters[eventName]++;
+            }, this);
+        },
 
         /**
          * Подписаться на событие
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          * @param {Function} handler
          * @returns {Object}
          */
-        on: function (event, context, handler) {
-            if (EVENTS[event] === undefined) {
-                EVENTS[event] = [];
-            }
-            EVENTS[event].push(createEvent(context, handler));
+        on: function (eventName, context, handler) {
+            this.createEvent(eventName, context, handler);
 
             return this;
         },
@@ -64,11 +82,11 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (eventPrefix, context) {
-            getAllSubNamespaces(eventPrefix).forEach(function (event) {
-                EVENTS[event] = EVENTS[event].filter(function (handler) {
+            getAllSubNamespaces(this.events, eventPrefix).forEach(function (event) {
+                this.events[event] = this.events[event].filter(function (handler) {
                     return handler.context !== context;
                 });
-            });
+            }, this);
 
             return this;
         },
@@ -79,9 +97,16 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            getHandlers(event).forEach(function (handler) {
-                handler.function();
-            });
+            this.countEventCall(event);
+            getHandlers(this.events, event)
+                .filter(function (handler) {
+                    return (!handler.severalParam && !handler.throughParam) ||
+                        handler.severalParam > this.eventCounters[handler.eventName] ||
+                        this.eventCounters[handler.eventName] % handler.throughParam === 0;
+                }, this)
+                .forEach(function (handler) {
+                    handler.function();
+                });
 
             return this;
         },
@@ -89,14 +114,15 @@ function getEmitter() {
         /**
          * Подписаться на событие с ограничением по количеству полученных уведомлений
          * @star
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
          * @returns {Object}
          */
-        several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+        several: function (eventName, context, handler, times) {
+            var event = this.createEvent(eventName, context, handler);
+            event.severalParam = times;
 
             return this;
         },
@@ -104,14 +130,15 @@ function getEmitter() {
         /**
          * Подписаться на событие с ограничением по частоте получения уведомлений
          * @star
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
          * @returns {Object}
          */
-        through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+        through: function (eventName, context, handler, frequency) {
+            var event = this.createEvent(eventName, context, handler);
+            event.throughParam = frequency;
 
             return this;
         }
