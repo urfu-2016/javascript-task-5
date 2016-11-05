@@ -81,7 +81,6 @@ function getEmitter() {
                 }
                 this._events[currEvent].forEach(function (item) {
                     item.handler();
-                    console.log(item.context);
                 });
             }
 
