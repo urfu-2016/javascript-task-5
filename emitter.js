@@ -12,7 +12,8 @@ module.exports = getEmitter;
  * @returns {Boolean}
  */
 function shouldCallHandler(handler) {
-    return handler.count < handler.times && handler.count % handler.frequency === 0;
+    return handler.callsCount < handler.maxCallsCount &&
+        handler.callsCount % handler.callFrequency === 0;
 }
 
 /**
@@ -33,9 +34,9 @@ function getEmitter() {
          */
         on: function (event, context, handler) {
             handler.boundThis = context;
-            handler.count = 0;
-            handler.times = handler.times > 0 ? handler.times : Infinity;
-            handler.frequency = handler.frequency > 0 ? handler.frequency : 1;
+            handler.callsCount = 0;
+            handler.maxCallsCount = handler.maxCallsCount > 0 ? handler.maxCallsCount : Infinity;
+            handler.callFrequency = handler.callFrequency > 0 ? handler.callFrequency : 1;
 
             if (!eventHandlers[event]) {
                 eventHandlers[event] = [];
@@ -84,7 +85,7 @@ function getEmitter() {
                         });
                     eventHandlers[event]
                         .forEach(function (handler) {
-                            handler.count++;
+                            handler.callsCount++;
                         });
                 }
                 event = event.substring(0, event.lastIndexOf('.'));
@@ -99,11 +100,11 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
+         * @param {Number} maxCallsCount – сколько раз получить уведомление
          * @returns {Object}
          */
-        several: function (event, context, handler, times) {
-            handler.times = times;
+        several: function (event, context, handler, maxCallsCount) {
+            handler.maxCallsCount = maxCallsCount;
 
             return this.on(event, context, handler);
         },
@@ -114,11 +115,11 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
+         * @param {Number} callFrequency – как часто уведомлять
          * @returns {Object}
          */
-        through: function (event, context, handler, frequency) {
-            handler.frequency = frequency;
+        through: function (event, context, handler, callFrequency) {
+            handler.callFrequency = callFrequency;
 
             return this.on(event, context, handler);
         }
