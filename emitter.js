@@ -81,16 +81,17 @@ function getEmitter() {
                 return acc;
             }, []);
 
-            events.reverse().forEach(function (e) {
-                if (eventSubscribers[e]) {
-                    eventSubscribers[e].forEach(function (subscriber) {
-                        if (subscriber.count < subscriber.times &&
-                            subscriber.count % subscriber.frequency === 0) {
-                            subscriber.handler.call(subscriber.context);
-                        }
-                        subscriber.count++;
-                    });
-                }
+            events.reverse().filter(function (e) {
+                return eventSubscribers[e];
+            })
+            .forEach(function (e) {
+                eventSubscribers[e].forEach(function (subscriber) {
+                    if (subscriber.count < subscriber.times &&
+                        subscriber.count % subscriber.frequency === 0) {
+                        subscriber.handler.call(subscriber.context);
+                    }
+                    subscriber.count++;
+                });
             });
 
             return this;
