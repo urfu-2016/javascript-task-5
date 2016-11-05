@@ -34,12 +34,12 @@ function getEmitter() {
          * @param {Object} context
          */
         off: function (event, context) {
-            studentEvents = studentEvents.slice().filter(function (element) {
-                var notEqualElement = element.nameEvent.indexOf(event) !== 0;
+            studentEvents = studentEvents.filter(function (element) {
+                var notEqualElement = element.nameEvent !== event;
                 var notEndPoint = element.nameEvent.indexOf(event + '.') !== 0;
                 var notEqualContext = element.context !== context;
 
-                return notEqualContext || (notEqualElement && notEndPoint);
+                return notEqualContext || notEqualElement && notEndPoint;
             });
 
             return this;
@@ -56,7 +56,7 @@ function getEmitter() {
                 studentEvents.forEach(function (studentEvent) {
                     if (studentEvent.nameEvent === fullEvent) {
                         studentEvent.thisCount++;
-                        studentEvent.thisFriquency++;
+                        studentEvent.thisFrequency++;
                         if (studentEvent.perform) {
                             studentEvent.handler.call(studentEvent.context);
                         }
@@ -102,7 +102,7 @@ function getEmitter() {
                 this.on(event, context, handler);
             } else {
                 var subscription = createSubscription(event, context, handler);
-                subscription.mustFriquency = frequency;
+                subscription.mustFrequency = frequency;
                 studentEvents.push(subscription);
             }
 
@@ -114,16 +114,16 @@ function getEmitter() {
 function createSubscription(event, context, handler) {
     return {
         get perform() {
-            var condition = (this.thisFriquency - 1) % this.mustFriquency === 0;
-            condition = condition && this.maxCount >= this.thisCount;
+            var correctFriquency = (this.thisFrequency) % this.mustFrequency === 0;
+            var correctCount = this.maxCount >= this.thisCount;
 
-            return condition;
+            return correctFriquency && correctCount;
         },
 
-        thisFriquency: 0,
-        mustFriquency: 1,
+        thisFrequency: 1,
+        mustFrequency: 1,
         thisCount: 0,
-        maxCount: Number.MAX_VALUE,
+        maxCount: Infinity,
         nameEvent: event,
         context: context,
         handler: handler
@@ -131,7 +131,7 @@ function createSubscription(event, context, handler) {
 }
 
 function sliceEvent(event) {
-    var spliteEvents = event.split('.');
+    var splitEvents = event.split('.');
 
-    return spliteEvents.slice(0, spliteEvents.length - 1).join('.');
+    return splitEvents.slice(0, -1).join('.');
 }
