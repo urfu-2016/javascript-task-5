@@ -49,7 +49,7 @@ function getEmitter() {
             Object.keys(eventHandlers)
                 .filter(function (key) {
                     return key.indexOf(event) === 0 &&
-                        ['', '.'].indexOf(key.substring(event.length, event.length)) === 0;
+                        ['', '.'].indexOf(key.substring(event.length, event.length)) !== -1;
                 })
                 .forEach(function (key) {
                     var handlers = eventHandlers[key];
