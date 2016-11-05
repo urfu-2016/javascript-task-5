@@ -26,6 +26,7 @@ Object.defineProperties(LectureEvent.prototype, {
         value: function (func, object) {
             if (this._counter === undefined) {
                 func(object);
+
                 return;
             }
             if (this._isSeveral && this._counter > 0) {
