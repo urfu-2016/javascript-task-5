@@ -14,16 +14,16 @@ module.exports = getEmitter;
 function getEmitter() {
     var eventSubscribers = {};
 
-    function getEventListener(context, handler, several, through) {
-        several = several > 0 ? several : Infinity;
-        through = through > 0 ? through : 1;
+    function getEventListener(context, handler, times, frequency) {
+        times = times > 0 ? times : Infinity;
+        frequency = frequency > 0 ? frequency : 1;
 
         return {
             context: context,
             handler: handler,
             count: 0,
-            several: several,
-            through: through
+            times: times,
+            frequency: frequency
         };
     }
 
@@ -74,8 +74,8 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            var events = event.split('.').reduce(function (acc, val) {
-                var eventWithNamespace = acc.length ? acc[acc.length - 1] + '.' + val : val;
+            var events = event.split('.').reduce(function (acc, value) {
+                var eventWithNamespace = acc.length ? acc[acc.length - 1] + '.' + value : value;
                 acc.push(eventWithNamespace);
 
                 return acc;
@@ -84,8 +84,8 @@ function getEmitter() {
             events.reverse().forEach(function (e) {
                 if (eventSubscribers[e]) {
                     eventSubscribers[e].forEach(function (subscriber) {
-                        if (subscriber.count < subscriber.several &&
-                            subscriber.count % subscriber.through === 0) {
+                        if (subscriber.count < subscriber.times &&
+                            subscriber.count % subscriber.frequency === 0) {
                             subscriber.handler.call(subscriber.context);
                         }
                         subscriber.count++;
