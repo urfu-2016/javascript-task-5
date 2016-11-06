@@ -66,7 +66,7 @@ function getEmitter() {
          */
         off: function (event, context) {
             for (var key in this._events) {
-                if (key.match(event + '.*')) {
+                if (key.match(event + '?..*')) {
                     this._events[key].handlers = this._events[key].handlers
                         .filter(function (handler) {
                             return handler.context !== context;
