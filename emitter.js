@@ -30,8 +30,9 @@ function getEmitter() {
         },
 
         off: function (event, context) {
+            var deepCount = event.split('.').length;
             Object.keys(events).forEach(function (key) {
-                if (event === key.split('.').slice(0, (event.split('.').length))
+                if (event === key.split('.').slice(0, deepCount)
                         .join('.')) {
                     events[key] = events[key].filter(function (student) {
                         return student.context !== context;
@@ -59,22 +60,17 @@ function getEmitter() {
 
                 return this;
             }
+            var newEvetn = {
+                context: context,
+                handler: handler,
+                times: times,
+                frequency: 0,
+                frequencyCounter: 0
+            };
             if (events.hasOwnProperty(event)) {
-                events[event].push({
-                    context: context,
-                    handler: handler,
-                    times: times,
-                    frequency: 0,
-                    frequencyCounter: 0
-                });
+                events[event].push(newEvetn);
             } else {
-                events[event] = [{
-                    context: context,
-                    handler: handler,
-                    times: times,
-                    frequency: 0,
-                    frequencyCounter: 0
-                }];
+                events[event] = [newEvetn];
             }
 
             return this;
@@ -87,22 +83,17 @@ function getEmitter() {
 
                 return this;
             }
+            var newEvent = {
+                context: context,
+                handler: handler,
+                times: Infinity,
+                frequency: frequency,
+                frequencyCounter: 0
+            };
             if (events.hasOwnProperty(event)) {
-                events[event].push({
-                    context: context,
-                    handler: handler,
-                    times: Infinity,
-                    frequency: frequency,
-                    frequencyCounter: 0
-                });
+                events[event].push(newEvent);
             } else {
-                events[event] = [{
-                    context: context,
-                    handler: handler,
-                    times: Infinity,
-                    frequency: frequency,
-                    frequencyCounter: 0
-                }];
+                events[event] = [newEvent];
             }
 
             return this;
@@ -111,21 +102,16 @@ function getEmitter() {
 }
 
 function addEvent(event, context, handler, events) {
+    var newEvent = {
+        context: context,
+        handler: handler,
+        times: Infinity,
+        frequency: 0,
+        frequencyCounter: 0
+    };
     if (events.hasOwnProperty(event)) {
-        events[event].push({
-            context: context,
-            handler: handler,
-            times: Infinity,
-            frequency: 0,
-            frequencyCounter: 0
-        });
+        events[event].push(newEvent);
     } else {
-        events[event] = [{
-            context: context,
-            handler: handler,
-            times: Infinity,
-            frequency: 0,
-            frequencyCounter: 0
-        }];
+        events[event] = [newEvent];
     }
 }
