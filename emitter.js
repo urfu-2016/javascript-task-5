@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 
@@ -45,12 +45,14 @@ function getEmitter() {
 
         _addEvent: function (eventName, context, handler) {
             var event = this._createEvent(eventName);
-            event.handlers.push({
+            var handlerWraper = {
                 'context': context,
-                'function': handler.bind(context)
-            });
+                'function': handler.bind(context),
+                'counter': 0
+            };
+            event.handlers.push(handlerWraper);
 
-            return event;
+            return handlerWraper;
         },
 
         /**
@@ -83,6 +85,24 @@ function getEmitter() {
             return this;
         },
 
+        _canEmit: function (handler) {
+            if (handler.isSeveral) {
+                if (handler.counter >= handler.times) {
+
+                    return false;
+                }
+            }
+            if (handler.isThrough) {
+                if (handler.counter % handler.freq !== 0) {
+
+                    return false;
+                }
+            }
+
+            return true;
+        },
+
+
         /**
          * Уведомить о событии
          * @param {String} eventName
@@ -91,8 +111,11 @@ function getEmitter() {
         emit: function (eventName) {
             this._getUpperNameSpaces(eventName).forEach(function (upperEventName) {
                 this._events[upperEventName].handlers.forEach(function (handler) {
-                    handler.function(handler.context);
-                });
+                    if (this._canEmit(handler)) {
+                        handler.function(handler.context);
+                    }
+                    handler.counter += 1;
+                }.bind(this));
             }.bind(this));
 
             return this;
@@ -101,14 +124,16 @@ function getEmitter() {
         /**
          * Подписаться на событие с ограничением по количеству полученных уведомлений
          * @star
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
          * @returns {Emmitter} this
          */
-        several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+        several: function (eventName, context, handler, times) {
+            var handlerWraper = this._addEvent(eventName, context, handler);
+            handlerWraper.isSeveral = true;
+            handlerWraper.times = times;
 
             return this;
         },
@@ -116,14 +141,16 @@ function getEmitter() {
         /**
          * Подписаться на событие с ограничением по частоте получения уведомлений
          * @star
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
          * @returns {Emmitter} this
          */
-        through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+        through: function (eventName, context, handler, frequency) {
+            var handlerWraper = this._addEvent(eventName, context, handler);
+            handlerWraper.isThrough = true;
+            handlerWraper.freq = frequency;
 
             return this;
         }
