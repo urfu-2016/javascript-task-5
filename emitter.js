@@ -50,8 +50,7 @@ Object.defineProperties(LectureEvent.prototype, {
             if (this._function) {
                 this._call(this._function, this._object);
             }
-            var parents = this._parents.slice();
-            parents.reverse().forEach(function (parent) {
+            this._parents.forEach(function (parent) {
                 parent.emit();
             });
         }
