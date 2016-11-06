@@ -12,11 +12,11 @@ function SubscribeHandler(arg) {
         event: arg.event,
         context: arg.context,
         contextHandler: arg.handler,
-        maxCount: arg.times || -1,
+        maxCount: arg.times || Number.POSITIVE_INFINITY,
         frequency: arg.frequency || 1,
         count: 0,
         processEvent: function () {
-            var keepDoing = this.maxCount === -1 || (this.maxCount - this.count) > 0;
+            var keepDoing = (this.maxCount - this.count) > 0;
             if (this.count % this.frequency === 0 && keepDoing) {
                 this.contextHandler.call(this.context);
             }
@@ -63,6 +63,7 @@ function handleEvent(event) {
 }
 
 function multipleAddSubscribe(event, context, handler, times) {
+    times = times > 0 ? times : undefined;
     var newSubscribe = new SubscribeHandler(
         {
             event: event,
@@ -75,6 +76,7 @@ function multipleAddSubscribe(event, context, handler, times) {
 }
 
 function addFrequentlySubscribe(event, context, handler, frequency) {
+    frequency = frequency > 0 ? frequency : undefined;
     var newSubscribe = new SubscribeHandler(
         {
             event: event,
