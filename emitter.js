@@ -13,6 +13,7 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     var subscriberEvents = {};
+    var count = 0;
 
     return {
 
@@ -26,10 +27,13 @@ function getEmitter() {
         on: function (event, context, handler) {
             // console.info(event, context, handler);
             if (!subscriberEvents.hasOwnProperty(event)) {
-                subscriberEvents[event] = [];
+                subscriberEvents[event] = {
+                    subscribers: [],
+                    queue: Object.keys(subscriberEvents).length + 1
+                };
             }
 
-            subscriberEvents[event].push({
+            subscriberEvents[event].subscribers.push({
                 context: context,
                 handler: handler
             });
@@ -51,7 +55,7 @@ function getEmitter() {
                 var searchedEvents = [event];
                 var subscriberIndex = -1;
 
-                subscriberEvents[event].forEach(function (subscriber, index) {
+                subscriberEvents[event].subscribers.forEach(function (subscriber, index) {
                     if (subscriber.context === context) {
                         subscriberIndex = index;
                     }
@@ -63,7 +67,7 @@ function getEmitter() {
                     }
                 });
                 searchedEvents.forEach(function (searchEvent) {
-                    subscriberEvents[searchEvent].splice(subscriberIndex, 1);
+                    subscriberEvents[searchEvent].subscribers.splice(subscriberIndex, 1);
                 });
             }
 
@@ -81,8 +85,11 @@ function getEmitter() {
 
             for (var i = nameEvents.length; i > -1; i--) {
                 var nameEvent = nameEvents.slice(0, i).join('.');
-                if (subscriberEvents.hasOwnProperty(nameEvent)) {
-                    performEvents(subscriberEvents[nameEvent]);
+
+                if (subscriberEvents.hasOwnProperty(nameEvent) &&
+                    subscriberEvents[nameEvent].queue - count === 1) {
+                    count = subscriberEvents[nameEvent].queue;
+                    performEvents(subscriberEvents[nameEvent].subscribers);
                 }
             }
 
