@@ -13,27 +13,16 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     var subscriberEvents = {};
-    var count = 0;
 
     return {
 
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @returns {Object} this
-         */
         on: function (event, context, handler) {
             // console.info(event, context, handler);
             if (!subscriberEvents.hasOwnProperty(event)) {
-                subscriberEvents[event] = {
-                    subscribers: [],
-                    queue: Object.keys(subscriberEvents).length + 1
-                };
+                subscriberEvents[event] = [];
             }
 
-            subscriberEvents[event].subscribers.push({
+            subscriberEvents[event].push({
                 context: context,
                 handler: handler
             });
@@ -41,12 +30,6 @@ function getEmitter() {
             return this;
         },
 
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         * @returns {Object} this
-         */
         off: function (event, context) {
             // console.info(event, context);
 
@@ -55,7 +38,7 @@ function getEmitter() {
                 var searchedEvents = [event];
                 var subscriberIndex = -1;
 
-                subscriberEvents[event].subscribers.forEach(function (subscriber, index) {
+                subscriberEvents[event].forEach(function (subscriber, index) {
                     if (subscriber.context === context) {
                         subscriberIndex = index;
                     }
@@ -67,29 +50,21 @@ function getEmitter() {
                     }
                 });
                 searchedEvents.forEach(function (searchEvent) {
-                    subscriberEvents[searchEvent].subscribers.splice(subscriberIndex, 1);
+                    subscriberEvents[searchEvent].splice(subscriberIndex, 1);
                 });
             }
 
             return this;
         },
 
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         * @returns {Object} this
-         */
         emit: function (event) {
             // console.info(event);
             var nameEvents = event.split('.');
 
             for (var i = nameEvents.length; i > -1; i--) {
                 var nameEvent = nameEvents.slice(0, i).join('.');
-
-                if (subscriberEvents.hasOwnProperty(nameEvent) &&
-                    subscriberEvents[nameEvent].queue - count < 2) {
-                    count = subscriberEvents[nameEvent].queue;
-                    performEvents(subscriberEvents[nameEvent].subscribers);
+                if (subscriberEvents.hasOwnProperty(nameEvent)) {
+                    performEvents(subscriberEvents[nameEvent]);
                 }
             }
 
