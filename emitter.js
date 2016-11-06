@@ -18,11 +18,11 @@ function getEmitter() {
         _events: {},
         _getSubNameSpaces: function (event) {
             return Object.keys(this._events).filter(function (eventName) {
-                return eventName === event || eventName.match("^"+event + '[.].*');
+                return eventName === event || eventName.match('^' + event + '[.].*');
             });
         },
 
-        _getUpperNameSpaces: function(event) {
+        _getUpperNameSpaces: function (event) {
             var events = [];
             while (event.split('.').length > 0 && event !== '') {
                 if (event in this._events) {
@@ -31,6 +31,7 @@ function getEmitter() {
                 event = event.split('.').slice(0, -1)
                 .join('.');
             }
+
             return events;
         },
 
@@ -38,10 +39,11 @@ function getEmitter() {
             if (!(eventName in this._events)) {
                 this._events[eventName] = { 'handlers': [], 'name': eventName };
             }
+
             return this._events[eventName];
         },
 
-        _addEvent: function (eventName, context, handler) {     
+        _addEvent: function (eventName, context, handler) {
             var event = this._createEvent(eventName);
             event.handlers.push({
                 'context': context,
@@ -66,12 +68,11 @@ function getEmitter() {
 
         /**
          * Отписаться от события
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          * @returns {Emmitter} this
          */
         off: function (eventName, context) {
-            console.log(this._events);
             this._getSubNameSpaces(eventName).forEach(function (subEventName) {
                 this._events[subEventName].handlers = this._events[subEventName].handlers
                 .filter(function (handler) {
@@ -84,7 +85,7 @@ function getEmitter() {
 
         /**
          * Уведомить о событии
-         * @param {String} event
+         * @param {String} eventName
          * @returns {Emmitter} this
          */
         emit: function (eventName) {
