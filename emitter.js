@@ -46,7 +46,6 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
             eventList.push({
                 event: event.split('.'),
                 context: context,
@@ -64,7 +63,6 @@ function getEmitter() {
          */
         off: function (event, context) {
             event = event.split('.');
-            console.info(event, context);
             eventList = eventList.filter(function (item) {
                 return item.context !== context || !hasSubsting(item.event, event);
             });
@@ -97,7 +95,6 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
             var count = 0;
 
             eventList.push({
@@ -122,7 +119,6 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
             var count = 0;
 
             eventList.push({
