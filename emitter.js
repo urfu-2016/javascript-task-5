@@ -50,7 +50,9 @@ function getEmitter() {
                     }
                 });
                 searchedEvents.forEach(function (searchEvent) {
-                    subscriberEvents[searchEvent].splice(subscriberIndex, 1);
+                    if (subscriberIndex !== -1) {
+                        subscriberEvents[searchEvent].splice(subscriberIndex, 1);
+                    }
                 });
             }
 
