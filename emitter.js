@@ -49,11 +49,11 @@ function getEmitter() {
             if (subscriberEvents.hasOwnProperty(event)) {
                 var events = Object.keys(subscriberEvents);
                 var searchedEvents = [event];
-                var subscriberIndexes = [];
+                var subscriberIndexes = -1;
 
                 subscriberEvents[event].forEach(function (subscriber, index) {
                     if (subscriber.context === context) {
-                        subscriberIndexes.push(index);
+                        subscriberIndexes = index;
                     }
                 });
                 events.forEach(function (searchedEvent) {
@@ -66,8 +66,8 @@ function getEmitter() {
                         }
                     }
                 });
-                searchedEvents.forEach(function (searchEvent, i) {
-                    subscriberEvents[searchEvent].splice(subscriberIndexes[i], 1);
+                searchedEvents.forEach(function (searchEvent) {
+                    subscriberEvents[searchEvent].splice(subscriberIndexes, 1);
                 });
             }
 
