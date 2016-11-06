@@ -13,7 +13,7 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     var subscriberEvents = {};
-    var count = 0;
+    // var count = 0;
 
     return {
 
@@ -61,6 +61,7 @@ function getEmitter() {
         emit: function (event) {
             // console.info(event);
             var namesEvent = event.split('.');
+            // var events = Object.keys(subscriberEvents);
 
             for (var i = namesEvent.length; i > -1; i--) {
                 var nameEvent = namesEvent.slice(0, i).join('.');
