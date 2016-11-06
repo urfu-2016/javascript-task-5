@@ -121,9 +121,14 @@ Object.defineProperties(LectureEvent.prototype, {
                     return;
                 }
                 events[key].forEach(function (event) {
-                    this.removeEvent(event.name, context);
-                }.bind(this));
+                    event._handlers = event._handlers.filter(function (handler) {
+
+                        return handler.context !== context;
+                    });
+                    event._deepDisable(event._subEvents, context);
+                });
             }
+
         }
     },
     removeEvent: {
