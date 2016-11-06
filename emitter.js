@@ -67,7 +67,7 @@ function getEmitter() {
                     performEvents(subscriberEvents[nameEvent]);
                 }
             }
-            
+
             return this;
         },
 
