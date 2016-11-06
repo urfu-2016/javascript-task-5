@@ -57,9 +57,13 @@ function getEmitter() {
                     }
                 });
                 events.forEach(function (searchedEvent) {
-                    if (searchedEvent !== event &&
-                        searchedEvent.split('.')[0] === event) {
-                        searchedEvents.push(searchedEvent);
+                    var check = searchedEvent.split('.');
+                    for (var i = 0; i < check.length; i++) {
+                        var nameEvent = check.slice(0, i).join('.');
+                        if (searchedEvent !== event &&
+                            nameEvent === event) {
+                            searchedEvents.push(searchedEvent);
+                        }
                     }
                 });
                 searchedEvents.forEach(function (searchEvent, i) {
