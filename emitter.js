@@ -1,10 +1,11 @@
+
 'use strict';
 
 /**
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 var LectureEvent = function (name) {
@@ -43,6 +44,7 @@ Object.defineProperties(LectureEvent.prototype, {
         value: function () {
             this._handlers.forEach(function (handler) {
                 var func = handler.function;
+                console.info('emit', handler.function.name, handler.context.name);
                 if (func) {
                     this._call(handler);
                 }
@@ -121,8 +123,12 @@ Object.defineProperties(LectureEvent.prototype, {
                     return;
                 }
                 events[key].forEach(function (event) {
-                    this.removeEvent(event.name, context);
-                }.bind(this));
+                    event._handlers = event._handlers.filter(function (handler) {
+
+                        return handler.context !== context;
+                    });
+                    event._deepDisable(event._subEvents, context);
+                });
             }
         }
     },
