@@ -21,7 +21,7 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @returns {Object} this
+         * @returns {Object}
          */
         on: function (event, context, handler) {
             if (!events[event]) {
@@ -40,7 +40,7 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
-         * @returns {Object} this
+         * @returns {Object}
          */
         off: function (event, context) {
             Object.keys(events)
@@ -63,7 +63,7 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
-         * @returns {Object} this
+         * @returns {Object}
          */
         emit: function (event) {
             while (event) {
@@ -85,7 +85,7 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
-         * @returns {Object} this
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
             if (times <= 0) {
@@ -112,7 +112,7 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
-         * @returns {Object} this
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
             if (frequency <= 0) {
