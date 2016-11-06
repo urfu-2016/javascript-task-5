@@ -8,25 +8,13 @@ getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function handle(eventList, event) {
-    console.info('<----------------New Event------------------>');
-    console.info(event);
-    console.info('<------------------Start-------------------->');
-
     eventList.forEach(function (item) {
         if (item.event.toString() === event.toString()) {
-            console.info('before');
-            console.info(item.context);
-
             if (!item.filter || item.filter()) {
                 item.handler.call(item.context);
             }
-
-            console.info('after');
-            console.info(item.context);
-            console.info('----------------------------------------------');
         }
     });
-    console.info('<----------------Event close------------------>');
 }
 
 function hasSubsting(target, string) {
