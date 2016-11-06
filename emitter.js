@@ -106,9 +106,9 @@ Object.defineProperties(LectureEvent.prototype, {
                     return;
                 }
                 events[key].forEach(function (event) {
-                    event._function = false;
-                });
-                this._deepDisable(events[key]._subEvents);
+                    event._function = undefined;
+                    this._deepDisable(event._subEvents);
+                }.bind(this));
             }
         }
 
