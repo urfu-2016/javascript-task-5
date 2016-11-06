@@ -84,12 +84,15 @@ Object.defineProperties(LectureEvent.prototype, {
             }
             var splitted = event.name.split('.');
             if (splitted.length > 1) {
+                if (! this._subEvents[splitted[0]]) {
+                    var emptyEvent = new LectureEvent(splitted[0], this._object);
+                    this.addSubEvent(emptyEvent);
+                }
                 event._name = splitted.slice(1, splitted.length).join('.');
                 var subEvents = this._subEvents[splitted[0]];
                 subEvents.forEach(function (subEvent) {
                     subEvent.addSubEvent(event);
                 });
-
             } else {
                 if (!(event.name in this._subEvents)) {
                     this._subEvents[event.name] = [];
