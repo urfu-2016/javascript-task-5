@@ -18,6 +18,7 @@ var LectureEvent = function (name, object, func) {
     this._isSeveral = false;
     this._isThrough = false;
     this._freq = undefined;
+    this._parents = [];
 };
 
 Object.defineProperties(LectureEvent.prototype, {
@@ -49,24 +50,29 @@ Object.defineProperties(LectureEvent.prototype, {
             if (this._function) {
                 this._call(this._function, this._object);
             }
-            if (this._parent) {
-                this._parent.emit();
-            }
+            var parents = this._parents.slice();
+            parents.reverse().forEach(function (parent) {
+                parent.emit();
+            });
         }
     },
 
     setSeveral: {
         value: function (times) {
-            this._isSeveral = true;
-            this._counter = times;
+            if (times > 0) {
+                this._isSeveral = true;
+                this._counter = times;
+            }
         }
     },
 
     setThrough: {
         value: function (freq) {
-            this._isThrough = true;
-            this._counter = 0;
-            this._freq = freq;
+            if (freq > 0) {
+                this._isThrough = true;
+                this._counter = 0;
+                this._freq = freq;
+            }
         }
     },
 
@@ -89,7 +95,7 @@ Object.defineProperties(LectureEvent.prototype, {
                     this._subEvents[event.name] = [];
                 }
                 this._subEvents[event.name].push(event);
-                event.parent = this;
+                event._parents.push(this);
             }
         }
     },
@@ -131,19 +137,6 @@ Object.defineProperties(LectureEvent.prototype, {
         get: function () {
 
             return this._name;
-        }
-    },
-
-    parent: {
-        get: function () {
-
-            return this._parent;
-        },
-
-        set: function (value) {
-            this._parent = value;
-
-            return this;
         }
     },
 
@@ -196,11 +189,11 @@ function getEmitter() {
          * @returns {Emmitter} this
          */
         off: function (event, context) {
-            this._eventHandler.removeEvent(event, context);
-            // this._events[event] = this._events[event].filter(function (ev) {
+            this._events[event] = this._events[event].filter(function (ev) {
+                ev.removeEvent('', context);
 
-            //     return context !== ev.object;
-            // });
+                return context !== ev.object;
+            });
 
             return this;
         },
