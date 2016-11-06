@@ -21,6 +21,7 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object} this
          */
         on: function (event, context, handler) {
             // console.info(event, context, handler);
@@ -40,6 +41,7 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object} this
          */
         off: function (event, context) {
             // console.info(event, context);
@@ -50,13 +52,13 @@ function getEmitter() {
                 var subscriberIndex = -1;
 
                 subscriberEvents[event].forEach(function (subscriber, index) {
-                    if (subscriber.context == context) {
+                    if (subscriber.context === context) {
                         subscriberIndex = index;
                     }
                 });
                 events.forEach(function (searchedEvent) {
-                    if (searchedEvent !== event
-                    && searchedEvent.split('.')[0] === event) {
+                    if (searchedEvent !== event &&
+                        searchedEvent.split('.')[0] === event) {
                         searchedEvents.push(searchedEvent);
                     }
                 });
@@ -71,6 +73,7 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object} this
          */
         emit: function (event) {
             // console.info(event);
