@@ -64,7 +64,9 @@ function getEmitter() {
 
             for (var i = namesEvent.length; i > -1; i--) {
                 var nameEvent = namesEvent.slice(0, i).join('.');
-                performEvents(subscriberEvents[nameEvent]);
+                if (subscriberEvents.hasOwnProperty(nameEvent)) {
+                    performEvents(subscriberEvents[nameEvent]);
+                }
             }
 
             return this;
