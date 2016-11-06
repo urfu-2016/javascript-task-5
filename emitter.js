@@ -87,7 +87,7 @@ function getEmitter() {
                 var nameEvent = nameEvents.slice(0, i).join('.');
 
                 if (subscriberEvents.hasOwnProperty(nameEvent) &&
-                    subscriberEvents[nameEvent].queue - count === 1) {
+                    subscriberEvents[nameEvent].queue - count < 2) {
                     count = subscriberEvents[nameEvent].queue;
                     performEvents(subscriberEvents[nameEvent].subscribers);
                 }
