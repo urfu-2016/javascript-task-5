@@ -9,10 +9,10 @@ module.exports = getEmitter;
 
 var callEvent = function (student, event) {
     event = student.events[event];
-    event.count++;
-    if (event.count <= event.times && event.count % event.frequency === 0) {
+    if (event.count < event.times && event.count % event.frequency === 0) {
         event.handler.call(student);
     }
+    event.count++;
 };
 
 /**
@@ -39,6 +39,7 @@ function getEmitter() {
             if (!context.hasOwnProperty('events')) {
                 context.events = {};
             }
+            console.info(arguments[4]);
 
             context.events[event] = {
                 handler: handler,
