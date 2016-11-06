@@ -55,8 +55,9 @@ function getEmitter() {
         off: function (event, context) {
             Object.keys(eventHandlers)
                 .filter(function (key) {
-                    return key.indexOf(event) === 0 &&
-                        [undefined, '.'].indexOf(key[event.length]) !== -1;
+                    var correctEventPattern = '^' + event + '(?:\\..+)?$';
+
+                    return Boolean(key.match(correctEventPattern));
                 })
                 .forEach(function (key) {
                     eventHandlers[key] = eventHandlers[key]
