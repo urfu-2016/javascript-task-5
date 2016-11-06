@@ -16,33 +16,39 @@ function getEmitter() {
 
     return {
         _events: {},
-        _insertEvent: function (event) {
-            this._events[event] = {
-                'handlers': []
-            };
+        _getSubNameSpaces: function (event) {
+            return Object.keys(this._events).filter(function (eventName) {
+                return eventName === event || eventName.match("^"+event + '[.].*');
+            });
         },
-        _addEvent: function (event, context, handler) {
-            if (!(event in this._events)) {
-                var eventCopy = event;
-                var eventTmp = event;
-                while (!(eventTmp in this._events) && eventTmp !== '') {
-                    eventTmp = eventTmp.split('.').slice(0, -1)
-                    .join('.');
+
+        _getUpperNameSpaces: function(event) {
+            var events = [];
+            while (event.split('.').length > 0 && event !== '') {
+                if (event in this._events) {
+                    events.push(event);
                 }
-                var tails = eventCopy.replace(event + '.', '').split('.');
-                while (tails.length > 0 && eventTmp !== '') {
-                    eventTmp = eventTmp + '.' + tails.splice(0, 1);
-                    this._insertEvent(eventTmp);
-                }
-                event = eventCopy;
-                this._insertEvent(event);
+                event = event.split('.').slice(0, -1)
+                .join('.');
             }
-            this._events[event].handlers.push({
+            return events;
+        },
+
+        _createEvent: function (eventName) {
+            if (!(eventName in this._events)) {
+                this._events[eventName] = { 'handlers': [], 'name': eventName };
+            }
+            return this._events[eventName];
+        },
+
+        _addEvent: function (eventName, context, handler) {     
+            var event = this._createEvent(eventName);
+            event.handlers.push({
                 'context': context,
                 'function': handler.bind(context)
             });
 
-            return this._events[event];
+            return event;
         },
 
         /**
@@ -64,16 +70,14 @@ function getEmitter() {
          * @param {Object} context
          * @returns {Emmitter} this
          */
-        off: function (event, context) {
-            for (var key in this._events) {
-                if (key.match(event + '[.].*|' + event + '$')) {
-                    this._events[key].handlers = this._events[key].handlers
-                        .filter(function (handler) {
-
-                            return handler.context !== context;
-                        });
-                }
-            }
+        off: function (eventName, context) {
+            console.log(this._events);
+            this._getSubNameSpaces(eventName).forEach(function (subEventName) {
+                this._events[subEventName].handlers = this._events[subEventName].handlers
+                .filter(function (handler) {
+                    return handler.context !== context;
+                });
+            }.bind(this));
 
             return this;
         },
@@ -83,16 +87,12 @@ function getEmitter() {
          * @param {String} event
          * @returns {Emmitter} this
          */
-        emit: function (event) {
-            while (event.split('.').length > 0 && event !== '') {
-                if (event in this._events) {
-                    this._events[event].handlers.forEach(function (handler) {
-                        handler.function (handler.context);
-                    });
-                }
-                event = event.split('.').slice(0, -1)
-                .join('.');
-            }
+        emit: function (eventName) {
+            this._getUpperNameSpaces(eventName).forEach(function (upperEventName) {
+                this._events[upperEventName].handlers.forEach(function (handler) {
+                    handler.function(handler.context);
+                });
+            }.bind(this));
 
             return this;
         },
