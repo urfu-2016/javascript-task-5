@@ -7,8 +7,6 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-var events = {};
-
 function getAllNamespaces(str) {
     var namespacePart = str.split('.');
     var namespaces = [];
@@ -38,7 +36,7 @@ function processExpires(item) {
     return item.frequency === null;
 }
 
-function removeUnusedEvents() {
+function removeUnusedEvents(events) {
     for (var i in events) {
         if (events.hasOwnProperty(i)) {
             events[i] = events[i].filter(function (item) {
@@ -49,7 +47,7 @@ function removeUnusedEvents() {
     }
 }
 
-function filterOneEvent(e, context, event) {
+function filterOneEvent(e, context, event, events) {
     return events[e].filter(function (item) {
         return item.context !== context || getAllNamespaces(e).indexOf(event) === -1;
     });
@@ -61,6 +59,7 @@ function filterOneEvent(e, context, event) {
  */
 function getEmitter() {
     return {
+        events: {},
 
         /**
          * Подписаться на событие
@@ -70,10 +69,10 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (!events[event]) {
-                events[event] = [];
+            if (!this.events[event]) {
+                this.events[event] = [];
             }
-            events[event].push({ context: context, handler: handler,
+            this.events[event].push({ context: context, handler: handler,
                 expires: arguments[3] === undefined ? null : arguments[3],
                 frequency: arguments[4] || null });
 
@@ -88,9 +87,9 @@ function getEmitter() {
          * jshint loop-func:true
          */
         off: function (event, context) {
-            for (var e in events) {
-                if (events.hasOwnProperty(e)) {
-                    events[e] = filterOneEvent(e, context, event);
+            for (var e in this.events) {
+                if (this.events.hasOwnProperty(e)) {
+                    this.events[e] = filterOneEvent(e, context, event, this.events);
                 }
             }
 
@@ -104,15 +103,15 @@ function getEmitter() {
          */
         emit: function (event) {
             getAllNamespaces(event).forEach(function (eventNamespace) {
-                if (events[eventNamespace]) {
-                    events[eventNamespace].forEach(function (item) {
+                if (this.events[eventNamespace]) {
+                    this.events[eventNamespace].forEach(function (item) {
                         if (processExpires(item)) {
                             item.handler.call(item.context);
                         }
                     });
                 }
-            });
-            removeUnusedEvents();
+            }, this);
+            removeUnusedEvents(this.events);
 
             return this;
         },
