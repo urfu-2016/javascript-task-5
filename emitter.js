@@ -13,6 +13,7 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     var subscriberEvents = {};
+    var count = 0;
 
     return {
 
@@ -36,11 +37,11 @@ function getEmitter() {
             if (subscriberEvents.hasOwnProperty(event)) {
                 var events = Object.keys(subscriberEvents);
                 var searchedEvents = [event];
-                var subscriberIndexs = [];
+                var subscriberIndexes = [];
 
                 subscriberEvents[event].forEach(function (subscriber, index) {
                     if (subscriber.context === context) {
-                        subscriberIndexs.push(index);
+                        subscriberIndexes.push(index);
                     }
                 });
                 events.forEach(function (searchedEvent) {
@@ -50,7 +51,7 @@ function getEmitter() {
                     }
                 });
                 searchedEvents.forEach(function (searchEvent, i) {
-                    subscriberEvents[searchEvent].splice(subscriberIndexs[i], 1);
+                    subscriberEvents[searchEvent].splice(subscriberIndexes[i], 1);
                 });
             }
 
@@ -59,13 +60,11 @@ function getEmitter() {
 
         emit: function (event) {
             // console.info(event);
-            var nameEvents = event.split('.');
+            var namesEvent = event.split('.');
 
-            for (var i = nameEvents.length; i > -1; i--) {
-                var nameEvent = nameEvents.slice(0, i).join('.');
-                if (subscriberEvents.hasOwnProperty(nameEvent)) {
-                    performEvents(subscriberEvents[nameEvent]);
-                }
+            for (var i = namesEvent.length; i > -1; i--) {
+                var nameEvent = namesEvent.slice(0, i).join('.');
+                performEvents(subscriberEvents[nameEvent]);
             }
 
             return this;
