@@ -35,11 +35,11 @@ function getEmitter() {
          */
         off: function (event, context) {
             studentEvents = studentEvents.filter(function (element) {
-                var notEqualElement = element.nameEvent !== event;
-                var notEndPoint = element.nameEvent.indexOf(event + '.') !== 0;
-                var notEqualContext = element.context !== context;
+                var isNotEqualElement = element.nameEvent !== event;
+                var isNotEndPoint = element.nameEvent.indexOf(event + '.') !== 0;
+                var isNotEqualContext = element.context !== context;
 
-                return notEqualContext || notEqualElement && notEndPoint;
+                return isNotEqualContext || isNotEqualElement && isNotEndPoint;
             });
 
             return this;
@@ -50,20 +50,19 @@ function getEmitter() {
          * @param {String} event
          */
         emit: function (event) {
-            var divideEvents = event.split('.');
-            var fullEvent = event;
-            divideEvents.forEach(function () {
+            var events = event.split('.');
+            var currentEvent = event;
+            events.forEach(function () {
                 studentEvents.forEach(function (studentEvent) {
-                    if (studentEvent.nameEvent === fullEvent) {
-                        if (studentEvent.perform) {
+                    if (studentEvent.nameEvent === currentEvent) {
+                        if (studentEvent.isMatch()) {
                             studentEvent.handler.call(studentEvent.context);
                         }
                         studentEvent.thisCount++;
-                        studentEvent.thisFrequency++;
                     }
                 });
 
-                fullEvent = sliceEvent(fullEvent);
+                currentEvent = sliceEvent(currentEvent);
             });
 
             return this;
@@ -102,7 +101,7 @@ function getEmitter() {
                 this.on(event, context, handler);
             } else {
                 var subscription = createSubscription(event, context, handler);
-                subscription.mustFrequency = frequency;
+                subscription.thisFrequency = frequency;
                 studentEvents.push(subscription);
             }
 
@@ -113,15 +112,14 @@ function getEmitter() {
 
 function createSubscription(event, context, handler) {
     return {
-        get perform() {
-            var correctFriquency = (this.thisFrequency) % this.mustFrequency === 0;
-            var correctCount = this.maxCount > this.thisCount;
+        isMatch: function () {
+            var isCorrectFriquency = (this.thisCount) % this.thisFrequency === 0;
+            var isCorrectCount = this.maxCount > this.thisCount;
 
-            return correctFriquency && correctCount;
+            return isCorrectFriquency && isCorrectCount;
         },
 
-        thisFrequency: 0,
-        mustFrequency: 1,
+        thisFrequency: 1,
         thisCount: 0,
         maxCount: Infinity,
         nameEvent: event,
