@@ -105,7 +105,7 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
+         * @param {Number} frequency – как часто следует уведомлять
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
