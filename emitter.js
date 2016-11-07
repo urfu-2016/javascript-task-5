@@ -28,10 +28,18 @@ function getEmitter() {
                 events[event] = [];
             }
 
-            events[event].push({
+            var subscription = {
                 student: context,
-                callback: handler
-            });
+                callback: handler,
+                count: 0
+            };
+
+            var params = arguments[3];
+            if (params) {
+                subscription.totalCount = params.totalCount;
+                subscription.frequency = params.frequency;
+            }
+            events[event].push(subscription);
 
             return this;
         },
@@ -44,17 +52,13 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(events)
-                .filter(function (eventName) {
-                    return event === eventName || eventName.indexOf(event + '.') === 0;
+                .filter(function (consideredEvent) {
+                    return event === consideredEvent || consideredEvent.indexOf(event + '.') === 0;
                 })
                 .forEach(function (eventName) {
-                    var consideredEvent = events[eventName];
-                    for (var i = 0; i < consideredEvent.length; i++) {
-                        if (context === consideredEvent[i].student) {
-                            events[eventName].splice(i, 1);
-                            i--;
-                        }
-                    }
+                    events[eventName] = events[eventName].filter(function (subscription) {
+                        return subscription.student !== context;
+                    })
                 });
 
             return this;
@@ -89,20 +93,10 @@ function getEmitter() {
          */
         several: function (event, context, handler, times) {
             if (times <= 0) {
-                this.on(event, context, handler);
+                times = undefined;
             }
 
-            if (!events[event]) {
-                events[event] = [];
-            }
-
-            events[event].push({
-                student: context,
-                callback: handler,
-                times: times
-            });
-
-            return this;
+            return this.on(event, context, handler, {totalCount: times});
         },
 
         /**
@@ -116,39 +110,26 @@ function getEmitter() {
          */
         through: function (event, context, handler, frequency) {
             if (frequency <= 0) {
-                this.on(event, context, handler);
+                frequency = undefined;
             }
 
-            if (!events[event]) {
-                events[event] = [];
-            }
-
-            events[event].push({
-                student: context,
-                callback: handler,
-                frequency: frequency,
-                count: 0
-            });
-
-            return this;
+            return this.on(event, context, handler, {frequency: frequency})
         }
     };
 }
 
 function performEvent(event) {
     event.forEach(function (item) {
-        if (item.times !== undefined) {
-            if (item.times > 0) {
-                item.callback.call(item.student);
-                item.times--;
+        if (item.count !== undefined) {
+            if (item.times-- <= 0) {
+                return;
             }
         } else if (item.frequency !== undefined) {
-            if (item.count % item.frequency === 0) {
-                item.callback.call(item.student);
+            if (item.count++ % item.frequency !== 0) {
+                return;
             }
-            item.count++;
-        } else {
-            item.callback.call(item.student);
         }
+
+        item.callback.call(item.student);
     });
 }
