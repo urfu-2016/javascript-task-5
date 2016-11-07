@@ -8,10 +8,7 @@ getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function getHandlers(events, eventName) {
-    var namespaces = getAllParentNamespaces(eventName);
-    namespaces.reverse();
-
-    return namespaces.reduce(function (acc, namespace) {
+    return getAllParentNamespaces(eventName).reduce(function (acc, namespace) {
         return acc.concat(events[namespace] || []);
     }, []);
 }
@@ -27,7 +24,7 @@ function getAllParentNamespaces(fullEventName) {
 
     return eventNameParts.map(function (_, index) {
         return eventNameParts.slice(0, index + 1).join('.');
-    });
+    }).reverse();
 }
 
 function isNeedToExec(event) {
