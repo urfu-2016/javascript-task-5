@@ -92,9 +92,8 @@ function getEmitter() {
             if (miniContext.hasOwnProperty(miniEvent)) {
                 miniContext = eventExists(miniContext, miniEvent, isLastElem(i, length), eventFunc);
             } else {
-                miniContext[miniEvent] = {};
-                miniContext[miniEvent].funcObj = standartFunc(miniContext);
-                miniContext[miniEvent].funcObj.eventFuncs = [eventFunc];
+                miniContext = eventNotExists(miniContext, miniEvent,
+                    isLastElem(i, length), eventFunc);
             }
         }
     }
@@ -109,6 +108,18 @@ function getEmitter() {
         } else {
             miniContext[miniEvent].funcObj.eventFuncs
                 .push(eventFunc); /* handler.bind(miniContext)*/
+        }
+
+        return miniContext;
+    }
+
+    function eventNotExists(miniContext, miniEvent, isLast, eventFunc) {
+        miniContext[miniEvent] = {};
+        miniContext[miniEvent].funcObj = standartFunc(miniContext);
+        if (isLast) {
+            miniContext[miniEvent].funcObj.eventFuncs = [eventFunc];
+        } else {
+            miniContext[miniEvent].funcObj.eventFuncs = [];
         }
 
         return miniContext;
