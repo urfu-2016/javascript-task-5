@@ -28,11 +28,9 @@ function standartFunc(context) {
         eventFuncs: [],
 
         func: function () {
-            for (var eventFunc in this.eventFuncs) {
-                if (this.eventFuncs.hasOwnProperty(eventFunc)) {
-                    execEventFunc(this.eventFuncs, eventFunc);
-                }
-            }
+            this.eventFuncs.forEach(function (eventFunc, ind, eventFuncs) {
+                execEventFunc(eventFuncs, ind, eventFunc);
+            });
             if (context.hasOwnProperty('funcObj')) {
                 context.funcObj.func();
             }
@@ -40,19 +38,18 @@ function standartFunc(context) {
     };
 }
 
-function execEventFunc(eventFuncs, eventFunc) {
-    var eventFuncObj = eventFuncs[eventFunc];
-    if (eventFuncObj.callCounter % eventFuncObj.mod === 0) {
-        if (eventFuncObj.count > 0) {
-            eventFuncs[eventFunc].func();
-            eventFuncs[eventFunc].count--;
+function execEventFunc(eventFuncs, ind, eventFunc) {
+    if (eventFunc.callCounter % eventFunc.mod === 0) {
+        if (eventFunc.count > 0) {
+            eventFunc.func();
+            eventFunc.count--;
         } else {
-            delete eventFuncs[eventFunc];
+            delete eventFuncs[ind];
 
             return;
         }
     }
-    eventFuncObj.callCounter++;
+    eventFunc.callCounter++;
 }
 
 function execLastEvent(student, event) {
