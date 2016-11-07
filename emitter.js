@@ -120,8 +120,8 @@ function getEmitter() {
 
 function performEvent(event) {
     event.forEach(function (item) {
-        if (item.count !== undefined) {
-            if (item.times-- <= 0) {
+        if (item.totalCount !== undefined) {
+            if (item.count++ >= item.totalCount) {
                 return;
             }
         } else if (item.frequency !== undefined) {
