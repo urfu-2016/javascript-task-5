@@ -54,7 +54,7 @@ function getEmitter() {
         off: function (event, context) {
             for (var currentEvent in this.subscriptions) {
                 if (currentEvent !== undefined && (currentEvent === event ||
-                                    currentEvent.indexOf(event + '.') >= 0)) {
+                                    currentEvent.indexOf(event + '.') === 0)) {
                     this.offFromCurrentEvent(currentEvent, context);
                 }
             }
