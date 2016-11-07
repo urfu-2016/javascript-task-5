@@ -2,7 +2,7 @@
 
 /**
  * Сделано задание на звездочку
- * Реализованы методы several и through
+ * Реализованы оба дополнительных метода
  */
 getEmitter.isStar = true;
 module.exports = getEmitter;
