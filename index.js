@@ -78,24 +78,6 @@ lecturer
         this.wisdom -= 10;
     });
 
-lecturer
-    .on('slide.funny', students.Sam, function () {
-        this.focus += 5;
-        this.wisdom -= 10;
-    })
-    .on('slide.funny', students.Sally, function () {
-        this.focus += 5;
-        this.wisdom -= 5;
-    })
-    .on('slide.funny', students.Bill, function () {
-        this.focus += 5;
-        this.wisdom -= 10;
-    })
-    .on('slide.funny', students.Sharon, function () {
-        this.focus += 10;
-        this.wisdom -= 10;
-    });
-
 // Начинаем лекцию
 lecturer.emit('begin');
 // Sam(110,50); Sally(110,60); Bill(100,55); Sharon(130,40)
