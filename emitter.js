@@ -37,7 +37,7 @@ function isNeedToExec(event) {
 }
 
 /**
- * Возвращает новый emitter
+ * Возвращает emitter
  * @returns {Object}
  */
 function getEmitter() {
