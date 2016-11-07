@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 function lastEvent(context, event) {
@@ -28,8 +28,8 @@ function standartFunc(context) {
         eventFuncs: [],
 
         func: function () {
-            this.eventFuncs.forEach(function (eventFunc, ind, eventFuncs) {
-                execEventFunc(eventFuncs, ind, eventFunc);
+            this.eventFuncs.forEach(function (eventFunc) {
+                execEventFunc(eventFunc);
             });
             if (context.hasOwnProperty('funcObj')) {
                 context.funcObj.func();
@@ -38,16 +38,10 @@ function standartFunc(context) {
     };
 }
 
-function execEventFunc(eventFuncs, ind, eventFunc) {
-    if (eventFunc.callCounter % eventFunc.mod === 0) {
-        if (eventFunc.count > 0) {
-            eventFunc.func();
-            eventFunc.count--;
-        } else {
-            delete eventFuncs[ind];
-
-            return;
-        }
+function execEventFunc(eventFunc) {
+    if (eventFunc.count > 0 && eventFunc.callCounter % eventFunc.mod === 0) {
+        eventFunc.func();
+        eventFunc.count--;
     }
     eventFunc.callCounter++;
 }
