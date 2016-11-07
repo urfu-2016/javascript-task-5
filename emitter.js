@@ -7,13 +7,19 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-var callEvent = function (student, event) {
-    event = student.events[event];
-    if (event.count < event.times && event.count % event.frequency === 0) {
-        event.handler.call(student);
-    }
-    event.count++;
-};
+function Listener(student, handler, times, frequency) {
+    this.student = student;
+    this._handler = handler;
+    this._times = times || Infinity;
+    this._frequency = frequency || 1;
+    this._callCount = 0;
+    this.callEvent = function () {
+        if (this._callCount < this._times && this._callCount % this._frequency === 0) {
+            this._handler.call(this.student);
+        }
+        this._callCount++;
+    };
+}
 
 /**
  * Возвращает новый emitter
@@ -22,7 +28,7 @@ var callEvent = function (student, event) {
 function getEmitter() {
     return {
 
-        students: [],
+        _events: [],
 
         /**
          * Подписаться на событие
@@ -32,21 +38,10 @@ function getEmitter() {
          * @returns {on}
          */
         on: function (event, context, handler) {
-            if (this.students.indexOf(context) === -1) {
-                this.students.push(context);
+            if (!this._events.hasOwnProperty(event)) {
+                this._events[event] = [];
             }
-
-            if (!context.hasOwnProperty('events')) {
-                context.events = {};
-            }
-            console.info(arguments[4]);
-
-            context.events[event] = {
-                handler: handler,
-                times: arguments[3] || Infinity,
-                frequency: arguments[4] || 1,
-                count: 0
-            };
+            this._events[event].push(new Listener(context, handler, arguments[3], arguments[4]));
 
             return this;
         },
@@ -58,14 +53,14 @@ function getEmitter() {
          * @returns {off}
          */
         off: function (event, context) {
-            if (this.students.indexOf(context) !== -1 && context.hasOwnProperty('events')) {
-                delete context.events[event];
-                Object.keys(context.events).forEach(function (currentEvent) {
-                    if (currentEvent.indexOf(event + '.') === 0) {
-                        delete context.events[currentEvent];
-                    }
-                });
-            }
+            Object.keys(this._events).forEach(function (currentEvent) {
+                if (currentEvent === event || currentEvent.indexOf(event + '.') === 0) {
+                    this._events[currentEvent] = this._events[currentEvent]
+                        .filter(function (listener) {
+                            return listener.student !== context;
+                        });
+                }
+            }, this);
 
             return this;
         },
@@ -76,19 +71,14 @@ function getEmitter() {
          * @returns {emit}
          */
         emit: function (event) {
-            this.students.forEach(function (student) {
-                var studentEvents = Object.keys(student.events);
-                var events = event.split('.');
-                while (events.length !== 0) {
-                    var currentEvent = events.join('.');
-                    if (studentEvents.indexOf(currentEvent) !== -1) {
-                        callEvent(student, currentEvent);
-                    }
-                    events.pop();
-                }
-            });
+            var listeners = this._events[event];
+            if (listeners) {
+                listeners.forEach(function (listener) {
+                    listener.callEvent();
+                });
+            }
 
-            return this;
+            return event ? this.emit(event.substring(0, event.lastIndexOf('.'))) : this;
 
         },
 
