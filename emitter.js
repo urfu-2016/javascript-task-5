@@ -42,6 +42,7 @@ function standartFunc(context) {
 
 function execEventFunc(eventFuncs, eventFunc) {
     var eventFuncObj = eventFuncs[eventFunc];
+    eventFuncObj.callCounter++;
     if (eventFuncObj.callCounter % eventFuncObj.mod === 0) {
         if (eventFuncObj.count > 0) {
             eventFuncs[eventFunc].func();
@@ -52,7 +53,6 @@ function execEventFunc(eventFuncs, eventFunc) {
             return;
         }
     }
-    eventFuncObj.callCounter++;
 }
 
 function execLastEvent(student, event) {
