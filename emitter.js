@@ -25,9 +25,7 @@ function SubscribeHandler(arg) {
     };
 }
 
-var subscribeQueue = [];
-
-function addSubscribe(event, context, handler) {
+function addSubscribe(event, context, handler, subscribeQueue) {
     var newSubscribe = new SubscribeHandler(
         { event: event, context: context, handler: handler });
     subscribeQueue.push(newSubscribe);
@@ -43,8 +41,8 @@ function getSubEvents(event) {
     return subEvents;
 }
 
-function deleteSubscribe(event, context) {
-    subscribeQueue = subscribeQueue.filter(function (eventHandler) {
+function deleteSubscribe(event, context, subscribeQueue) {
+    return subscribeQueue.filter(function (eventHandler) {
         var same = context === eventHandler.context;
         var subEvents = getSubEvents(eventHandler.event);
 
@@ -52,10 +50,10 @@ function deleteSubscribe(event, context) {
     });
 }
 
-function handleEvent(event) {
-    var subEvents = getSubEvents(event);
-    // console.info(subEvents);
-    subEvents.reverse().forEach(function (subEvent) {
+function handleEvent(event, subscribeQueue) {
+    var subEvents = getSubEvents(event).reverse();
+    console.info(subEvents);
+    subEvents.forEach(function (subEvent) {
         subscribeQueue.forEach(function (eventHandler) {
             if (eventHandler.event === subEvent) {
                 eventHandler.processEvent();
@@ -64,29 +62,13 @@ function handleEvent(event) {
     });
 }
 
-function multipleAddSubscribe(event, context, handler, times) {
-    times = times > 0 ? times : undefined;
-    var newSubscribe = new SubscribeHandler(
-        {
-            event: event,
-            context: context,
-            handler: handler,
-            times: times
-        }
-    );
+function multipleAddSubscribe(subscribeInfo, subscribeQueue) {
+    var newSubscribe = new SubscribeHandler(subscribeInfo);
     subscribeQueue.push(newSubscribe);
 }
 
-function addFrequentlySubscribe(event, context, handler, frequency) {
-    frequency = frequency > 0 ? frequency : undefined;
-    var newSubscribe = new SubscribeHandler(
-        {
-            event: event,
-            context: context,
-            handler: handler,
-            frequency: frequency
-        }
-    );
+function addFrequentlySubscribe(subscribeInfo, subscribeQueue) {
+    var newSubscribe = new SubscribeHandler(subscribeInfo);
     subscribeQueue.push(newSubscribe);
 }
 
@@ -95,7 +77,7 @@ function addFrequentlySubscribe(event, context, handler, frequency) {
  * @returns {Object}
  */
 function getEmitter() {
-    subscribeQueue = [];
+    var subscribeQueue = [];
 
     return {
 
@@ -108,7 +90,7 @@ function getEmitter() {
          */
         on: function (event, context, handler) {
             // console.info(event, context, handler);
-            addSubscribe(event, context, handler);
+            addSubscribe(event, context, handler, subscribeQueue);
 
             return this;
         },
@@ -121,7 +103,7 @@ function getEmitter() {
          */
         off: function (event, context) {
             // console.info(event, context);
-            deleteSubscribe(event, context);
+            subscribeQueue = deleteSubscribe(event, context, subscribeQueue);
 
             return this;
         },
@@ -133,7 +115,7 @@ function getEmitter() {
          */
         emit: function (event) {
             // console.info(event);
-            handleEvent(event);
+            handleEvent(event, subscribeQueue);
 
             return this;
         },
@@ -149,7 +131,10 @@ function getEmitter() {
          */
         several: function (event, context, handler, times) {
             // console.info(event, context, handler, times);
-            multipleAddSubscribe(event, context, handler, times);
+            times = times > 0 ? times : undefined;
+            var subscribeInfo = { event: event, context: context,
+                handler: handler, times: times };
+            multipleAddSubscribe(subscribeInfo, subscribeQueue);
 
             return this;
         },
@@ -165,7 +150,10 @@ function getEmitter() {
          */
         through: function (event, context, handler, frequency) {
             // console.info(event, context, handler, frequency);
-            addFrequentlySubscribe(event, context, handler, frequency);
+            frequency = frequency > 0 ? frequency : undefined;
+            var subscribeInfo = { event: event, context: context,
+                handler: handler, frequency: frequency };
+            addFrequentlySubscribe(subscribeInfo, subscribeQueue);
 
             return this;
         }
