@@ -58,7 +58,7 @@ function getEmitter() {
                 .forEach(function (eventName) {
                     events[eventName] = events[eventName].filter(function (subscription) {
                         return subscription.student !== context;
-                    })
+                    });
                 });
 
             return this;
@@ -96,7 +96,7 @@ function getEmitter() {
                 times = undefined;
             }
 
-            return this.on(event, context, handler, {totalCount: times});
+            return this.on(event, context, handler, { totalCount: times });
         },
 
         /**
@@ -113,7 +113,7 @@ function getEmitter() {
                 frequency = undefined;
             }
 
-            return this.on(event, context, handler, {frequency: frequency})
+            return this.on(event, context, handler, { frequency: frequency });
         }
     };
 }
