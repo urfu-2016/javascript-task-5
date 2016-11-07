@@ -36,7 +36,7 @@ function getEmitter() {
                 context: context,
                 handler: handler,
                 emitCallsCount: 0,
-                timesToEmit: Infinity,
+                times: Infinity,
                 frequency: 1
             });
 
@@ -61,12 +61,13 @@ function getEmitter() {
                         (event === signedEvent || signedEvent[event.length] === '.');
                 })
                 .forEach(function (eventToUnsign) {
-                    this.eventsArray[eventToUnsign]
+                    var eventContexts = this.eventsArray[eventToUnsign];
+                    eventContexts
                         .forEach(function (signedContext, index) {
                             if (signedContext.context === context) {
-                                this.eventsArray[eventToUnsign].splice(index, 1);
+                                delete eventContexts[index];
                             }
-                        }, this);
+                        }, [], this);
                 }, this);
 
             return this;
@@ -89,10 +90,16 @@ function getEmitter() {
                         .join('.');
                 })
                 // Вызываем каждое событие
-                .forEach(function (splittedEvent) {
-                    if (this.eventsArray.hasOwnProperty(splittedEvent)) {
-                        this.eventsArray[splittedEvent]
-                            .forEach(tryToEmit);
+                .forEach(function (currentEvent) {
+                    if (this.eventsArray.hasOwnProperty(currentEvent)) {
+                        this.eventsArray[currentEvent]
+                            .forEach(function (signedContext) {
+                                if (signedContext.emitCallsCount < signedContext.times) {
+                                    tryToCallHandler(signedContext);
+                                } else {
+                                    this.off(currentEvent, signedContext);
+                                }
+                            }, this);
                     }
                 }, this);
 
@@ -110,11 +117,8 @@ function getEmitter() {
          */
         several: function (event, context, handler, times) {
             this.on(event, context, handler);
-            if (times > 0) {
-                this.eventsArray[event][this.eventsArray[event].length - 1].timesToEmit = times;
-            }
 
-            return this;
+            return this.callAdditionalFunction(event, times, 'times');
         },
 
         /**
@@ -128,9 +132,14 @@ function getEmitter() {
          */
         through: function (event, context, handler, frequency) {
             this.on(event, context, handler);
-            if (frequency > 0) {
-                var lastEventIndex = this.eventsArray[event].length;
-                this.eventsArray[event][lastEventIndex - 1].frequency = frequency;
+
+            return this.callAdditionalFunction(event, frequency, 'frequency');
+        },
+
+        callAdditionalFunction: function (event, fieldValue, fieldName) {
+            if (fieldValue > 0) {
+                var eventContexts = this.eventsArray[event];
+                eventContexts[eventContexts.length - 1][fieldName] = fieldValue;
             }
 
             return this;
@@ -138,14 +147,12 @@ function getEmitter() {
     };
 }
 
-function tryToEmit(signer) {
-    if (signer.emitCallsCount < signer.timesToEmit) {
-        var frequency = signer.frequency;
-        var emitCallsCount = signer.emitCallsCount;
-        signer.emitCallsCount++;
+function tryToCallHandler(signedContext) {
+    var frequency = signedContext.frequency;
+    var emitCallsCount = signedContext.emitCallsCount;
+    signedContext.emitCallsCount++;
 
-        if (emitCallsCount % frequency === 0 || emitCallsCount === 0) {
-            signer.handler.call(signer.context);
-        }
+    if (emitCallsCount % frequency === 0 || emitCallsCount === 0) {
+        signedContext.handler.call(signedContext.context);
     }
 }
