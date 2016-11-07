@@ -1,6 +1,6 @@
 {
   "private": true,
-  "main": "emmiter.js",
+  "main": "emitter.js",
   "scripts": {
     "lint": "eslint .",
     "test": "eslint . && mocha *.spec.js"
