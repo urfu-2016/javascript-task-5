@@ -43,8 +43,8 @@ function getEmitter() {
          * @returns {this}
          */
         off: function (event, context) {
-            Object.keys(NAME_SPACE).forEach(function (keys) {
-                if (keys.indexOf(event) !== -1) {
+            Object.keys(NAME_SPACE).forEach(function () {
+                if (NAME_SPACE.hasOwnProperty(event)) {
                     NAME_SPACE[event].map(function (record, index) {
                         if (record.context === context) {
                             delete NAME_SPACE[event][index];
@@ -53,7 +53,7 @@ function getEmitter() {
                         return false;
                     });
                 }
-            });
+            }, this);
 
             return this;
         },
