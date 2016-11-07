@@ -144,7 +144,8 @@ if (getEmitter.isStar) {
             this.wisdom -= 10;
         });
 
-    lecturer.emit('begin');
+    lecturer.emit('begin')
+        .off('begin', students.Sam);
     // Sam(110,50); Bill(100,55)
 
     lecturer
