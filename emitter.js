@@ -4,10 +4,10 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function lastEvent(context, event) {
+function getLastEvent(context, event) {
     var splittedEvent = event.split('.');
     for (var miniEvent in splittedEvent) {
         if (context.hasOwnProperty(splittedEvent[miniEvent])) {
@@ -23,7 +23,7 @@ function lastEvent(context, event) {
  * @param {Object} context
  * @returns {Function}
  */
-function standartFunc(context) {
+function standartizeFunc(context) {
     return {
         eventFuncs: [],
 
@@ -47,9 +47,9 @@ function execEventFunc(eventFunc) {
 }
 
 function execLastEvent(student, event) {
-    var lEvent = lastEvent(student, event);
-    if (lEvent.funcObj) {
-        lEvent.funcObj.func();
+    var lastEvent = getLastEvent(student, event);
+    if (lastEvent.funcObj) {
+        lastEvent.funcObj.func();
     }
 }
 
@@ -74,14 +74,14 @@ function createEventFuncParams(count, frequency) {
 function getEmitter() {
     var students = [];
 
-    function eventNameSpace(event, context, eventFunc) {
+    function addEventHandler(event, context, eventFunc) {
         var splittedEvent = event.split('.');
         var miniContext = context;
         var length = splittedEvent.length;
         for (var i = 0; i < length; i++) {
             var miniEvent = splittedEvent[i];
             if (miniContext.hasOwnProperty(miniEvent)) {
-                miniContext = eventExists(miniContext, miniEvent, isLastElem(i, length), eventFunc);
+                miniContext = changeMiniContextIfEventExists(miniContext, miniEvent, isLastElem(i, length), eventFunc);
             } else {
                 miniContext = eventNotExists(miniContext, miniEvent,
                     isLastElem(i, length), eventFunc);
@@ -93,20 +93,20 @@ function getEmitter() {
         return i === length - 1;
     }
 
-    function eventExists(miniContext, miniEvent, isLast, eventFunc) {
+    function changeContextIfEventExists(miniContext, miniEvent, isLast, eventFunc) {
         if (!isLast) {
             miniContext = miniContext[miniEvent];
         } else {
             miniContext[miniEvent].funcObj.eventFuncs
-                .push(eventFunc); /* handler.bind(miniContext)*/
+                .push(eventFunc);
         }
 
         return miniContext;
     }
 
-    function eventNotExists(miniContext, miniEvent, isLast, eventFunc) {
+    function changeContextIfEventNotExists(miniContext, miniEvent, isLast, eventFunc) {
         miniContext[miniEvent] = {};
-        miniContext[miniEvent].funcObj = standartFunc(miniContext);
+        miniContext[miniEvent].funcObj = standartizeFunc(miniContext);
         if (isLast) {
             miniContext[miniEvent].funcObj.eventFuncs = [eventFunc];
         } else {
@@ -133,7 +133,7 @@ function getEmitter() {
             eventFuncParams = eventFuncParams
                 ? eventFuncParams : createEventFuncParams(Infinity, 1);
             handler = handler.bind(context);
-            eventNameSpace(event, context, createEventFunc(handler,
+            addEventHandler(event, context, createEventFunc(handler,
                 eventFuncParams.count, eventFuncParams.freq));
 
             return this;
@@ -150,9 +150,9 @@ function getEmitter() {
         off: function (event, context) {
             var lastEventSearch = this.offRegExp.exec(event);
             if (lastEventSearch) {
-                var lEvent = lastEvent(context, lastEventSearch[1]);
+                var lastEvent = getLastEvent(context, lastEventSearch[1]);
                 var property = lastEventSearch[2];
-                delete lEvent[property];
+                delete lastEvent[property];
             } else {
                 delete context[event];
             }
@@ -166,9 +166,6 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            if (event === 'end') {
-                return this;
-            }
             for (var student in students) {
                 if (students.hasOwnProperty(student)) {
                     execLastEvent(students[student], event);
