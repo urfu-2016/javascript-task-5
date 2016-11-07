@@ -53,7 +53,7 @@ function getEmitter() {
                         return false;
                     });
                 }
-            }, this);
+            });
 
             return this;
         },
