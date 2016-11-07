@@ -81,9 +81,10 @@ function getEmitter() {
         for (var i = 0; i < length; i++) {
             var miniEvent = splittedEvent[i];
             if (miniContext.hasOwnProperty(miniEvent)) {
-                miniContext = changeMiniContextIfEventExists(miniContext, miniEvent, isLastElem(i, length), eventFunc);
+                miniContext = changeContextIfEventExists(miniContext,
+                    miniEvent, isLastElem(i, length), eventFunc);
             } else {
-                miniContext = eventNotExists(miniContext, miniEvent,
+                miniContext = changeContextIfEventNotExists(miniContext, miniEvent,
                     isLastElem(i, length), eventFunc);
             }
         }
