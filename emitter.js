@@ -55,10 +55,12 @@ function deleteSubscribe(event, context) {
 function handleEvent(event) {
     var subEvents = getSubEvents(event);
     // console.info(subEvents);
-    subscribeQueue.forEach(function (eventHandler) {
-        if (subEvents.indexOf(eventHandler.event) !== -1) {
-            eventHandler.processEvent();
-        }
+    subEvents.reverse().forEach(function (subEvent) {
+        subscribeQueue.forEach(function (eventHandler) {
+            if (eventHandler.event === subEvent) {
+                eventHandler.processEvent();
+            }
+        });
     });
 }
 
@@ -93,6 +95,8 @@ function addFrequentlySubscribe(event, context, handler, frequency) {
  * @returns {Object}
  */
 function getEmitter() {
+    subscribeQueue = [];
+
     return {
 
         /**
