@@ -47,9 +47,8 @@ function getEmitter() {
         createEvent: function (eventName, context, handler) {
             handler = handler.bind(context);
             var event = {
-                'eventName': eventName,
                 'context': context,
-                'function': handler,
+                'func': handler,
                 'countOfCalls': 0
             };
             if (this.events[eventName] === undefined) {
@@ -98,7 +97,7 @@ function getEmitter() {
             getHandlers(this.events, eventName)
                 .forEach(function (event) {
                     if (isNeedToExec(event)) {
-                        event.function();
+                        event.func();
                     }
                     event.countOfCalls++;
                 });
