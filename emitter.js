@@ -201,7 +201,8 @@ function getEmitter() {
          */
         through: function (event, context, handler, frequency) { /* freq <= 0 check */
             return this.on(event, context, handler,
-                createEventFuncParams(Infinity, frequency));
+                createEventFuncParams(Infinity, frequency > 0
+                    ? frequency : 1);
         }
     };
 }
