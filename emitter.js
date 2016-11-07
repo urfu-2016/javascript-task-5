@@ -199,10 +199,10 @@ function getEmitter() {
          * @param {Number} frequency – как часто уведомлять
          * @returns {Object}
          */
-        through: function (event, context, handler, frequency) { /* freq <= 0 check */
+        through: function (event, context, handler, frequency) {
             return this.on(event, context, handler,
                 createEventFuncParams(Infinity, frequency > 0
-                    ? frequency : 1);
+                    ? frequency : 1));
         }
     };
 }
