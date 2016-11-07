@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function lastEvent(context, event) {
@@ -41,12 +41,18 @@ function standartFunc(context) {
 }
 
 function execEventFunc(eventFuncs, eventFunc) {
-    if (eventFuncs[eventFunc].count > 0) {
-        eventFuncs[eventFunc].func();
-        eventFuncs[eventFunc].count--;
-    } else {
-        delete eventFuncs[eventFunc];
+    var eventFuncObj = eventFuncs[eventFunc];
+    if (eventFuncObj.callCounter % eventFuncObj.mod === 0) {
+        if (eventFuncObj.count > 0) {
+            eventFuncs[eventFunc].func();
+            eventFuncs[eventFunc].count--;
+        } else {
+            delete eventFuncs[eventFunc];
+
+            return;
+        }
     }
+    eventFuncObj.callCounter++;
 }
 
 function execLastEvent(student, event) {
@@ -56,11 +62,18 @@ function execLastEvent(student, event) {
     }
 }
 
-function createEventFunc(func, count) {
+function createEventFunc(func, count, mod) {
     return {
         func: func,
-        count: count
+        count: count,
+        callCounter: 0,
+        mod: mod
     };
+}
+
+function createEventFuncParams(count, frequency) {
+    return { count: count,
+    freq: frequency };
 }
 
 /**
@@ -70,20 +83,18 @@ function createEventFunc(func, count) {
 function getEmitter() {
     var students = [];
 
-    function eventNameSpace(event, context, handler, count) {
+    function eventNameSpace(event, context, eventFunc) {
         var splittedEvent = event.split('.');
         var miniContext = context;
-        handler = handler.bind(context);
         var length = splittedEvent.length;
         for (var i = 0; i < length; i++) {
             var miniEvent = splittedEvent[i];
             if (miniContext.hasOwnProperty(miniEvent)) {
-                miniContext = eventExists(miniContext, miniEvent, isLastElem(i, length),
-                createEventFunc(handler, count));
+                miniContext = eventExists(miniContext, miniEvent, isLastElem(i, length), eventFunc);
             } else {
                 miniContext[miniEvent] = {};
                 miniContext[miniEvent].funcObj = standartFunc(miniContext);
-                miniContext[miniEvent].funcObj.eventFuncs = [createEventFunc(handler, count)];
+                miniContext[miniEvent].funcObj.eventFuncs = [eventFunc];
             }
         }
     }
@@ -110,14 +121,18 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @param {Number} count
+         * @param {Object} eventFuncParams
          * @returns {Object} this
          */
-        on: function (event, context, handler, count) {
+        on: function (event, context, handler, eventFuncParams) {
             if (students.indexOf(context) === -1) {
                 students.push(context);
             }
-            eventNameSpace(event, context, handler, (count || Infinity));
+            eventFuncParams = eventFuncParams
+                ? eventFuncParams : createEventFuncParams(Infinity, 1);
+            handler = handler.bind(context);
+            eventNameSpace(event, context, createEventFunc(handler,
+                eventFuncParams.count, eventFuncParams.freq));
 
             return this;
         },
@@ -170,7 +185,8 @@ function getEmitter() {
          * @param {Number} times – сколько раз получить уведомление
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            return this.on(event, context, handler,
+                createEventFuncParams(times <= 0 ? Infinity : times, 1));
         },
 
         /**
@@ -181,8 +197,9 @@ function getEmitter() {
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
          */
-        through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+        through: function (event, context, handler, frequency) { /* freq <= 0 check */
+            return this.on(event, context, handler,
+                createEventFuncParams(Infinity, frequency));
         }
     };
 }
