@@ -67,7 +67,7 @@ function getEmitter() {
                             if (signedContext.context === context) {
                                 delete eventContexts[index];
                             }
-                        }, [], this);
+                        });
                 }, this);
 
             return this;
