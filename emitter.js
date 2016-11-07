@@ -49,8 +49,6 @@ function execEventFunc(eventFuncs, eventFunc) {
             eventFuncs[eventFunc].count--;
         } else {
             delete eventFuncs[eventFunc];
-
-            return;
         }
     }
 }
