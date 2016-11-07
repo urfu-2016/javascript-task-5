@@ -9,15 +9,15 @@ module.exports = getEmitter;
 
 /**
  * Функция, превращающая {handler}, в хэндлер,
- * который будет вызываться {times} раз
+ * который будет вызываться {callsCount} раз
  * @param {Function} handler - исходный хэндлер
- * @param {Number} times - сколько раз он должен вызваться
+ * @param {Number} callsCount - сколько раз он должен вызваться
  * @param {Object} context - контекст вызова события
  * @returns {Function} - новый хэндлер
  */
-function makeSeveralHandler(handler, times, context) {
+function makeSeveralHandler(handler, callsCount, context) {
     var counter = 0;
-    var repeats = times > 0 ? times : Infinity;
+    var repeats = callsCount > 0 ? callsCount : Infinity;
 
     return function () {
         if (counter < repeats) {
@@ -76,15 +76,13 @@ function makeNamespace(name) {
         innerNamespaces: {},
         events: [],
         getOrCreateNamespace: function (path) {
-            var currentNamespace = this;
-            for (var i = 0; i < path.length; i++) {
-                if (!(path[i] in currentNamespace.innerNamespaces)) {
-                    currentNamespace.innerNamespaces[path[i]] = makeNamespace(path[i]);
+            return path.reduce(function (currentNamespace, ns) {
+                if (!(ns in currentNamespace.innerNamespaces)) {
+                    currentNamespace.innerNamespaces[ns] = makeNamespace(ns);
                 }
-                currentNamespace = currentNamespace.innerNamespaces[path[i]];
-            }
 
-            return currentNamespace;
+                return currentNamespace.innerNamespaces[ns];
+            }, this);
         }
     };
 }
@@ -101,16 +99,14 @@ function getEmitter() {
 
         /**
          * Подписаться на событие
-         * @param {String} event - имя события
+         * @param {String} eventName - имя события
          * @param {Object} context - контекст вызова события
          * @param {Function} handler - функция вызываемая событием
          * @returns {Object} - emitter
          */
-        on: function (event, context, handler) {
-            console.info(event, context, handler);
-
-            var parts = event.split('.');
-            var namespace = this.rootNamespace.getOrCreateNamespace(parts);
+        on: function (eventName, context, handler) {
+            var dividedByDot = eventName.split('.');
+            var namespace = this.rootNamespace.getOrCreateNamespace(dividedByDot);
             namespace.events.push(makeEvent(context, handler));
 
             return this;
@@ -141,10 +137,8 @@ function getEmitter() {
          * @returns {Object} - emitter
          */
         off: function (event, context) {
-            console.info(event, context);
-
-            var parts = event.split('.');
-            var namespace = this.rootNamespace.getOrCreateNamespace(parts);
+            var dividedByDot = event.split('.');
+            var namespace = this.rootNamespace.getOrCreateNamespace(dividedByDot);
             this.offRecursive(namespace, context);
 
             return this;
@@ -156,11 +150,9 @@ function getEmitter() {
          * @returns {Object} - emitter
          */
         emit: function (event) {
-            console.info(event);
-
-            var parts = event.split('.');
-            for (var i = parts.length; i > 0; i--) {
-                var path = parts.slice(0, i);
+            var dividedByDot = event.split('.');
+            for (var i = dividedByDot.length; i > 0; i--) {
+                var path = dividedByDot.slice(0, i);
                 var currentNamespace = this.rootNamespace.getOrCreateNamespace(path);
                 currentNamespace.events.forEach(function (eventElement) {
                     eventElement.emit();
@@ -180,8 +172,6 @@ function getEmitter() {
          * @returns {Object} - emitter
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
-
             this.on(event, context, makeSeveralHandler(handler, times, context));
 
             return this;
@@ -197,8 +187,6 @@ function getEmitter() {
          * @returns {Object} - emitter
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
-
             this.on(event, context, makeThoughtHandler(handler, frequency, context));
 
             return this;
