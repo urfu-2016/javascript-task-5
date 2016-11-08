@@ -44,12 +44,15 @@ function getEmitter() {
             return this;
         },
 
-        offFromOneEvent: function (info, context) {
-            for (var i = 0; i < info.length; i++) {
-                if (info[i].context === context) {
-                    info.splice(i, 1);
+        offFromOneEvent: function (j, context) {
+            var savesInfo = [];
+            for (var i = 0; i < this.events[j].info.length; i++) {
+                if (this.events[j].info[i].context !== context) {
+                    savesInfo.push(this.events[j].info[i]);
                 }
             }
+            this.events[j].info = savesInfo;
+
         },
 
         /**
@@ -62,7 +65,7 @@ function getEmitter() {
             for (var i = 0; i < this.events.length; i++) {
                 var name = this.events[i].name;
                 if ((name === event) || (name.indexOf(event + '.') === 0)) {
-                    this.offFromOneEvent(this.events[i].info, context);
+                    this.offFromOneEvent(i, context);
                 }
             }
 
