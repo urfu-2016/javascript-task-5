@@ -13,10 +13,11 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
+
         /**
          * Список событий на которые подписались
          */
-        subscriptions : [],
+        subscriptions: [],
 
         /**
          * Подписаться на событие
