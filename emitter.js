@@ -1,11 +1,11 @@
 'use strict';
 
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 function getEmitter() {
     var events = {};
-    var period = 1;
+    // var period = 1;
 
     function addEvent(eventInfo) {
         if (!(events.hasOwnProperty(eventInfo.name))) {
@@ -15,7 +15,8 @@ function getEmitter() {
             student: eventInfo.student,
             callback: eventInfo.callback,
             times: eventInfo.times,
-            type: eventInfo.type
+            type: eventInfo.type,
+            period: 1
         });
     }
 
@@ -27,10 +28,10 @@ function getEmitter() {
             }
         },
         'through': function (event) {
-            if (period % event.times === 0) {
+            if (event.period % event.times === 0) {
                 event.callback.call(event.student);
             }
-            period++;
+            event.period++;
         }
     };
 
