@@ -54,13 +54,14 @@ function getEmitter() {
          */
         off: function (event, context) {
             var searchString = event + '.';
+            var eventsCopy = this.events;
             Object.keys(this.events).forEach(function (currentEvent) {
                 if (currentEvent.lastIndexOf(searchString) === 0 || currentEvent === event) {
-                    this.events[currentEvent] = this.events[currentEvent].filter(function (note) {
+                    eventsCopy[currentEvent] = eventsCopy[currentEvent].filter(function (note) {
                         return context !== note.listener;
                     });
                 }
-            }.bind(this));
+            });
 
             return this;
         },
@@ -71,7 +72,6 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-
             this.events = emitEvent(this.events, event);
             while (event.indexOf('.') !== -1) {
                 event = event.slice(0, event.lastIndexOf('.'));
