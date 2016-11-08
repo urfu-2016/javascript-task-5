@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -13,32 +13,69 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
+        events: {},
 
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (Object.keys(this.events).indexOf(event) === -1) {
+                this.events[event] = [];
+            }
+            this.events[event].push(
+                {
+                    listener: context,
+                    handler: handler.bind(context)
+                }
+            );
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            var searchString = event + '.';
+            Object.keys(this.events).forEach(function (currentEvent) {
+                if (currentEvent.lastIndexOf(searchString) === 0 || currentEvent === event) {
+                    this.events[currentEvent] = this.events[currentEvent].filter(function (note) {
+                        return context !== note.listener;
+                    });
+                }
+            }.bind(this));
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            if (Object.keys(this.events).indexOf(event) !== -1) {
+                this.events[event].forEach(function (subscriber) {
+                    subscriber.handler();
+                });
+            }
+            while (event.indexOf('.') !== -1) {
+                event = event.slice(0, event.lastIndexOf('.'));
+                if (Object.keys(this.events).indexOf(event) !== -1) {
+                    this.events[event].forEach(function (subscriber) {
+                        subscriber.handler();
+                    });
+                }
+            }
+
+            return this;
         },
 
         /**
