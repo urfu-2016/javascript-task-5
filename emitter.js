@@ -45,9 +45,9 @@ function getEmitter() {
 
         off: function (event, context) {
             this.events = this.events.filter(function (currentEvent) {
-                return currentEvent.event !== event ||
-                    currentEvent.event.indexOf(event + '.') !== 0 &&
-                        currentEvent.context !== context;
+                return currentEvent.context !== context ||
+                    currentEvent.event !== event &&
+                        currentEvent.event.indexOf(event + '.') !== 0;
             });
 
             return this;
@@ -66,8 +66,10 @@ function getEmitter() {
                 acc.push(newNameFunction);
 
                 return acc;
-            }, []);
-            developments.reverse().forEach(function (nameFunction) {
+            }, [])
+            .reverse();
+
+            developments.forEach(function (nameFunction) {
                 this.events.forEach(function (currentEvent) {
                     if (currentEvent.event === nameFunction) {
                         currentEvent.handler.call(currentEvent.context);
