@@ -7,17 +7,19 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function Listener(student, handler, times, frequency) {
-    this.student = student;
+function Listener(context, handler, times, frequency) {
+    this.context = context;
     this._handler = handler;
     this._times = times || Infinity;
     this._frequency = frequency || 1;
     this._callCount = 0;
     this.callEvent = function () {
         if (this._callCount < this._times && this._callCount % this._frequency === 0) {
-            this._handler.call(this.student);
+            this._handler.call(this.context);
         }
         this._callCount++;
+
+        return this._callCount !== this._times;
     };
 }
 
@@ -55,10 +57,10 @@ function getEmitter() {
         off: function (event, context) {
             Object.keys(this._events).forEach(function (currentEvent) {
                 if (currentEvent === event || currentEvent.indexOf(event + '.') === 0) {
-                    this._events[currentEvent] = this._events[currentEvent]
-                        .filter(function (listener) {
-                            return listener.student !== context;
-                        });
+                    var listeners = this._events[currentEvent];
+                    this._events[currentEvent] = listeners.filter(function (listener) {
+                        return listener.context !== context;
+                    });
                 }
             }, this);
 
@@ -73,8 +75,8 @@ function getEmitter() {
         emit: function (event) {
             var listeners = this._events[event];
             if (listeners) {
-                listeners.forEach(function (listener) {
-                    listener.callEvent();
+                this._events[event] = listeners.filter(function (listener) {
+                    return listener.callEvent();
                 });
             }
 
