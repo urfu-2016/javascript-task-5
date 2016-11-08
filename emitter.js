@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -13,32 +13,89 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
+        events: [],
 
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            for (var i = 0; i < this.events.length; i++) {
+                if (this.events[i].name === event) {
+                    this.events[i].info.push({
+                        context: context,
+                        handler: handler
+                    });
+
+                    return this;
+                }
+            }
+            this.events.push({
+                name: event,
+                info: [{
+                    context: context,
+                    handler: handler
+                }]
+            });
+
+            return this;
+        },
+
+        offFromOneEvent: function (info, context) {
+            for (var i = 0; i < info.length; i++) {
+                if (info[i].context === context) {
+                    info.splice(i, 1);
+                }
+            }
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            for (var i = 0; i < this.events.length; i++) {
+                var name = this.events[i].name;
+                if ((name === event) || (name.indexOf(event + '.') === 0)) {
+                    this.offFromOneEvent(this.events[i].info, context);
+                }
+            }
+
+            return this;
+        },
+
+        /**
+         * Уведомить об одном событие
+         * @param {Object} info
+         */
+        emitForOneEvent: function (info) {
+            for (var i = 0; i < info.length; i++) {
+                info[i].handler.call(info[i].context);
+            }
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            var currentEvent = event;
+            var sortedEvents = this.events.slice();
+            sortedEvents = sortedEvents.sort().reverse();
+            for (var i = 0; i < sortedEvents.length; i++) {
+                if (currentEvent.indexOf(sortedEvents[i].name) === 0) {
+                    this.emitForOneEvent(sortedEvents[i].info);
+                    currentEvent = sortedEvents[i].name;
+                }
+            }
+
+            return this;
         },
 
         /**
