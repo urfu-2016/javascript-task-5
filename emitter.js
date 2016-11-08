@@ -54,13 +54,13 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(eventHandlers)
-                .filter(function (key) {
+                .filter(function (eventName) {
                     var correctEventPattern = '^' + event + '(?:\\..+)?$';
 
-                    return Boolean(key.match(correctEventPattern));
+                    return Boolean(eventName.match(correctEventPattern));
                 })
-                .forEach(function (key) {
-                    eventHandlers[key] = eventHandlers[key]
+                .forEach(function (eventName) {
+                    eventHandlers[eventName] = eventHandlers[eventName]
                         .filter(function (handler) {
                             return handler.context !== context;
                         });
