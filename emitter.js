@@ -12,9 +12,11 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
-    var subscriptions = [];
-
     return {
+        /**
+         * Список событий на которые подписались
+         */
+        subscriptions : [],
 
         /**
          * Подписаться на событие
@@ -24,7 +26,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            subscriptions.push({
+            this.subscriptions.push({
                 event: event,
                 context: context,
                 handler: handler,
@@ -42,8 +44,8 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            subscriptions = subscriptions.filter(function (subscription) {
-                return subscription.event.indexOf(event) !== 0 ||
+            this.subscriptions = this.subscriptions.filter(function (subscription) {
+                return !(subscription.event.indexOf(event) === 0) ||
                         (subscription.context !== context) ||
                         (subscription.event[event.length] !== '.') &&
                         (subscription.event[event.length] !== undefined);
@@ -58,14 +60,14 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            var emittedEvents = [event];
+            var emittingEvents = [event];
             while (event.lastIndexOf('.') !== -1) {
                 event = event.slice(0, event.lastIndexOf('.'));
-                emittedEvents.push(event);
+                emittingEvents.push(event);
             }
 
-            emittedEvents.forEach(function (emittedEvent) {
-                subscriptions.forEach(function (subscription) {
+            emittingEvents.forEach(function (emittedEvent) {
+                this.subscriptions.forEach(function (subscription) {
                     if (emittedEvent === subscription.event && subscription.several !== 0) {
                         if (subscription.numberOfEmits % subscription.through === 0) {
                             subscription.handler.call(subscription.context);
@@ -74,7 +76,7 @@ function getEmitter() {
                         subscription.numberOfEmits = subscription.numberOfEmits + 1;
                     }
                 });
-            });
+            }, this);
 
             return this;
         },
@@ -90,7 +92,7 @@ function getEmitter() {
          */
         several: function (event, context, handler, times) {
             if (times > 0) {
-                subscriptions.push({
+                this.subscriptions.push({
                     event: event,
                     context: context,
                     handler: handler,
@@ -117,7 +119,7 @@ function getEmitter() {
          */
         through: function (event, context, handler, frequency) {
             if (frequency > 0) {
-                subscriptions.push({
+                this.subscriptions.push({
                     event: event,
                     context: context,
                     handler: handler,
