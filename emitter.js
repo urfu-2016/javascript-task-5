@@ -7,6 +7,16 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
+function emitEvent(events, event) {
+    if (Object.keys(events).indexOf(event) !== -1) {
+        events[event].forEach(function (subscriber) {
+            subscriber.handler();
+        });
+    }
+
+    return events;
+}
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
@@ -61,18 +71,11 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            if (Object.keys(this.events).indexOf(event) !== -1) {
-                this.events[event].forEach(function (subscriber) {
-                    subscriber.handler();
-                });
-            }
+
+            this.events = emitEvent(this.events, event);
             while (event.indexOf('.') !== -1) {
                 event = event.slice(0, event.lastIndexOf('.'));
-                if (Object.keys(this.events).indexOf(event) !== -1) {
-                    this.events[event].forEach(function (subscriber) {
-                        subscriber.handler();
-                    });
-                }
+                this.events = emitEvent(this.events, event);
             }
 
             return this;
