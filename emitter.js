@@ -12,9 +12,9 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var events = [];
 
     return {
-        events: [],
 
         /**
          * Подписаться на событие
@@ -25,7 +25,7 @@ function getEmitter() {
          */
 
         on: function (event, context, handler) {
-            this.events.push(
+            events.push(
                 {
                     event: event,
                     context: context,
@@ -44,10 +44,10 @@ function getEmitter() {
          */
 
         off: function (event, context) {
-            this.events = this.events.filter(function (currentEvent) {
-                return currentEvent.context !== context ||
-                    currentEvent.event !== event &&
-                        currentEvent.event.indexOf(event + '.') !== 0;
+            events = events.filter(function (currentEvent) {
+                return currentEvent.event !== event ||
+                    currentEvent.context !== context &&
+                    currentEvent.event.indexOf(event + '.') !== 0;
             });
 
             return this;
@@ -69,15 +69,39 @@ function getEmitter() {
             }, [])
             .reverse();
 
-            developments.forEach(function (nameFunction) {
-                this.events.forEach(function (currentEvent) {
-                    if (currentEvent.event === nameFunction) {
+            developments.forEach(function (currentFunction) {
+                events.forEach(function (currentEvent) {
+                    if (currentEvent.event === currentFunction) {
                         currentEvent.handler.call(currentEvent.context);
                     }
                 });
-            }, this);
+            });
 
             return this;
+        },
+
+        /**
+         * Подписаться на событие с ограничением по количеству полученных уведомлений
+         * @star
+         * @param {String} event
+         * @param {Object} context
+         * @param {Function} handler
+         * @param {Number} times – сколько раз получить уведомление
+         */
+        several: function (event, context, handler, times) {
+            console.info(event, context, handler, times);
+        },
+
+        /**
+         * Подписаться на событие с ограничением по частоте получения уведомлений
+         * @star
+         * @param {String} event
+         * @param {Object} context
+         * @param {Function} handler
+         * @param {Number} frequency – как часто уведомлять
+         */
+        through: function (event, context, handler, frequency) {
+            console.info(event, context, handler, frequency);
         }
     };
 }
