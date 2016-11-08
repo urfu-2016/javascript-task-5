@@ -2,16 +2,27 @@
 
 /**
  * Сделано задание на звездочку
- * Реализованы методы several и through
+ * Реализованы оба дополнительных метода
  */
 getEmitter.isStar = true;
 module.exports = getEmitter;
+
+/**
+ * @param {Funcation} handler
+ * @returns {Boolean}
+ */
+function shouldCallHandler(handler) {
+    return handler.callsCount < handler.maxCallsCount &&
+        !(handler.callsCount % handler.callFrequency);
+}
 
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
+    var eventHandlers = {};
+
     return {
 
         /**
@@ -19,26 +30,66 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            handler.context = context;
+            handler.callsCount = 0;
+            handler.maxCallsCount = handler.maxCallsCount > 0 ? handler.maxCallsCount : Infinity;
+            handler.callFrequency = handler.callFrequency > 0 ? handler.callFrequency : 1;
+
+            if (!eventHandlers[event]) {
+                eventHandlers[event] = [];
+            }
+            eventHandlers[event].push(handler);
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(eventHandlers)
+                .filter(function (eventName) {
+                    var correctEventPattern = '^' + event + '(?:\\..+)?$';
+
+                    return Boolean(eventName.match(correctEventPattern));
+                })
+                .forEach(function (eventName) {
+                    eventHandlers[eventName] = eventHandlers[eventName]
+                        .filter(function (handler) {
+                            return handler.context !== context;
+                        });
+                });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            for (; event; event = event.substring(0, event.lastIndexOf('.'))) {
+                if (eventHandlers[event]) {
+                    eventHandlers[event]
+                        .filter(shouldCallHandler)
+                        .forEach(function (handler) {
+                            handler.call(handler.context);
+                        });
+                    eventHandlers[event]
+                        .forEach(function (handler) {
+                            handler.callsCount++;
+                        });
+                }
+            }
+
+            return this;
         },
 
         /**
@@ -47,10 +98,13 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
+         * @param {Number} maxCallsCount – сколько раз получить уведомление
+         * @returns {Object}
          */
-        several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+        several: function (event, context, handler, maxCallsCount) {
+            handler.maxCallsCount = maxCallsCount;
+
+            return this.on(event, context, handler);
         },
 
         /**
@@ -59,10 +113,13 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
+         * @param {Number} callFrequency – как часто уведомлять
+         * @returns {Object}
          */
-        through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+        through: function (event, context, handler, callFrequency) {
+            handler.callFrequency = callFrequency;
+
+            return this.on(event, context, handler);
         }
     };
 }
