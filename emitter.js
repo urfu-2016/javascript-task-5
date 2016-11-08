@@ -7,12 +7,18 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+var NAMESPACE_PATTERN = '^{0}(?:$|\\..*)'; // По аналогии с String.Format в C#
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
-    var eventQueues = {};
+
+    /**
+     * @type {{event: Array.<{context: Object, handler: Function}>} events
+     */
+    var events = {};
 
     return {
 
@@ -24,12 +30,12 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-            if (!eventQueues.hasOwnProperty(event)) {
-                eventQueues[event] = [];
+            if (!events.hasOwnProperty(event)) {
+                events[event] = [];
             }
-            eventQueues[event].push({
+            events[event].push({
                 context: context,
-                func: handler.bind(context)
+                handler: handler.bind(context)
             });
 
             return this;
@@ -42,10 +48,10 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context) {
-            Object.keys(eventQueues).forEach(function (queueKey) {
-                var regexp = new RegExp('^' + event + '(?:$|\\..*)');
-                if (regexp.test(queueKey)) {
-                    eventQueues[queueKey] = eventQueues[queueKey].filter(function (handler) {
+            var namespacePattern = new RegExp(NAMESPACE_PATTERN.replace('{0}', event));
+            Object.keys(events).forEach(function (eventName) {
+                if (namespacePattern.test(eventName)) {
+                    events[eventName] = events[eventName].filter(function (handler) {
                         return handler.context !== context;
                     });
                 }
@@ -60,18 +66,18 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            Object.keys(eventQueues)
-                .filter(function (queueKey) {
-                    var regexp = new RegExp('^' + queueKey + '(?:$|\\..*)');
+            Object.keys(events)
+                .filter(function (eventName) {
+                    var namespacePattern = new RegExp(NAMESPACE_PATTERN.replace('{0}', eventName));
 
-                    return regexp.test(event);
+                    return namespacePattern.test(event);
                 })
-                .sort(function (queueKey1, queueKey2) {
-                    return queueKey2 > queueKey1;
+                .sort(function (eventName1, eventName2) {
+                    return eventName2 > eventName1;
                 })
-                .forEach(function (queueKey) {
-                    eventQueues[queueKey].forEach(function (handler) {
-                        handler.func();
+                .forEach(function (eventName) {
+                    events[eventName].forEach(function (handler) {
+                        handler.handler();
                     });
                 });
 
@@ -91,6 +97,7 @@ function getEmitter() {
             if (times <= 0) {
                 return this.on(event, context, handler);
             }
+
             var i = times;
             var newHandler = function () {
                 if (i > 0) {
