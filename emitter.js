@@ -1,68 +1,100 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
 function getEmitter() {
+    var events = {};
+    var period = 1;
+
+    function addEvent(eventInfo) {
+        if (!(events.hasOwnProperty(eventInfo.name))) {
+            events[eventInfo.name] = [];
+        }
+        events[eventInfo.name].push({
+            student: eventInfo.student,
+            callback: eventInfo.callback,
+            times: eventInfo.times,
+            type: eventInfo.type
+        });
+    }
+
+    var launch = {
+        'on_several': function (event) {
+            if (event.times !== 0) {
+                event.callback.call(event.student);
+                event.times--;
+            }
+        },
+        'through': function (event) {
+            if (period % event.times === 0) {
+                event.callback.call(event.student);
+            }
+            period++;
+        }
+    };
+
     return {
 
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            addEvent({
+                name: event,
+                student: context,
+                callback: handler,
+                times: -1,
+                type: 'on_several'
+            });
+
+            return this;
         },
 
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(events).forEach(function (e) {
+                if (e.startsWith(event)) {
+                    events[e] = events[e].filter(function (ev) {
+                        return context !== ev.student;
+                    });
+                }
+            });
+
+            return this;
         },
 
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         */
         emit: function (event) {
-            console.info(event);
+            while (event) {
+                if (events.hasOwnProperty(event)) {
+                    events[event].forEach(function (e) {
+                        launch[e.type](e);
+                    });
+                }
+                event = event.replace(/.(\w+)$/, '');
+            }
+
+            return this;
         },
 
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            addEvent({
+                name: event,
+                student: context,
+                callback: handler,
+                times: times === 0 ? -1 : times,
+                type: 'on_several'
+            });
+
+            return this;
         },
 
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            addEvent({
+                name: event,
+                student: context,
+                callback: handler,
+                times: frequency === 0 ? -1 : frequency,
+                type: frequency <= 0 ? 'on_several' : 'through'
+            });
+
+            return this;
         }
     };
 }
