@@ -45,11 +45,9 @@ function getEmitter() {
 
         off: function (event, context) {
             this.events = this.events.filter(function (currentEvent) {
-                if (currentEvent.event.indexOf(event + '.') === 0 || currentEvent.event === event) {
-                    return context !== currentEvent.context;
-                }
-
-                return true;
+                return currentEvent.event !== event ||
+                    currentEvent.event.indexOf(event + '.') !== 0 &&
+                        currentEvent.context !== context;
             });
 
             return this;
