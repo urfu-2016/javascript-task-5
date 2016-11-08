@@ -7,6 +7,8 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+var SEPARATOR = '.';
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
@@ -53,8 +55,9 @@ function getEmitter() {
          */
         off: function (event, context) {
             for (var currentEvent in this.subscriptions) {
-                if (currentEvent !== undefined && (currentEvent === event ||
-                                    currentEvent.indexOf(event + '.') === 0)) {
+                if (this.subscriptions.hasOwnProperty(currentEvent) &&
+                            (currentEvent === event ||
+                            currentEvent.indexOf(event + SEPARATOR) === 0)) {
                     this.offFromCurrentEvent(currentEvent, context);
                 }
             }
@@ -82,15 +85,14 @@ function getEmitter() {
          */
         emit: function (event) {
             var events = getEvents(event);
-            var self = this;
             events.forEach(function (currentEvent) {
-                if (currentEvent in self.subscriptions) {
-                    self.subscriptions[currentEvent].forEach(
+                if (currentEvent in this.subscriptions) {
+                    this.subscriptions[currentEvent].forEach(
                         function (subscription) {
-                            self.emitObserver(subscription);
-                        });
+                            this.emitObserver(subscription);
+                        }, this);
                 }
-            });
+            }, this);
 
             return this;
         },
@@ -151,8 +153,6 @@ function getEmitter() {
         }
     };
 }
-
-var SEPARATOR = '.';
 
 /**
  * Возвращает всевозможные события в нужном порядке
