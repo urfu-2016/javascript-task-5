@@ -45,9 +45,9 @@ function getEmitter() {
 
         off: function (event, context) {
             events = events.filter(function (currentEvent) {
-                return currentEvent.event !== event ||
-                    currentEvent.context !== context &&
-                    currentEvent.event.indexOf(event + '.') !== 0;
+                return currentEvent.context !== context ||
+                    currentEvent.event !== event &&
+                        currentEvent.event.indexOf(event + '.') !== 0;
             });
 
             return this;
@@ -62,13 +62,14 @@ function getEmitter() {
         emit: function (event) {
             var developments = event.split('.')
             .reduce(function (acc, nameFunction) {
-                var newNameFunction = acc.length > 0 ? [acc, nameFunction].join('.') : nameFunction;
+                var length = acc.length;
+                var newNameFunction = length > 0
+                    ? [acc[length - 1], nameFunction].join('.') : nameFunction;
                 acc.push(newNameFunction);
 
                 return acc;
             }, [])
             .reverse();
-
             developments.forEach(function (currentFunction) {
                 events.forEach(function (currentEvent) {
                     if (currentEvent.event === currentFunction) {
