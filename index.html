@@ -16,8 +16,12 @@
             target.callbacks[event] = target.callbacks[event] || [];
             target.callbacks[event].push(fn);
         };
-        target.off = function(event) {
-            target.callbacks[event] = [];
+        target.off = function (event) {
+            Object.keys(target.callbacks).forEach(function (subscribedEvent) {
+                if (subscribedEvent.indexOf(event) === 0) {
+                    target.callbacks[event] = [];
+                }
+            });
         };
         target.dispatch = function(event) {
             target.callbacks[event].reverse();
@@ -78,8 +82,16 @@
                 var targetIdx = this.observers[event].indexOf(context);
                 this.observers[event].splice(targetIdx, 1);
                 context.off(event);
+                var self = this;
+                Object.keys(this.observers).forEach(function (subscribedEvent) {
+                    if (subscribedEvent.indexOf(event) === 0) {
+                        self.observers[subscribedEvent].splice(targetIdx);
+                    }
+                });
+
                 return this;
             },
+            
 
             /**
              * Уведомить о событии

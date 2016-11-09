@@ -15,8 +15,8 @@ function EventTarget(target) {
     };
     target.off = function (event) {
         Object.keys(target.callbacks).forEach(function (subscribedEvent) {
-            if (subscribedEvent.indexOf('.' + event) !== -1) {
-                target.callbacks[event] = [];
+            if (subscribedEvent.indexOf(event) === 0) {
+                target.callbacks[subscribedEvent] = [];
             }
         });
     };
@@ -82,6 +82,12 @@ function getEmitter() {
             var targetIdx = this.observers[event].indexOf(context);
             this.observers[event].splice(targetIdx, 1);
             context.off(event);
+            var self = this;
+            Object.keys(this.observers).forEach(function (subscribedEvent) {
+                if (subscribedEvent.indexOf(event) === 0) {
+                    self.observers[subscribedEvent].splice(targetIdx);
+                }
+            });
 
             return this;
         },
