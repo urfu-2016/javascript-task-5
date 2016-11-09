@@ -19,7 +19,7 @@
         target.off = function (event) {
             Object.keys(target.callbacks).forEach(function (subscribedEvent) {
                 if (subscribedEvent.indexOf(event) === 0) {
-                    target.callbacks[event] = [];
+                    target.callbacks[subscribedEvent] = [];
                 }
             });
         };
