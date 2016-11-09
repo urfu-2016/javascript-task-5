@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -12,6 +12,8 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var events = {};
+
     return {
 
         /**
@@ -19,26 +21,71 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!events[event]) {
+                events[event] = [];
+            }
+            var subObject = {
+                context: context,
+                handler: handler,
+                count: arguments[3] || null,
+                frequency: arguments[4] || null
+            };
+
+            events[event].push(subObject);
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(events)
+                .filter(function (eventName) {
+                    return event === eventName || eventName.indexOf(event + '.') === 0;
+                })
+                .forEach(function (eventName) {
+                    events[eventName] = events[eventName].filter(function (sub) {
+                        return sub.context !== context;
+                    });
+                });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+
+            while (event !== '') {
+                var testEvent = events[event];
+                if (events[event]) {
+                    events[event].forEach(function (item) {
+                        if (item.count && (item.count++ >= item.count)) {
+
+                            return;
+                        } else if (item.frequency && (item.count++ % item.frequency !== 0)) {
+
+                            return;
+                        }
+                        item.handler.call(item.context);
+                    });
+                }
+
+                var testSliceEvent = event.slice(0, event.lastIndexOf('.'));
+                event = event.slice(0, event.lastIndexOf('.'));
+            }
+
+            return this;
         },
 
         /**
