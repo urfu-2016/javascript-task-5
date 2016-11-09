@@ -24,8 +24,8 @@
             });
         };
         target.dispatch = function(event) {
-            target.callbacks[event].reverse();
-            //target.callbacks[event].forEach(function (fn) {
+            //target.callbacks[event].reverse();
+            target.callbacks[event].forEach(function (fn) {
                 fn.apply(target, arguments);
             });
             //target.callbacks[event].reverse();
@@ -67,7 +67,7 @@
                 context = new EventTarget(context);
                 context.on(event, handler);
                 this.observers[event] = this.observers[event] || [];
-                if (this.observers.indexOf(context) === -1) {
+                if (this.observers[event].indexOf(context) === -1) {
                     this.observers[event].push(context);
                 }
 
