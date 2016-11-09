@@ -7,10 +7,6 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
 function subscribersFilter(subscribers, context, i) {
     var keys = Object.keys(subscribers);
     for (var j = 0; j < subscribers[keys[i]].length; j++) {
@@ -22,6 +18,11 @@ function subscribersFilter(subscribers, context, i) {
     return subscribers;
 }
 
+/**
+ * Возвращает новый emitter
+ * @returns {Object}
+ */
+func
 function getEmitter() {
     var subscribers = {};
 
@@ -35,7 +36,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            //console.info(event, context, handler);
+            // console.info(event, context, handler);
             if (!subscribers[event]) {
                 subscribers[event] = [];
             }
@@ -54,11 +55,11 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            //console.info(event, context);
+            // console.info(event, context);
             var keys = Object.keys(subscribers);
-            for (var i = 0; i < keys.length; i++) {
-                if (keys[i] === event || keys[i].slice(0, event.length + 1) === event + '.') {
-                    subscribers = subscribersFilter(subscribers, context, i);
+            for (var k = 0; k < keys.length; i++) {
+                if (keys[k] === event || keys[k].slice(0, event.length + 1) === event + '.') {
+                    subscribers = subscribersFilter(subscribers, context, k);
                 }
             }
 
@@ -71,17 +72,17 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            //console.info(event);
+            // console.info(event);
             var events = [];
             for (var i = 1; i <= event.split('.').length; i++) {
                 events.push(event.split('.').slice(0, i).join('.'));
             }
             events.reverse();
-            for (var i = 0; i < events.length; i++) {
-                if (subscribers[events[i]] !== undefined) {
-                    subscribers[events[i]].forEach(function (listener) {
-                    listener.handler();
-                    });
+            for (var j = 0; j < events.length; j++) {
+                if (subscribers[events[j]] !== undefined) {
+                        subscribers[events[j]].forEach(function (listener) {
+                            listener.handler();
+                        });
                 }
             }
 
