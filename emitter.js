@@ -17,12 +17,24 @@ function getParentEvents(event) {
     return parents;
 }
 
+function getChildEvents(event, events) {
+    return events.filter(function (a) {
+        return a.startsWith(event) && (!a[event.length] || a[event.length] === '.');
+    });
+}
+
 function emit(event, events) {
     if (events[event]) {
         events[event].forEach(function (eventInfo) {
             eventInfo.handler();
         });
     }
+}
+
+function off(event, context, events) {
+    return events[event].filter(function (eventInfo) {
+        return eventInfo.student !== context;
+    });
 }
 
 /**
@@ -60,8 +72,9 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            this.events[event] = this.events[event].filter(function (eventInfo) {
-                return eventInfo.student !== context;
+            var events = this.events;
+            getChildEvents(event, Object.keys(events)).forEach(function (childEvent) {
+                events[childEvent] = off(childEvent, context, events);
             });
 
             return this;
