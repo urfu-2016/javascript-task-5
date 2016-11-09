@@ -13,7 +13,7 @@ module.exports = getEmitter;
  * @returns {Boolean}
  */
 function startsWith(prefix, string) {
-    return string.indexOf(prefix) !== -1;
+    return string.indexOf(prefix) !== 0;
 }
 
 /**
