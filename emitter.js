@@ -39,13 +39,11 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            if (typeof (event) === 'string' && typeof (context) === 'object') {
-                students = students.filter(function (subscriber) {
+            students = students.filter(function (subscriber) {
 
-                    return subscriber.context !== context || subscriber.event !== event &&
-                        !(event.indexOf(event + '.') === 0);
-                });
-            }
+                return (subscriber.context !== context) || (subscriber.event !== event) &&
+                    !(event.indexOf(event + '.') === 0);
+            });
 
             return this;
         },
