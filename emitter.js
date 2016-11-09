@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -12,6 +12,8 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var students = [];
+
     return {
 
         /**
@@ -19,26 +21,64 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            students.push({ event: event,
+                context: context,
+                handler: handler }
+            );
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            if (typeof (event) === 'string' && typeof (context) === 'object') {
+                students = students.filter(function (subscriber) {
+
+                    return (subscriber.context !== context || subscriber.event !== event) &&
+                        !(subscriber.event.indexOf(event + '.') === 0);
+                });
+            }
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            var emitEvent = [];
+            var splitEvent = event.split('.');
+            var flag = 1;
+
+            for (var i = 0; i < splitEvent.length; i++) {
+                var event_ = splitEvent[0];
+                for (var j = 1; j < flag; j++) {
+                    event_ += '.' + splitEvent[j];
+                }
+                flag++;
+                emitEvent.push(event_);
+            }
+            emitEvent.reverse();
+
+            emitEvent.forEach(function (eventt) {
+                students.forEach(function (subscriber) {
+                    if (subscriber.event === eventt) {
+                        subscriber.handler.call(subscriber.context);
+                    }
+                });
+            });
+
+            return this;
         },
 
         /**
