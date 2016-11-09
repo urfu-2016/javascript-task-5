@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 function EventTarget(target) {
@@ -14,7 +14,11 @@ function EventTarget(target) {
         target.callbacks[event].push(fn);
     };
     target.off = function (event) {
-        target.callbacks[event] = [];
+        Object.keys(target.callbacks).forEach(function (subscribedEvent) {
+            if (subscribedEvent.indexOf('.' + event) !== -1) {
+                target.callbacks[event] = [];
+            }
+        });
     };
     target.dispatch = function (event) {
         target.callbacks[event].reverse();
