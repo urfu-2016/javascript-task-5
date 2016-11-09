@@ -58,7 +58,7 @@ function getEmitter() {
 
         emit: function (event) {
             for (var i = 0; i < events.length; i++) {
-                if (compareNamespaces(event, events[i].event)){
+                if (compareNamespaces(event, events[i].event)) {
                     events[i].handler.call(events[i].context);
                 }
             }
