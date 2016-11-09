@@ -8,6 +8,8 @@ getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
+ * @param {string} prefix
+ * @param {string} string
  * @returns {Boolean}
  */
 function startsWith(prefix, string) {
@@ -15,6 +17,7 @@ function startsWith(prefix, string) {
 }
 
 /**
+ * @param {String} event
  * @returns {Boolean}
  */
 function isUpperEvent(event) {
@@ -22,6 +25,7 @@ function isUpperEvent(event) {
 }
 
 /**
+ * @param {String} event
  * @returns {Array}
  */
 function getSubEvents(event) {
@@ -49,6 +53,7 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
             if (!this.handlers[event]) {
@@ -69,9 +74,11 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} eventToOff
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (eventToOff, context) {
             var events = Object.keys(this.handlers);
+            var handlers = this.handlers;
 
             events = events.filter(function (event) {
                 var eventPrefix = event + '.';
@@ -79,9 +86,9 @@ function getEmitter() {
                 return event === eventToOff || startsWith(eventPrefix, event);
             });
 
-            events.forEach(function (element) {
-                events[element] = events[element].filter(function (event) {
-                    return event.context !== context;
+            events.forEach(function (event) {
+                handlers[event] = handlers[event].filter(function (subscriber) {
+                    return subscriber.context !== context;
                 });
             });
 
@@ -91,15 +98,18 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            var schedule = this.handlers;
+            var handlers = this.handlers;
 
             var eventsToEmit = getSubEvents(event);
             eventsToEmit.forEach(function (eventToEmit) {
-                schedule[eventToEmit].forEach(function (subscriber) {
-                    subscriber.handler();
-                });
+                if (Object.keys(handlers).indexOf(eventToEmit) !== -1) {
+                    handlers[eventToEmit].forEach(function (subscriber) {
+                        subscriber.handler();
+                    });
+                }
             });
 
             return this;
