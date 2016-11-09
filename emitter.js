@@ -33,11 +33,10 @@ function getEmitter() {
             for (var i = events.length - 1; i >= 0; i--) {
                 if ((event === events[i].event.split('.')[0] || event === events[i].event) &&
                     context === events[i].context) {
-                    events[i].handler = function ()
-                    {
+                    events[i].handler = function () {
                         this.focus += 0;
                         this.wisdom += 0;
-                    }
+                    };
                 }
             }
 
