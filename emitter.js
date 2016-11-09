@@ -40,10 +40,12 @@ function getEmitter() {
             console.info(event, context);
 
             events.forEach(function (studentEvent) {
-                if (studentEvent.event === event && studentEvent.context === context) {
-                    events.splice(events.indexOf(studentEvent), 1);
+                var eventNames = [];
+                for (var i = 1; i <= studentEvent.event.split('.').length; i++) {
+                    eventNames.push(studentEvent.event.split('.').slice(0, i)
+                        .join('.'));
                 }
-                if (studentEvent.event.split('.')[0] === event &&
+                if (eventNames.indexOf(event) !== -1 &&
                     studentEvent.context === context) {
                     events.splice(events.indexOf(studentEvent), 1);
                 }
@@ -58,18 +60,19 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            // console.info(event);
+            console.info(event);
 
-            var names = event.split('.');
-            events.forEach(function (studentEvent) {
-                if (studentEvent.event === event) {
-                    studentEvent.handler.call(studentEvent.context);
-                }
-            });
-            events.forEach(function (studentEvent) {
-                if (event.indexOf('.') !== -1 && studentEvent.event === names[0]) {
-                    studentEvent.handler.call(studentEvent.context);
-                }
+            var eventNames = [];
+            for (var i = event.split('.').length; i > 0; i--) {
+                eventNames.push(event.split('.').slice(0, i)
+                    .join('.'));
+            }
+            eventNames.forEach(function (eventName) {
+                events.forEach(function (studentEvent) {
+                    if (studentEvent.event === eventName) {
+                        studentEvent.handler.call(studentEvent.context);
+                    }
+                });
             });
 
             return this;
