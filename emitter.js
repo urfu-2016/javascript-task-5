@@ -1,66 +1,64 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
 function getEmitter() {
+    var events = {};
+    function getEventsForEmit(event) {
+        var eventsForEmit = [];
+        var nameEvent = '';
+        event.split('.').forEach(function (e) {
+            nameEvent += e;
+            eventsForEmit.push(nameEvent);
+            nameEvent += '.';
+        });
+
+        return eventsForEmit.reverse();
+    }
+
     return {
-
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!events.hasOwnProperty(event)) {
+                events[event] = [];
+            }
+            events[event].push({
+                context: context,
+                handler: handler
+            });
+
+            return this;
         },
 
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(events).forEach(function (eventForOff) {
+                if (eventForOff === event || eventForOff.indexOf(event + '.') === 0) {
+                    events[eventForOff] = events[eventForOff].filter(function (humon) {
+                        return humon.context !== context;
+                    });
+                }
+            });
+
+            return this;
         },
 
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         */
         emit: function (event) {
-            console.info(event);
+            var eventsForEmit = getEventsForEmit(event);
+            eventsForEmit.forEach(function (eventForEmit) {
+                if (events.hasOwnProperty(eventForEmit)) {
+                    events[eventForEmit].forEach(function (humon) {
+                        humon.handler.call(humon.context);
+                    });
+                }
+            });
+
+            return this;
         },
 
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
         several: function (event, context, handler, times) {
             console.info(event, context, handler, times);
         },
 
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
         through: function (event, context, handler, frequency) {
             console.info(event, context, handler, frequency);
         }
