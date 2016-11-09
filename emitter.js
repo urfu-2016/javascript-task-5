@@ -17,22 +17,20 @@ function getEmitter() {
     return {
         _events: {},
 
-        _getSpacesByRegExp: function (regexp) {
-
+        _getSubNameSpaces: function (event) {
             return Object.keys(this._events).filter(function (eventName) {
 
-                return eventName.match(regexp) !== null;
+                return eventName === event || eventName.match('^' + event + '[.].*');
             });
-        },
-
-        _getSubNameSpaces: function (event) {
-            return this._getSpacesByRegExp('^' + event + '[.].*').concat(event);
         },
 
         _getUpperNameSpaces: function (event) {
             var events = [];
             while (event) {
-                events = events.concat(this._getSpacesByRegExp('^' + event + '$'));
+                if (event in this._events) {
+                    events.push(event);
+                }
+
                 event = event.split('.').slice(0, -1)
                     .join('.');
             }
