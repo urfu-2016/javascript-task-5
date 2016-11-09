@@ -4,8 +4,26 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
+
+function getParentEvents(event) {
+    var subEvents = event.split('.');
+    var parents = [];
+    for (var elements = subEvents.length; elements > 0; elements--) {
+        parents.push(subEvents.slice(0, elements).join('.'));
+    }
+
+    return parents;
+}
+
+function emit(event, events) {
+    if (events[event]) {
+        events[event].forEach(function (eventInfo) {
+            eventInfo.handler();
+        });
+    }
+}
 
 /**
  * Возвращает новый emitter
@@ -13,32 +31,54 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
+        events: {},
 
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!this.events[event]) {
+                this.events[event] = [];
+            }
+            this.events[event].push(
+                {
+                    student: context,
+                    handler: handler.bind(context)
+                });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            this.events[event] = this.events[event].filter(function (eventInfo) {
+                return eventInfo.student !== context;
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            var events = this.events;
+            getParentEvents(event).map(function (parent) {
+                return emit(parent, events);
+            });
+
+            return this;
         },
 
         /**
