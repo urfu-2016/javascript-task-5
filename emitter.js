@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -37,8 +37,8 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-
-            this.listeners.push({ event: event, context: context, handler: handler });
+            this.listeners.push({ event: event, context: context, handler: handler,
+                                count: Number.POSITIVE_INFINITY, module: 0, countModule: 0 });
 
             return this;
         },
@@ -70,8 +70,15 @@ function getEmitter() {
             var events = this.getEventsList(event);
             events.forEach(function (currentEvent) {
                 _this.listeners.forEach(function (listener) {
-                    if (listener.event === currentEvent) {
+                    if (listener.event === currentEvent &&
+                        listener.countModule === 0 && listener.count > 0) {
                         listener.handler.call(listener.context);
+                        listener.count--;
+                        listener.countModule += listener.module;
+
+                    }
+                    if (listener.event === currentEvent && listener.countModule > 0) {
+                        listener.countModule--;
                     }
                 });
             });
@@ -87,9 +94,14 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            times = times > 0 ? times : Number.MAX_VALUE;
+            this.listeners.push({ event: event, context: context, handler: handler,
+                count: times, module: 0, countModule: 0 });
+
+            return this;
         },
 
         /**
@@ -99,9 +111,14 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object} this
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            frequency = frequency > 0 ? frequency : 0;
+            this.listeners.push({ event: event, context: context, handler: handler,
+                count: Number.POSITIVE_INFINITY, module: frequency, countModule: 0 });
+
+            return this;
         }
     };
 }
