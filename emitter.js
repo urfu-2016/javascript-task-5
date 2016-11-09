@@ -53,7 +53,7 @@ function getEmitter() {
             var _this = this;
             var lengthEvent = event.split('.').length;
             this.listeners = this.listeners.filter(function (listener) {
-                return ((_this.getStartEvent(listener.event, lengthEvent) !== event) &&
+                return ((_this.getStartEvent(listener.event, lengthEvent) !== event) ||
                         (listener.context !== context));
             });
 
