@@ -92,7 +92,8 @@ function getEmitter() {
             var sortedEvents = this.events.slice();
             sortedEvents = sortedEvents.sort().reverse();
             for (var i = 0; i < sortedEvents.length; i++) {
-                if (currentEvent.indexOf(sortedEvents[i].name) === 0) {
+                var name = sortedEvents[i].name;
+                if ((currentEvent === name) || (currentEvent.indexOf(name + '.') === 0)) {
                     this.emitForOneEvent(sortedEvents[i].info);
                     currentEvent = sortedEvents[i].name;
                 }
