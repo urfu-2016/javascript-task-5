@@ -9,7 +9,7 @@ module.exports = getEmitter;
 
 function isNotExistParameters(event, context, student) {
     var isNotExistElement = student.event !== event;
-    var isNotRootEventName = !event.startsWith(event + '.');
+    var isNotRootEventName = !student.event.startsWith(event + '.');
     var isNotExistStudent = student.parameters !== context;
 
     return (isNotRootEventName && isNotExistElement) || isNotExistStudent;
