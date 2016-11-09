@@ -44,7 +44,8 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(NAME_SPACE).forEach(function (keys) {
-                if (keys.indexOf(event) === 0) {
+                if (keys.indexOf(event) === 0 && (keys.lastIndexOf('.') !== -1) ||
+                    keys.indexOf(event) !== -1) {
                     NAME_SPACE[keys] = NAME_SPACE[keys].filter(function (record) {
                         return record.context !== context;
                     });
