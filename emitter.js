@@ -35,11 +35,11 @@ function getEmitter() {
          */
         off: function (event, context) {
             studentEvents = studentEvents.filter(function (element) {
-                var isNotEqualElement = element.nameEvent !== event;
-                var isNotEndPoint = element.nameEvent.indexOf(event + '.') !== 0;
+                var isNotEqualEvents = element.nameEvent !== event;
+                var isNotEqualEventWithPoint = element.nameEvent.indexOf(event + '.') !== 0;
                 var isNotEqualContext = element.context !== context;
 
-                return isNotEqualContext || isNotEqualElement && isNotEndPoint;
+                return isNotEqualContext || isNotEqualEvents && isNotEqualEventWithPoint;
             });
 
             return this;
@@ -58,7 +58,7 @@ function getEmitter() {
                         if (studentEvent.isMatch()) {
                             studentEvent.handler.call(studentEvent.context);
                         }
-                        studentEvent.thisCount++;
+                        studentEvent.countCall++;
                     }
                 });
 
@@ -71,7 +71,7 @@ function getEmitter() {
         /*
          * Подписаться на событие с ограничением по количеству полученных уведомлений
          * @star
-         * @param { } event
+         * @param {String} event
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
@@ -113,14 +113,14 @@ function getEmitter() {
 function createSubscription(event, context, handler) {
     return {
         isMatch: function () {
-            var isCorrectFriquency = (this.thisCount) % this.thisFrequency === 0;
-            var isCorrectCount = this.maxCount > this.thisCount;
+            var isCorrectFriquency = (this.countCall) % this.thisFrequency === 0;
+            var isCorrectCount = this.maxCount > this.countCall;
 
             return isCorrectFriquency && isCorrectCount;
         },
 
         thisFrequency: 1,
-        thisCount: 0,
+        countCall: 0,
         maxCount: Infinity,
         nameEvent: event,
         context: context,
