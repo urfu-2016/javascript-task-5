@@ -39,11 +39,21 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            students = students.filter(function (subscriber) {
+            if (typeof (event) === 'string' && typeof (context) === 'object') {
+                students = students.filter(function (subscriber) {
 
-                return (subscriber.context !== context) || (subscriber.event !== event) &&
-                    !(event.indexOf(event + '.') === 0);
-            });
+                    if ((subscriber.context !== context) || (subscriber.event !== event)) {
+
+                        return true;
+                    }
+                    if (event.indexOf(event + '.') === 0) {
+
+                        return false;
+                    }
+
+                    return false;
+                });
+            }
 
             return this;
         },
