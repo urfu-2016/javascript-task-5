@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -12,6 +12,8 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var events = {};
+
     return {
 
         /**
@@ -19,26 +21,58 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object} this
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            events[event] = events[event] || [];
+            events[event].push({
+                context: context,
+                handler: handler
+            });
+
+            return this;
         },
 
         /**
          * Отписаться от события
-         * @param {String} event
+         * @param {String} eventOff
          * @param {Object} context
+         * @returns {Object} this
          */
-        off: function (event, context) {
-            console.info(event, context);
+        off: function (eventOff, context) {
+            for (var event in events) {
+                if (!events.hasOwnProperty(event)) {
+                    continue;
+                }
+                if (event === eventOff || event.split('.')[0] === eventOff) {
+                    events[event] = events[event].filter(function (listener) {
+                        return listener.context !== context;
+                    });
+                }
+            }
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object} this
          */
         emit: function (event) {
-            console.info(event);
+            var subEvents = event.split('.');
+            var end = subEvents.length;
+            while (end) {
+                var subEvent = subEvents.slice(0, end).join('.');
+                if (events[subEvent]) {
+                    events[subEvent].forEach(function (listener) {
+                        listener.handler.call(listener.context);
+                    });
+                }
+                end--;
+            }
+
+            return this;
         },
 
         /**
