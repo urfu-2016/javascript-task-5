@@ -7,15 +7,17 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function changeEvent(string) {
-    var e = string.lastIndexOf('.');
+var SEPARATOR = '.';
 
-    return (e !== -1) ? string.slice(0, e) : '';
+function changeEvent(string) {
+    var separatorIndex = string.lastIndexOf(SEPARATOR);
+
+    return (separatorIndex !== -1) ? string.slice(0, separatorIndex) : '';
 }
 
-function findIndex(collection, functionI) {
+function findIndex(collection, isSuitable) {
     for (var i = 0; i < collection.length; i++) {
-        if (functionI(collection[i])) {
+        if (isSuitable(collection[i])) {
             return i;
         }
     }
@@ -38,8 +40,6 @@ function deleteSubscriber(subscribers, subscriber) {
         subscribers.splice(index, 1);
     }
 }
-
-var SEPARATOR = '.';
 
 /**
  * Возвращает новый emitter
@@ -95,7 +95,7 @@ function getEmitter() {
             var previousEvent = event + SEPARATOR;
 
             var previousEvents = Object.keys(this.events).filter(function (eventItem) {
-                return eventItem.indexOf(oldEvent) === 0;
+                return eventItem.indexOf(previousEvent) === 0;
             });
 
             previousEvents.forEach(function (eventItem) {
@@ -151,7 +151,6 @@ function getEmitter() {
             function wrapperOfHandler() {
                 if (countOfCall !== times) {
                     handler.call(this);
-                    console.info(54, this);
                     countOfCall++;
                 }
             }
