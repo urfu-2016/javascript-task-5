@@ -4,8 +4,31 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
+
+function isEmiting(executor) {
+    if (executor.frequency !== undefined) {
+        if (executor.currentFrequency === 0) {
+            executor.currentFrequency = executor.frequency;
+
+            return true;
+        }
+        executor.currentFrequency--;
+
+        return false;
+    }
+    if (executor.times !== undefined) {
+        executor.times--;
+        if (executor.times >= 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    return true;
+}
 
 /**
  * Возвращает новый emitter
@@ -24,17 +47,19 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-
-            var countCalls = arguments[3];
-            var repetition = arguments[4];
             if (!(event in this.events)) {
                 this.events[event] = [];
+            }
+            var nameParam = '';
+            if (arguments[3]) {
+                nameParam = Object.keys(arguments[3]);
             }
             this.events[event].push({
                 context: context,
                 handler: handler.bind(context),
-                countCalls: countCalls,
-                repetition: repetition
+                times: (nameParam[0] === 'times') ? arguments[3].times : undefined,
+                frequency: (nameParam[0] === 'frequency') ? arguments[3].frequency - 1 : undefined,
+                currentFrequency: 0
             });
 
             return this;
@@ -80,7 +105,9 @@ function getEmitter() {
             }, this);
             filteredNames.forEach(function (eventForCall) {
                 this.events[eventForCall].forEach(function (executor) {
-                    executor.handler.call();
+                    if (isEmiting(executor)) {
+                        executor.handler.call();
+                    }
                 });
             }, this);
 
@@ -97,7 +124,11 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times > 0) {
+                this.on(event, context, handler, { times: times });
+            } else {
+                this.on(event, context, handler);
+            }
 
             return this;
         },
@@ -112,7 +143,11 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (frequency > 0) {
+                this.on(event, context, handler, { frequency: frequency });
+            } else {
+                this.on(event, context, handler);
+            }
 
             return this;
         }
