@@ -1,68 +1,54 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
 function getEmitter() {
+    var subscribed = {};
+
     return {
-
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!subscribed.hasOwnProperty(event)) {
+                subscribed[event] = [];
+            }
+            subscribed[event].push({ 'context': context, 'handler': handler });
+
+            return this;
         },
 
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(subscribed).forEach(function (key) {
+                if (event === key || event === key.substr(0, event.length) + '.') {
+                    subscribed[key].forEach(function (elem) {
+                        if (elem.context === context) {
+                            subscribed[key].splice(subscribed[key].indexOf(elem), 1);
+                        }
+                    });
+                }
+            });
+
+            return this;
         },
 
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         */
         emit: function (event) {
-            console.info(event);
-        },
+            var allEvents = [];
+            while (event.length !== 0) {
+                allEvents.push(event);
+                if (event.lastIndexOf('.') !== -1) {
+                    event = event.slice(0, event.lastIndexOf('.'));
+                } else {
+                    event = '';
+                }
+            }
+            allEvents.forEach(function (item) {
+                if (subscribed.hasOwnProperty(item)) {
+                    subscribed[item].forEach(function (elem) {
+                        elem.handler.call(elem.context);
+                    });
+                }
+            });
 
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
-        several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
-        },
-
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
-        through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            return this;
         }
     };
 }
