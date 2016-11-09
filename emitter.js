@@ -8,17 +8,13 @@ getEmitter.isStar = false;
 module.exports = getEmitter;
 
 function isNotExistParameters(event, context, student) {
-    if (student !== undefined) {
-        var regexp = new RegExp(event + '.');
-        var isNotExistElement = student.event !== event;
-        var eventNames = student.event.match(regexp);
-        var isNotRootEventName = eventNames !== null ? eventNames.index !== 0 : true;
-        var isNotExistStudent = student.parameters !== context;
+    var regexp = new RegExp(event + '.');
+    var isNotExistElement = student.event !== event;
+    var eventNames = student.event.match(regexp);
+    var isNotRootEventName = eventNames !== null ? eventNames.index !== 0 : true;
+    var isNotExistStudent = student.parameters !== context;
 
-        return isNotExistStudent || isNotRootEventName && isNotExistElement;
-    }
-
-    return false;
+    return isNotExistStudent || isNotRootEventName && isNotExistElement;
 }
 
 function getEmitter() {
