@@ -35,7 +35,6 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            // console.info(event, context, handler);
             if (!subscribers[event]) {
                 subscribers[event] = [];
             }
@@ -54,7 +53,6 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            // console.info(event, context);
             var keys = Object.keys(subscribers);
             for (var k = 0; k < keys.length; k++) {
                 if (keys[k] === event || keys[k].slice(0, event.length + 1) === event + '.') {
@@ -71,7 +69,6 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            // console.info(event);
             var events = [];
             for (var i = 1; i <= event.split('.').length; i++) {
                 events.push(event.split('.').slice(0, i)
