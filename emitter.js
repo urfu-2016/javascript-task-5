@@ -2,22 +2,6 @@
 
 getEmitter.isStar = true;
 module.exports = getEmitter;
-
-function startEvents(event, events) {
-    if (events.hasOwnProperty(event)) {
-        events[event].forEach(function (student) {
-            if (student.frequencyCounter > 0) {
-                student.frequencyCounter--;
-            }
-            if (student.times > 0 && student.frequencyCounter === 0) {
-                student.times--;
-                student.frequencyCounter = student.frequency;
-                student.handler.call(student.context);
-            }
-        });
-    }
-}
-
 function getEmitter() {
     var events = {};
 
@@ -44,57 +28,28 @@ function getEmitter() {
         },
 
         emit: function (event) {
-            startEvents(event, events);
-            while (event.indexOf('.') !== -1) {
-                event = event.split('.').slice(0, -1)
+            var copyOfEvent = event.slice();
+            startEvents(copyOfEvent, events);
+            while (copyOfEvent.indexOf('.') !== -1) {
+                copyOfEvent = copyOfEvent.split('.').slice(0, -1)
                     .join('.');
-                startEvents(event, events);
+                startEvents(copyOfEvent, events);
             }
 
             return this;
         },
 
         several: function (event, context, handler, times) {
-            if (times < 1) {
-                addEvent(event, context, handler, events);
-
-                return this;
-            }
-            var newEvetn = {
-                context: context,
-                handler: handler,
-                times: times,
-                frequency: 0,
-                frequencyCounter: 0
-            };
-            if (events.hasOwnProperty(event)) {
-                events[event].push(newEvetn);
-            } else {
-                events[event] = [newEvetn];
-            }
+            addEvent(event, context, handler, events);
+            events[event][(events[event]).length - 1].times = times;
 
             return this;
         },
 
 
         through: function (event, context, handler, frequency) {
-            if (frequency < 1) {
-                addEvent(event, context, handler, events);
-
-                return this;
-            }
-            var newEvent = {
-                context: context,
-                handler: handler,
-                times: Infinity,
-                frequency: frequency,
-                frequencyCounter: 0
-            };
-            if (events.hasOwnProperty(event)) {
-                events[event].push(newEvent);
-            } else {
-                events[event] = [newEvent];
-            }
+            addEvent(event, context, handler, events);
+            events[event][(events[event]).length - 1].frequency = frequency;
 
             return this;
         }
@@ -113,5 +68,20 @@ function addEvent(event, context, handler, events) {
         events[event].push(newEvent);
     } else {
         events[event] = [newEvent];
+    }
+}
+
+function startEvents(event, events) {
+    if (events.hasOwnProperty(event)) {
+        events[event].forEach(function (student) {
+            if (student.frequencyCounter > 0) {
+                student.frequencyCounter--;
+            }
+            if (student.times > 0 && student.frequencyCounter === 0) {
+                student.times--;
+                student.frequencyCounter = student.frequency;
+                student.handler.call(student.context);
+            }
+        });
     }
 }
