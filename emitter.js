@@ -77,11 +77,11 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (eventToOff, context) {
-            var events = Object.keys(this.handlers);
             var handlers = this.handlers;
+            var events = Object.keys(handlers);
 
             events = events.filter(function (event) {
-                var eventPrefix = event + '.';
+                var eventPrefix = eventToOff + '.';
 
                 return event === eventToOff || startsWith(eventPrefix, event);
             });
@@ -102,8 +102,8 @@ function getEmitter() {
          */
         emit: function (event) {
             var handlers = this.handlers;
-
             var eventsToEmit = getSubEvents(event);
+
             eventsToEmit.forEach(function (eventToEmit) {
                 if (Object.keys(handlers).indexOf(eventToEmit) !== -1) {
                     handlers[eventToEmit].forEach(function (subscriber) {
