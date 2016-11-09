@@ -45,15 +45,11 @@ function getEmitter() {
         off: function (event, context) {
             Object.keys(NAME_SPACE).forEach(function (keys) {
                 if (keys.indexOf(event) === 0) {
-                    NAME_SPACE[event].map(function (record, index) {
-                        if (record.context === context) {
-                            delete NAME_SPACE[event][index];
-                        }
-
-                        return false;
+                    NAME_SPACE[keys] = NAME_SPACE[keys].filter(function (record) {
+                        return record.context !== context;
                     });
                 }
-            }, this);
+            });
 
             return this;
         },
