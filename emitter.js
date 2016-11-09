@@ -67,7 +67,6 @@ function getEmitter() {
         emit: function (event) {
 
             while (event !== '') {
-                var testEvent = events[event];
                 if (events[event]) {
                     events[event].forEach(function (item) {
                         if (item.count && (item.count++ >= item.count)) {
@@ -81,7 +80,6 @@ function getEmitter() {
                     });
                 }
 
-                var testSliceEvent = event.slice(0, event.lastIndexOf('.'));
                 event = event.slice(0, event.lastIndexOf('.'));
             }
 
