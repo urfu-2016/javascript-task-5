@@ -44,7 +44,7 @@ function getEmitter() {
         off: function (event, context) {
             subscriptions = subscriptions.filter(function (subscription) {
                 var isExcludedEvent = subscription.event !== event &&
-                    subscription.event.indexOf(event + '.') === -1;
+                    subscription.event.indexOf(event + '.') === 0;
 
                 return subscription.context !== context || isExcludedEvent;
             });
