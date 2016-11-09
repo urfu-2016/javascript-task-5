@@ -4,8 +4,9 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
+var events = [];
 
 /**
  * Возвращает новый emitter
@@ -19,26 +20,55 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
             console.info(event, context, handler);
+
+            events.push({ event: event, context: context, handler: handler });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
             console.info(event, context);
+
+            events.forEach(function (studentEvent) {
+                if (studentEvent.event === event && studentEvent.context === context) {
+                    events.splice(events.indexOf(studentEvent), 1);
+                }
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            // console.info(event);
+
+            var names = event.split('.');
+            events.forEach(function (studentEvent) {
+                if (studentEvent.event === event) {
+                    studentEvent.handler.call(studentEvent.context);
+                }
+            });
+            events.forEach(function (studentEvent) {
+                if (event.indexOf('.') !== -1 && studentEvent.event === names[0]) {
+                    studentEvent.handler.call(studentEvent.context);
+                }
+            });
+
+            return this;
         },
 
         /**
