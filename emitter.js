@@ -11,6 +11,20 @@ function comparer(a, b) {
     return (a.event >= b.event) ? -1 : 1;
 }
 
+function compareNamespaces(bigNamespace, smallNamespace) {
+    var splitedBigNS = bigNamespace.split('.');
+    var splitedSmallNS = smallNamespace.split('.');
+    for (var i = 0; i < splitedSmallNS.length; i++) {
+        if (splitedSmallNS[i] === splitedBigNS[i]) {
+            continue;
+        } else {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function getEmitter() {
     var events = [];
 
@@ -31,8 +45,7 @@ function getEmitter() {
 
         off: function (event, context) {
             for (var i = 0; i < events.length; i++) {
-                if ((event === events[i].event.split('.')[0] || event === events[i].event) &&
-                    context === events[i].context) {
+                if (compareNamespaces(events[i].event, event) && context === events[i].context) {
                     events[i].handler = function () {
                         this.focus += 0;
                         this.wisdom += 0;
@@ -45,7 +58,7 @@ function getEmitter() {
 
         emit: function (event) {
             for (var i = 0; i < events.length; i++) {
-                if (event.split('.')[0] === events[i].event || event === events[i].event) {
+                if (compareNamespaces(event, events[i].event)){
                     events[i].handler.call(events[i].context);
                 }
             }
