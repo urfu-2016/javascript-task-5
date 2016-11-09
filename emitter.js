@@ -16,20 +16,25 @@ function getEmitter() {
 
     return {
         _events: {},
-        _getSubNameSpaces: function (event) {
+
+        _getSpacesByRegExp: function (regexp) {
+
             return Object.keys(this._events).filter(function (eventName) {
-                return eventName === event || eventName.match('^' + event + '[.].*');
+
+                return eventName.match(regexp) !== null;
             });
+        },
+
+        _getSubNameSpaces: function (event) {
+            return this._getSpacesByRegExp('^' + event + '[.].*').concat(event);
         },
 
         _getUpperNameSpaces: function (event) {
             var events = [];
-            while (event.split('.').length > 0 && event !== '') {
-                if (event in this._events) {
-                    events.push(event);
-                }
+            while (event) {
+                events = events.concat(this._getSpacesByRegExp('^' + event + '$'));
                 event = event.split('.').slice(0, -1)
-                .join('.');
+                    .join('.');
             }
 
             return events;
@@ -37,7 +42,7 @@ function getEmitter() {
 
         _createEvent: function (eventName) {
             if (!(eventName in this._events)) {
-                this._events[eventName] = { 'handlers': [], 'name': eventName };
+                this._events[eventName] = { 'handlerWrappers': [] };
             }
 
             return this._events[eventName];
@@ -50,7 +55,7 @@ function getEmitter() {
                 'function': handler.bind(context),
                 'counter': 0
             };
-            event.handlers.push(handlerWraper);
+            event.handlerWrappers.push(handlerWraper);
 
             return handlerWraper;
         },
@@ -76,24 +81,25 @@ function getEmitter() {
          */
         off: function (eventName, context) {
             this._getSubNameSpaces(eventName).forEach(function (subEventName) {
-                this._events[subEventName].handlers = this._events[subEventName].handlers
-                .filter(function (handler) {
-                    return handler.context !== context;
+                this._events[subEventName].handlerWrappers =
+                 this._events[subEventName].handlerWrappers
+                .filter(function (handlerWrapper) {
+                    return handlerWrapper.context !== context;
                 });
             }.bind(this));
 
             return this;
         },
 
-        _canEmit: function (handler) {
-            if (handler.isSeveral) {
-                if (handler.counter >= handler.times) {
+        _canEmit: function (handlerWrapper) {
+            if (handlerWrapper.isSeveral) {
+                if (handlerWrapper.counter >= handlerWrapper.times) {
 
                     return false;
                 }
             }
-            if (handler.isThrough) {
-                if (handler.counter % handler.freq !== 0) {
+            if (handlerWrapper.isThrough) {
+                if (handlerWrapper.counter % handlerWrapper.frequency !== 0) {
 
                     return false;
                 }
@@ -109,14 +115,15 @@ function getEmitter() {
          * @returns {Emmitter} this
          */
         emit: function (eventName) {
+            var _this = this;
             this._getUpperNameSpaces(eventName).forEach(function (upperEventName) {
-                this._events[upperEventName].handlers.forEach(function (handler) {
-                    if (this._canEmit(handler)) {
-                        handler.function(handler.context);
+                _this._events[upperEventName].handlerWrappers.forEach(function (handlerWrapper) {
+                    if (_this._canEmit(handlerWrapper)) {
+                        handlerWrapper.function(handlerWrapper.context);
                     }
-                    handler.counter += 1;
-                }.bind(this));
-            }.bind(this));
+                    handlerWrapper.counter += 1;
+                });
+            });
 
             return this;
         },
@@ -150,7 +157,7 @@ function getEmitter() {
         through: function (eventName, context, handler, frequency) {
             var handlerWraper = this._addEvent(eventName, context, handler);
             handlerWraper.isThrough = true;
-            handlerWraper.freq = frequency;
+            handlerWraper.frequency = frequency;
 
             return this;
         }
