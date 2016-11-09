@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -12,6 +12,8 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var subscriptions = [];
+
     return {
 
         /**
@@ -19,26 +21,58 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            subscriptions.push(
+                {
+                    event: event,
+                    context: context,
+                    handler: handler
+                }
+            );
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            subscriptions = subscriptions.filter(function (subscription) {
+                var isExcludedEvent = subscription.event !== event &&
+                    subscription.event.indexOf(event + '.') === -1;
+
+                return subscription.context !== context || isExcludedEvent;
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            var splitedEvent = event.split('.');
+            var eventsList = splitedEvent.map(function (item, index) {
+                return splitedEvent.slice(0, index + 1)
+                    .join('.');
+            })
+            .reverse();
+            eventsList.forEach(function (item) {
+                subscriptions.forEach(function (subscription) {
+                    if (subscription.event === item) {
+                        subscription.handler.call(subscription.context);
+                    }
+                });
+            });
+
+            return this;
         },
 
         /**
