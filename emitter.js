@@ -44,11 +44,11 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(this.NAME_SPACE).forEach(function (keys) {
-                if (keys.indexOf(event) === 0) {
-                    this.NAME_SPACE[keys] = this.NAME_SPACE[keys].filter(function (record) {
-                        return record.context !== context;
-                    });
-                }
+                this.NAME_SPACE[keys] = this.NAME_SPACE[keys].filter(function (record) {
+                    return record.context !== context || keys !== event &&
+                    keys.indexOf(event + '.') !== 0;
+                });
+
             }, this);
 
             return this;
