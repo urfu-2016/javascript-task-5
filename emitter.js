@@ -18,7 +18,7 @@ function getEmitter() {
 
         off: function (event, context) {
             Object.keys(subscribed).forEach(function (key) {
-                if (event === key || event === key.substr(0, event.length) + '.') {
+                if (event === key || event + '.' === key.substr(0, event.length + 1)) {
                     subscribed[key].forEach(function (elem) {
                         if (elem.context === context) {
                             subscribed[key].splice(subscribed[key].indexOf(elem), 1);
