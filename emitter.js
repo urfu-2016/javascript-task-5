@@ -7,38 +7,102 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+function EventTarget(target) {
+    target.callbacks = target.callbacks || {};
+    target.on = function(event, fn) {
+        target.callbacks[event] = target.callbacks[event] || [];
+        target.callbacks[event].push(fn);
+    };
+    target.off = function(event) {
+        target.callbacks[event] = [];
+    };
+    target.dispatch = function(event) {
+        target.callbacks[event].reverse();
+        target.callbacks[event].forEach(function (fn) {
+            fn.apply(target, arguments);
+        });
+        target.callbacks[event].reverse();
+    };
+
+    return target;
+}
+function getAllNamespacedEvents(event) {
+    var namespaces = event.split('.');
+    var events = [];
+    namespaces.forEach(function () {
+        events.push(event);
+        var lastDotIdx = event.lastIndexOf('.');
+        if (lastDotIdx === -1) {
+            return;
+        }
+        event = event.slice(0, lastDotIdx);
+    });
+
+    return events;
+}
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
     return {
+        observers: {},
 
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Emitter}
          */
         on: function (event, context, handler) {
             console.info(event, context, handler);
+            context = new EventTarget(context);
+            context.on(event, handler);
+            this.observers[event] = this.observers[event] || [];
+            this.observers[event].push(context);
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Emitter}
          */
         off: function (event, context) {
             console.info(event, context);
+            context = new EventTarget(context);
+            var targetIdx = this.observers[event].indexOf(context);
+            this.observers[event].splice(targetIdx, 1);
+            context.off(event);
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Emitter}
          */
         emit: function (event) {
             console.info(event);
+            var allEvents = getAllNamespacedEvents(event);
+            var self = this;
+            allEvents.forEach(function (event) {
+                if (typeof self.observers[event] === 'undefined') {
+                    return;
+                }
+                self.observers[event].reverse();
+                self.observers[event].forEach(function (target) {
+                    target.dispatch(event);
+                });
+                self.observers[event].reverse();
+            });
+
+            return this;
         },
 
         /**
@@ -48,6 +112,7 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Emitter}
          */
         several: function (event, context, handler, times) {
             console.info(event, context, handler, times);
@@ -60,6 +125,7 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Emitter}
          */
         through: function (event, context, handler, frequency) {
             console.info(event, context, handler, frequency);
