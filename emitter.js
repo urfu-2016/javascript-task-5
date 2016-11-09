@@ -5,7 +5,6 @@ module.exports = getEmitter;
 
 function getEmitter() {
     var events = {};
-    // var period = 1;
 
     function addEvent(eventInfo) {
         if (!(events.hasOwnProperty(eventInfo.name))) {
@@ -65,6 +64,7 @@ function getEmitter() {
             while (event) {
                 if (events.hasOwnProperty(event)) {
                     events[event].forEach(function (e) {
+                        console.log(e);
                         launch[e.type](e);
                     });
                 }
