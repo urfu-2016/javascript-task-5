@@ -12,10 +12,10 @@ function isExistParameters(event, context, student) {
         var regexp = new RegExp(event + '.');
         var isExistElement = student.event === event;
         var eventNames = student.event.match(regexp);
-        var isRootEventName = eventNames !== null ? eventNames.index === 0 : false;
+        var isNotRootEventName = eventNames !== null ? eventNames.index === 0 : false;
         var isExistStudent = student.parameters === context;
 
-        return isExistStudent || isRootEventName && isExistElement;
+        return !isExistStudent || !(isRootEventName && isExistElement);
     }
 
     return false;
