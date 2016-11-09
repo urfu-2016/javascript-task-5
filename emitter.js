@@ -12,7 +12,7 @@ function subscribersFilter(subscribers, context, i) {
     for (var j = 0; j < subscribers[keys[i]].length; j++) {
         subscribers[keys[i]] = subscribers[keys[i]].filter(function (listener) {
             return listener.context !== context;
-        })
+        });
     }
 
     return subscribers;
