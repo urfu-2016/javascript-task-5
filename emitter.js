@@ -43,7 +43,7 @@ function getEmitter() {
                 students = students.filter(function (subscriber) {
 
                     return subscriber.context !== context || subscriber.event !== event &&
-                        event.indexOf(event + '.') !== 0;
+                        !(event.indexOf(event + '.') === 0);
                 });
             }
 
