@@ -43,6 +43,10 @@ function getEmitter() {
                 if (studentEvent.event === event && studentEvent.context === context) {
                     events.splice(events.indexOf(studentEvent), 1);
                 }
+                if (studentEvent.event.split('.')[0] === event &&
+                    studentEvent.context === context) {
+                    events.splice(events.indexOf(studentEvent), 1);
+                }
             });
 
             return this;
