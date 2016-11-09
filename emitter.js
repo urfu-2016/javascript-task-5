@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -81,8 +81,25 @@ function getEmitter() {
                 var callback = this.callbacks[i];
 
                 if (callback.event === event) {
-                    callback.handler.apply(callback.context);
+                    this.doCallback(callback);
                 }
+            }
+        },
+
+        doCallback: function (callback) {
+            if (callback.times !== undefined) {
+                if (callback.times > 0) {
+                    callback.handler.apply(callback.context);
+                    callback.times -= 1;
+                }
+            } else if (callback.frequency !== undefined) {
+                callback.current += 1;
+                if (callback.current === callback.frequency) {
+                    callback.handler.apply(callback.context);
+                    callback.current = 0;
+                }
+            } else {
+                callback.handler.apply(callback.context);
             }
         },
 
@@ -111,9 +128,27 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
             console.info(event, context, handler, times);
+
+            times = times || 0;
+
+            if (times <= 0) {
+                this.on(event, context, handler);
+            } else {
+                var callback = {};
+
+                callback.event = event;
+                callback.context = context;
+                callback.handler = handler;
+                callback.times = times;
+
+                this.callbacks.push(callback);
+            }
+
+            return this;
         },
 
         /**
@@ -123,9 +158,28 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
             console.info(event, context, handler, frequency);
+
+            frequency = frequency || 0;
+
+            if (frequency <= 0) {
+                this.on(event, context, handler);
+            } else {
+                var callback = {};
+
+                callback.event = event;
+                callback.context = context;
+                callback.handler = handler;
+                callback.frequency = frequency;
+                callback.current = frequency - 1;
+
+                this.callbacks.push(callback);
+            }
+
+            return this;
         }
     };
 }
