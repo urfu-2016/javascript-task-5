@@ -63,7 +63,9 @@ function getEmitter() {
          */
         off: function (event, context) {
             var eventsNameForOff = filterByPrefix(Object.keys(this.eventToHandlers), event + '.');
-            eventsNameForOff.push(event);
+            if (this.eventToHandlers.hasOwnProperty(event)) {
+                eventsNameForOff.push(event);
+            }
             var evetns = this.eventToHandlers;
 
             eventsNameForOff.forEach(function (eventForOff) {
