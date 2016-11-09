@@ -30,7 +30,6 @@ function getEmitter() {
             return this;
         },
 
-
         off: function (event, context) {
             subscriptions = subscriptions.filter(function (student) {
                 return isNotExistParameters(event, context, student);
