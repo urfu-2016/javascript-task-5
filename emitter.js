@@ -10,8 +10,8 @@ module.exports = getEmitter;
 function Listener(context, handler, times, frequency) {
     this.context = context;
     this._handler = handler;
-    this._times = times || Infinity;
-    this._frequency = frequency || 1;
+    this._times = times;
+    this._frequency = frequency;
     this._callCount = 0;
     this.callEvent = function () {
         if (this._callCount < this._times && this._callCount % this._frequency === 0) {
@@ -30,20 +30,22 @@ function Listener(context, handler, times, frequency) {
 function getEmitter() {
     return {
 
-        _events: [],
+        _events: {},
 
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @returns {on}
+         * @returns {Object}
          */
         on: function (event, context, handler) {
             if (!this._events.hasOwnProperty(event)) {
                 this._events[event] = [];
             }
-            this._events[event].push(new Listener(context, handler, arguments[3], arguments[4]));
+            var times = arguments[3] || Infinity;
+            var frequency = arguments[4] || 1;
+            this._events[event].push(new Listener(context, handler, times, frequency));
 
             return this;
         },
@@ -52,7 +54,7 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
-         * @returns {off}
+         * @returns {Object}
          */
         off: function (event, context) {
             Object.keys(this._events).forEach(function (currentEvent) {
@@ -70,7 +72,7 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
-         * @returns {emit}
+         * @returns {Object}
          */
         emit: function (event) {
             var listeners = this._events[event];
@@ -91,7 +93,7 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
-         * @returns {*|on}
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
             return this.on(event, context, handler, times);
@@ -104,7 +106,7 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
-         * @returns {*|on}
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
             return this.on(event, context, handler, undefined, frequency);
