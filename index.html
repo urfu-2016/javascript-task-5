@@ -83,7 +83,7 @@
                 var self = this;
                 Object.keys(this.observers).forEach(function (subscribedEvent) {
                     var targetIdx = self.observers[subscribedEvent].indexOf(context);
-                    if (subscribedEvent.indexOf(event) === 0 && subcribedEven) {
+                    if (subscribedEvent.indexOf(event) === 0 && subcribedEvent) {
                         self.observers[subscribedEvent].splice(targetIdx, 1);
                     }
                 });

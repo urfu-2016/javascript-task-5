@@ -83,7 +83,7 @@ function getEmitter() {
             var self = this;
             Object.keys(this.observers).forEach(function (subscribedEvent) {
                 var targetIdx = self.observers[subscribedEvent].indexOf(context);
-                if (subscribedEvent.indexOf(event) === 0 && subcribedEvent) {
+                if (subscribedEvent.indexOf(event) === 0 && subscribedEvent) {
                     self.observers[subscribedEvent].splice(targetIdx, 1);
                 }
             });
