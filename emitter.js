@@ -31,10 +31,7 @@ function getEmitter() {
             }
             this.eventStudents[event].push({
                 context: context,
-                handler: handler,
-                currentFrequency: 0,
-                frequency: 1,
-                count: Infinity
+                handler: handler
             });
 
             return this;
@@ -51,7 +48,7 @@ function getEmitter() {
             Object.keys(this.eventStudents).forEach(function (currentEvent) {
                 if (this.isHasEvent(event, currentEvent)) {
                     this.eventStudents[currentEvent] =
-                        this.describeEvents(this.eventStudents[currentEvent], context);
+                        this.filterEvents(this.eventStudents[currentEvent], context);
                 }
             }, this);
 
@@ -62,13 +59,12 @@ function getEmitter() {
             return (currentEvent.indexOf(event + '.') === 0) || (event === currentEvent);
         },
 
-        describeEvents: function (arrayEvents, context) {
+        filterEvents: function (arrayEvents, context) {
             return arrayEvents.filter(function (item) {
 
                 return item.context !== context;
             });
         },
-
 
         /**
          * Уведомить о событии
@@ -81,22 +77,11 @@ function getEmitter() {
 
             events.forEach(function (currentEvent) {
                 this.eventStudents[currentEvent].forEach(function (student) {
-                    if (this.isCanEmit(student)) {
-                        student.handler.call(student.context);
-                    }
-                    student.count--;
-                    student.currentFrequency++;
-
+                    student.handler.call(student.context);
                 }, this);
             }, this);
 
             return this;
-        },
-
-        isCanEmit: function (student) {
-            var correctFrequency = student.currentFrequency % student.frequency === 0;
-
-            return correctFrequency && (student.count > 0);
         },
 
         createAllEvents: function (event) {
@@ -104,15 +89,15 @@ function getEmitter() {
             if (eventNames.length === 1 && this.eventStudents.hasOwnProperty(event)) {
                 return [event];
             }
-            var rootEvent = eventNames[0];
+            var rootEvent = eventNames.shift();
             var eventsArray = [rootEvent];
-            eventNames.splice(0, 1);
+
             eventNames.forEach(function (currentEvent) {
                 rootEvent += '.' + currentEvent;
-                eventsArray.push(rootEvent);
+                eventsArray.unshift(rootEvent);
             });
 
-            return eventsArray.reverse().filter(function (current) {
+            return eventsArray.filter(function (current) {
                 return this.eventStudents.hasOwnProperty(current);
             }, this);
         },
@@ -132,17 +117,20 @@ function getEmitter() {
                 this.on(event, context, handler);
             }
 
-            if (!this.eventStudents.hasOwnProperty(event)) {
-                this.eventStudents[event] = [];
-            }
+            var modifiedHandler = function () {
+                var counter = times;
+                var hand = handler;
+                var currentContext = context;
 
-            this.eventStudents[event].push({
-                context: context,
-                handler: handler,
-                currentFrequency: 0,
-                frequency: 1,
-                count: times
-            });
+                return function () {
+                    if (counter > 0) {
+                        counter--;
+
+                        return hand.call(currentContext);
+                    }
+                };
+            };
+            this.on(event, context, modifiedHandler());
 
             return this;
         },
@@ -162,17 +150,20 @@ function getEmitter() {
                 this.on(event, context, handler);
             }
 
-            if (!this.eventStudents.hasOwnProperty(event)) {
-                this.eventStudents[event] = [];
-            }
+            var modifiedHandler = function () {
+                var currentFrequency = -1;
+                var mustFrequency = frequency;
+                var hand = handler;
+                var currentContext = context;
 
-            this.eventStudents[event].push({
-                context: context,
-                handler: handler,
-                currentFrequency: 0,
-                frequency: frequency,
-                count: Infinity
-            });
+                return function () {
+                    currentFrequency++;
+                    if (currentFrequency % mustFrequency === 0) {
+                        return hand.call(currentContext);
+                    }
+                };
+            };
+            this.on(event, context, modifiedHandler());
 
             return this;
         }
