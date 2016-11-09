@@ -22,7 +22,6 @@ function subscribersFilter(subscribers, context, i) {
  * Возвращает новый emitter
  * @returns {Object}
  */
-func
 function getEmitter() {
     var subscribers = {};
 
@@ -57,7 +56,7 @@ function getEmitter() {
         off: function (event, context) {
             // console.info(event, context);
             var keys = Object.keys(subscribers);
-            for (var k = 0; k < keys.length; i++) {
+            for (var k = 0; k < keys.length; k++) {
                 if (keys[k] === event || keys[k].slice(0, event.length + 1) === event + '.') {
                     subscribers = subscribersFilter(subscribers, context, k);
                 }
@@ -75,13 +74,14 @@ function getEmitter() {
             // console.info(event);
             var events = [];
             for (var i = 1; i <= event.split('.').length; i++) {
-                events.push(event.split('.').slice(0, i).join('.'));
+                events.push(event.split('.').slice(0, i)
+                    .join('.'));
             }
             events.reverse();
             for (var j = 0; j < events.length; j++) {
                 if (subscribers[events[j]] !== undefined) {
                         subscribers[events[j]].forEach(function (listener) {
-                            listener.handler();
+                        listener.handler();
                         });
                 }
             }
