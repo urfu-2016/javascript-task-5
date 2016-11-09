@@ -65,7 +65,7 @@ function getEmitter() {
             context = new EventTarget(context);
             context.on(event, handler);
             this.observers[event] = this.observers[event] || [];
-            if (this.observers.indexOf(context) === -1) {
+            if (this.observers[event].indexOf(context) === -1) {
                 this.observers[event].push(context);
             }
 
