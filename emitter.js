@@ -106,11 +106,11 @@ function getEmitter() {
                 if (typeof self.observers[eventWithoutNamespace] === 'undefined') {
                     return;
                 }
-                //self.observers[eventWithoutNamespace].reverse();
+                // self.observers[eventWithoutNamespace].reverse();
                 self.observers[eventWithoutNamespace].forEach(function (target) {
                     target.dispatch(eventWithoutNamespace);
                 });
-                //self.observers[eventWithoutNamespace].reverse();
+                // self.observers[eventWithoutNamespace].reverse();
             });
 
             return this;
