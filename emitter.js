@@ -15,7 +15,7 @@ function getEmitter() {
             callback: eventInfo.callback,
             times: eventInfo.times,
             type: eventInfo.type,
-            period: 1
+            period: 0
         });
     }
 
