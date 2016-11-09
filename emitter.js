@@ -30,7 +30,7 @@ function getEmitter() {
         },
 
         off: function (event, context) {
-            for (var i = events.length - 1; i >= 0; i--) {
+            for (var i = 0; i < events.length; i++) {
                 if ((event === events[i].event.split('.')[0] || event === events[i].event) &&
                     context === events[i].context) {
                     events[i].handler = function () {
