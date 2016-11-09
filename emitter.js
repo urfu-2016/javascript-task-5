@@ -64,7 +64,6 @@ function getEmitter() {
             while (event) {
                 if (events.hasOwnProperty(event)) {
                     events[event].forEach(function (e) {
-                        console.log(e);
                         launch[e.type](e);
                     });
                 }
