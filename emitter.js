@@ -50,7 +50,7 @@ function getEmitter() {
 
         off: function (event, context) {
             Object.keys(events).forEach(function (e) {
-                if (e.startsWith(event)) {
+                if (e.startsWith(event + '.') || e === event) {
                     events[e] = events[e].filter(function (ev) {
                         return context !== ev.student;
                     });
