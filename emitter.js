@@ -81,7 +81,6 @@ function getEmitter() {
         off: function (event, context) {
             console.info(event, context);
             context = new EventTarget(context);
-            context.off(event);
             var self = this;
             Object.keys(this.observers).forEach(function (subscribedEvent) {
                 var targetIdx = self.observers[subscribedEvent].indexOf(context);
@@ -89,6 +88,7 @@ function getEmitter() {
                     self.observers[subscribedEvent].splice(targetIdx, 1);
                 }
             });
+            context.off(event);
 
             return this;
         },

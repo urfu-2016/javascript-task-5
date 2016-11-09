@@ -108,11 +108,11 @@
                     if (typeof self.observers[event] === 'undefined') {
                         return;
                     }
-                    self.observers[event].reverse();
+                    //self.observers[event].reverse();
                     self.observers[event].forEach(function (target) {
                         target.dispatch(event);
                     });
-                    self.observers[event].reverse();
+                    //self.observers[event].reverse();
                 });
                 return this;
             },
