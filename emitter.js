@@ -82,7 +82,7 @@ function getEmitter() {
             context.off(event);
             var self = this;
             Object.keys(this.observers).forEach(function (subscribedEvent) {
-                var targetIdx = this.observers[subscribedEvent].indexOf(context);
+                var targetIdx = self.observers[subscribedEvent].indexOf(context);
                 if (subscribedEvent.indexOf(event) === 0 && subcribedEven) {
                     self.observers[subscribedEvent].splice(targetIdx, 1);
                 }

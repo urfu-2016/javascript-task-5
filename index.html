@@ -79,13 +79,12 @@
             off: function (event, context) {
                 console.info(event, context);
                 context = new EventTarget(context);
-                var targetIdx = this.observers[event].indexOf(context);
-                this.observers[event].splice(targetIdx, 1);
                 context.off(event);
                 var self = this;
                 Object.keys(this.observers).forEach(function (subscribedEvent) {
-                    if (subscribedEvent.indexOf(event) === 0) {
-                        self.observers[subscribedEvent].splice(targetIdx);
+                    var targetIdx = this.observers[subscribedEvent].indexOf(context);
+                    if (subscribedEvent.indexOf(event) === 0 && subcribedEven) {
+                        self.observers[subscribedEvent].splice(targetIdx, 1);
                     }
                 });
 
