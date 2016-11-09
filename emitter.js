@@ -80,8 +80,8 @@ function getEmitter() {
             events.reverse();
             for (var j = 0; j < events.length; j++) {
                 if (subscribers[events[j]] !== undefined) {
-                        subscribers[events[j]].forEach(function (listener) {
-                        listener.handler();
+                    subscribers[events[j]].forEach(function (listener) {
+                            listener.handler();
                         });
                 }
             }
