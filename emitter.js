@@ -172,17 +172,20 @@ function getEmitter() {
                 return this.on(event, context, handler);
             }
 
-            var countOfCall = 1;
+            var countOfCall = 0;
 
             /**
             * @this {Object}
             */
             function wrapperOfHandler() {
-                if (countOfCall !== frequency) {
+                if (countOfCall === 0) { //  2
                     handler.call(this);
-                    countOfCall++;
-                } else {
-                    countOfCall = 1;
+                }
+
+                countOfCall++;
+
+                if (countOfCall === frequency) {
+                    countOfCall = 0;
                 }
             }
 
