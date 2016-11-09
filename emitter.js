@@ -60,7 +60,7 @@ function getEmitter() {
             var newHandler = function (humon) {
                 humon.iteration++;
                 if (humon.iteration <= times) {
-                    handler.call(this);
+                    handler.call(humon.context);
                 }
             };
             this.on(event, context, newHandler);
@@ -71,7 +71,7 @@ function getEmitter() {
         through: function (event, context, handler, frequency) {
             var newHandler = function (humon) {
                 if (humon.iteration % frequency === 0) {
-                    handler.call(this);
+                    handler.call(humon.context);
                     humon.iteration = 0;
                 }
                 humon.iteration++;
