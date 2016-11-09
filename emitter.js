@@ -9,14 +9,14 @@ module.exports = getEmitter;
 
 function EventTarget(target) {
     target.callbacks = target.callbacks || {};
-    target.on = function(event, fn) {
+    target.on = function (event, fn) {
         target.callbacks[event] = target.callbacks[event] || [];
         target.callbacks[event].push(fn);
     };
-    target.off = function(event) {
+    target.off = function (event) {
         target.callbacks[event] = [];
     };
-    target.dispatch = function(event) {
+    target.dispatch = function (event) {
         target.callbacks[event].reverse();
         target.callbacks[event].forEach(function (fn) {
             fn.apply(target, arguments);
@@ -91,15 +91,15 @@ function getEmitter() {
             console.info(event);
             var allEvents = getAllNamespacedEvents(event);
             var self = this;
-            allEvents.forEach(function (event) {
-                if (typeof self.observers[event] === 'undefined') {
+            allEvents.forEach(function (eventWithoutNamespace) {
+                if (typeof self.observers[eventWithoutNamespace] === 'undefined') {
                     return;
                 }
-                self.observers[event].reverse();
-                self.observers[event].forEach(function (target) {
-                    target.dispatch(event);
+                self.observers[eventWithoutNamespace].reverse();
+                self.observers[eventWithoutNamespace].forEach(function (target) {
+                    target.dispatch(eventWithoutNamespace);
                 });
-                self.observers[event].reverse();
+                self.observers[eventWithoutNamespace].reverse();
             });
 
             return this;
@@ -112,7 +112,6 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
-         * @returns {Emitter}
          */
         several: function (event, context, handler, times) {
             console.info(event, context, handler, times);
@@ -125,7 +124,6 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
-         * @returns {Emitter}
          */
         through: function (event, context, handler, frequency) {
             console.info(event, context, handler, frequency);
