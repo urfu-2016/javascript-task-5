@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -12,6 +12,8 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var events = [];
+
     return {
 
         /**
@@ -20,8 +22,16 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          */
+
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            events.push(
+                {
+                    event: event,
+                    propertyStudent: context,
+                    handler: handler
+                });
+
+            return this;
         },
 
         /**
@@ -29,16 +39,40 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          */
+
         off: function (event, context) {
-            console.info(event, context);
+            events.forEach(function (currentEvent, i) {
+                var partsEvent = currentEvent.event.split('.');
+                var templates = [];
+                partsEvent.forEach(function (currentPart, j) {
+                    templates.push(partsEvent.slice(0, partsEvent.length - j).join('.'));
+                });
+                var checkEvent = (templates.indexOf(event) !== -1);
+                if (checkEvent && currentEvent.propertyStudent === context) {
+                    delete events[i];
+                }
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
          */
+
         emit: function (event) {
-            console.info(event);
+            var partsEvent = event.split('.');
+            partsEvent.forEach(function (currentPart, i) {
+                var template = partsEvent.slice(0, partsEvent.length - i).join('.');
+                events.forEach(function (currentEvent) {
+                    if (currentEvent.event === template) {
+                        currentEvent.handler.call(currentEvent.propertyStudent);
+                    }
+                });
+            });
+
+            return this;
         },
 
         /**
