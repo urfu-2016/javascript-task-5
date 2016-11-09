@@ -42,16 +42,8 @@ function getEmitter() {
             if (typeof (event) === 'string' && typeof (context) === 'object') {
                 students = students.filter(function (subscriber) {
 
-                    if ((subscriber.context !== context) || (subscriber.event !== event)) {
-
-                        return true;
-                    }
-                    if (event.indexOf(event + '.') === 0) {
-
-                        return false;
-                    }
-
-                    return false;
+                    return (subscriber.context !== context || subscriber.event !== event) &&
+                        !(subscriber.event.indexOf(event + '.') === 0);
                 });
             }
 
