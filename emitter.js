@@ -10,9 +10,9 @@ module.exports = getEmitter;
 function subscribersFilter(subscribers, context, i) {
     var keys = Object.keys(subscribers);
     for (var j = 0; j < subscribers[keys[i]].length; j++) {
-        if (subscribers[keys[i]][j] === context) {
-            delete subscribers[keys[i]][j];
-        }
+        subscribers[keys[i]] = subscribers[keys[i]].filter(function (listener) {
+            return listener.context !== context;
+        })
     }
 
     return subscribers;
