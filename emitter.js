@@ -7,14 +7,14 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-var NAME_SPACE = {};
-
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
     return {
+
+        NAME_SPACE: {},
 
         /**
          * Подписаться на событие
@@ -24,11 +24,11 @@ function getEmitter() {
          * @returns {this}
          */
         on: function (event, context, handler) {
-            if (!NAME_SPACE.hasOwnProperty(event)) {
-                NAME_SPACE[event] = [];
+            if (!this.NAME_SPACE.hasOwnProperty(event)) {
+                this.NAME_SPACE[event] = [];
             }
 
-            NAME_SPACE[event].push ({
+            this.NAME_SPACE[event].push ({
                 context: context,
                 handler: handler
             });
@@ -43,14 +43,13 @@ function getEmitter() {
          * @returns {this}
          */
         off: function (event, context) {
-            Object.keys(NAME_SPACE).forEach(function (keys) {
-                if (keys.indexOf(event) === 0 && (keys.lastIndexOf('.') !== -1) ||
-                    keys.indexOf(event) !== -1) {
-                    NAME_SPACE[keys] = NAME_SPACE[keys].filter(function (record) {
+            Object.keys(this.NAME_SPACE).forEach(function (keys) {
+                if (keys.indexOf(event) === 0) {
+                    this.NAME_SPACE[keys] = this.NAME_SPACE[keys].filter(function (record) {
                         return record.context !== context;
                     });
                 }
-            });
+            }, this);
 
             return this;
         },
@@ -65,12 +64,12 @@ function getEmitter() {
             arrayEvents.map(function (value, index) {
                 return arrayEvents.slice(0, arrayEvents.length - index).join('.');
             }).forEach(function (currentEvent) {
-                if (NAME_SPACE.hasOwnProperty(currentEvent)) {
-                    NAME_SPACE[currentEvent].forEach(function (record) {
+                if (this.NAME_SPACE.hasOwnProperty(currentEvent)) {
+                    this.NAME_SPACE[currentEvent].forEach(function (record) {
                         record.handler.call(record.context);
-                    });
+                    }, this);
                 }
-            });
+            }, this);
 
             return this;
         },
