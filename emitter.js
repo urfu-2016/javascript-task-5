@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -13,6 +13,29 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     var events = [];
+
+    function addEvent(event, context, handler) {
+        events.push(
+            {
+                event: event,
+                context: context,
+                handler: handler,
+                eventNumber: 0,
+                eventCount: arguments[3] || Infinity,
+                frequency: arguments[4] || 1
+            }
+        );
+    }
+
+    function challengeEvents(event) {
+        event.eventNumber++;
+        if (event.eventNumber === 1 ||
+            event.eventNumber % event.frequency === 0 &&
+                event.eventCount >= event.eventNumber) {
+            event.handler.call(event.context);
+            event.eventNumber *= event.frequency;
+        }
+    }
 
     return {
 
@@ -25,13 +48,7 @@ function getEmitter() {
          */
 
         on: function (event, context, handler) {
-            events.push(
-                {
-                    event: event,
-                    context: context,
-                    handler: handler
-                }
-            );
+            addEvent(event, context, handler);
 
             return this;
         },
@@ -73,7 +90,7 @@ function getEmitter() {
             developments.forEach(function (currentFunction) {
                 events.forEach(function (currentEvent) {
                     if (currentEvent.event === currentFunction) {
-                        currentEvent.handler.call(currentEvent.context);
+                        challengeEvents(currentEvent);
                     }
                 });
             });
@@ -88,9 +105,14 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * return {Object}
          */
+
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            times = times > 0 ? times : Infinity;
+            addEvent(event, context, handler, times);
+
+            return this;
         },
 
         /**
@@ -100,9 +122,14 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * returns {Object}
          */
+
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            frequency = frequency > 0 ? frequency : 1;
+            addEvent(event, context, handler, null, frequency);
+
+            return this;
         }
     };
 }
