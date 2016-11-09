@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 function comparer(a, b) {
@@ -13,6 +13,7 @@ function comparer(a, b) {
 
 function getEmitter() {
     var events = [];
+
     return {
 
         on: function (event, context, handler) {
@@ -30,8 +31,8 @@ function getEmitter() {
 
         off: function (event, context) {
             for (var i = events.length - 1; i >= 0; i--) {
-                if ((event === events[i].event.split('.')[0] || event === events[i].event) 
-                    && context === events[i].context) {
+                if ((event === events[i].event.split('.')[0] || event === events[i].event) &&
+                    context === events[i].context) {
                     var f = events[i].context.focus;
                     var w = events[i].context.wisdom;
                     events[i].handler.call(events[i].context);
@@ -53,7 +54,6 @@ function getEmitter() {
             }
 
             return this;
-            //console.info(event);
         },
 
         several: function (event, context, handler, times) {
