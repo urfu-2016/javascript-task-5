@@ -7,14 +7,23 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
+/**
+ * @returns {Boolean}
+ */
 function startsWith(prefix, string) {
     return string.indexOf(prefix) !== -1;
 }
 
+/**
+ * @returns {Boolean}
+ */
 function isUpperEvent(event) {
     return event.indexOf('.') !== -1;
 }
 
+/**
+ * @returns {Array}
+ */
 function getSubEvents(event) {
     var result = [event];
 
