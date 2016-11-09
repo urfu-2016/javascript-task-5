@@ -25,8 +25,8 @@ function getEmitter() {
         },
 
         getStartEvent: function (event, lengthEvent) {
-            return event.split('.').slice(0, lengthEvent).
-                        join('.');
+            return event.split('.').slice(0, lengthEvent)
+                .join('.');
         },
 
         /**
