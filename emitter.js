@@ -62,15 +62,15 @@ function getEmitter() {
          */
         emit: function (event) {
             var arrayEvents = event.split('.');
-            var currentEvent;
-            for (var i = arrayEvents.length; i !== 0; i--) {
-                currentEvent = arrayEvents.slice(0, i).join('.');
+            arrayEvents.map(function (value, index) {
+                return arrayEvents.slice(0, arrayEvents.length - index).join('.');
+            }).forEach(function (currentEvent) {
                 if (NAME_SPACE.hasOwnProperty(currentEvent)) {
                     NAME_SPACE[currentEvent].forEach(function (record) {
                         record.handler.call(record.context);
                     });
                 }
-            }
+            });
 
             return this;
         },
