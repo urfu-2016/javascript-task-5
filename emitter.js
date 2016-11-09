@@ -27,14 +27,13 @@ function getEmitter() {
             if (!events[event]) {
                 events[event] = [];
             }
-            var subObject = {
+
+            events[event].push({
                 context: context,
                 handler: handler,
                 count: arguments[3] || null,
                 frequency: arguments[4] || null
-            };
-
-            events[event].push(subObject);
+            });
 
             return this;
         },
@@ -80,7 +79,7 @@ function getEmitter() {
                     });
                 }
 
-                event = event.slice(0, event.lastIndexOf('.'));
+                event = event.substring(0, event.lastIndexOf('.'));
             }
 
             return this;
