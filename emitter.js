@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -25,9 +25,14 @@ function getEmitter() {
          */
         on: function (event, context, handler) {
             events[event] = events[event] || [];
+            var times = arguments[3] || Infinity;
+            var frequency = arguments[4] || 1;
             events[event].push({
                 context: context,
-                handler: handler
+                handler: handler,
+                times: times,
+                frequency: frequency,
+                eventNumber: 0
             });
 
             return this;
@@ -66,7 +71,11 @@ function getEmitter() {
                 var subEvent = subEvents.slice(0, end).join('.');
                 if (events[subEvent]) {
                     events[subEvent].forEach(function (listener) {
-                        listener.handler.call(listener.context);
+                        if (listener.eventNumber < listener.times &&
+                            listener.eventNumber % listener.frequency === 0) {
+                            listener.handler.call(listener.context);
+                        }
+                        listener.eventNumber++;
                     });
                 }
                 end--;
@@ -82,9 +91,12 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            times = (times > 0) ? times : undefined;
+
+            return this.on(event, context, handler, times);
         },
 
         /**
@@ -94,9 +106,12 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object} this
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            frequency = (frequency > 0) ? frequency : undefined;
+
+            return this.on(event, context, handler, undefined, frequency);
         }
     };
 }
