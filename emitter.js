@@ -26,7 +26,11 @@ function getEmitter() {
          */
         on: function (event, context, handler) {
             console.info(event, context, handler);
-            subs.push(getNewSubscription(event, context, handler));
+            subs.push({
+                event: event,
+                context: context,
+                handler: handler
+            });
 
             return this;
         },
@@ -40,10 +44,17 @@ function getEmitter() {
         off: function (event, context) {
             console.info(event, context);
             subs = subs.filter(function (sub) {
-                var contIsCont = sub.context !== context;
-                var eventIsEvent = sub.event !== event;
+                if (sub.context !== context) {
+                    return true;
+                }
+                if (sub.event.indexOf(event + '.') === 0) {
+                    return false;
+                }
+                if (sub.event !== event) {
+                    return true;
+                }
 
-                return contIsCont || eventIsEvent;
+                return false;
             });
 
             return this;
@@ -96,13 +107,5 @@ function getEmitter() {
         through: function (event, context, handler, frequency) {
             console.info(event, context, handler, frequency);
         }
-    };
-}
-
-function getNewSubscription(event, context, handler) {
-    return {
-        event: event,
-        context: context,
-        handler: handler
     };
 }
