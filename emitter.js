@@ -8,13 +8,13 @@ getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function executeCallback(callback) {
-    if (callback.count > 0 && callback.currentFrequency === 0) {
+    if (callback.callsLeft > 0 && callback.callsCount === 0) {
         callback.handler();
     }
 
-    callback.count--;
-    callback.currentFrequency++;
-    callback.currentFrequency %= callback.frequency;
+    callback.callsLeft--;
+    callback.callsCount++;
+    callback.callsCount %= callback.frequency;
 }
 
 /**
@@ -22,32 +22,33 @@ function executeCallback(callback) {
  * @returns {Object}
  */
 function getEmitter() {
+    var events = {};
+
     return {
-        events: {},
+
+        createEvent: function (event, context, handler, options) {
+            if (!(event in events)) {
+                events[event] = [];
+            }
+            events[event].push({
+                context: context,
+                handler: handler.bind(context),
+                callsLeft: options.count || Infinity,
+                frequency: options.frequency || 1,
+                callsCount: 0
+            });
+        },
 
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @param {Object} additional
+         * @param {Object} options
          * @returns {Object}
          */
-        on: function (event, context, handler, additional) {
-            additional = additional ? additional : {};
-            var frequency = additional.frequency || 1;
-            var count = additional.count || Infinity;
-
-            if (!(event in this.events)) {
-                this.events[event] = [];
-            }
-            this.events[event].push({
-                context: context,
-                handler: handler.bind(context),
-                count: count,
-                frequency: frequency,
-                currentFrequency: 0
-            });
+        on: function (event, context, handler) {
+            this.createEvent(event, context, handler, {});
 
             return this;
         },
@@ -59,13 +60,13 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            Object.keys(this.events).forEach(function (eventName) {
+            Object.keys(events).forEach(function (eventName) {
                 if (eventName === event || eventName.startsWith(event + '.')) {
-                    this.events[eventName] = this.events[eventName].filter(function (callback) {
+                    events[eventName] = events[eventName].filter(function (callback) {
                         return callback.context !== context;
                     });
                 }
-            }.bind(this));
+            });
 
             return this;
         },
@@ -79,8 +80,8 @@ function getEmitter() {
             var targetEvent = event;
 
             while (targetEvent) {
-                if (targetEvent in this.events) {
-                    this.events[targetEvent].forEach(executeCallback);
+                if (targetEvent in events) {
+                    events[targetEvent].forEach(executeCallback);
                 }
                 targetEvent = targetEvent.substring(0, targetEvent.lastIndexOf('.'));
             }
@@ -98,9 +99,10 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            var additional = { count: times > 0 ? times : Infinity };
+            var options = { count: times > 0 ? times : Infinity };
+            this.createEvent(event, context, handler, options);
 
-            return this.on(event, context, handler, additional);
+            return this;
         },
 
         /**
@@ -113,9 +115,10 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            var additional = { frequency: frequency > 0 ? frequency : 1 };
+            var options = { frequency: frequency > 0 ? frequency : 1 };
+            this.createEvent(event, context, handler, options);
 
-            return this.on(event, context, handler, additional);
+            return this;
         }
     };
 }
