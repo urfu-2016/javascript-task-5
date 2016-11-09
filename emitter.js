@@ -21,11 +21,11 @@ function EventTarget(target) {
         });
     };
     target.dispatch = function (event) {
-        //target.callbacks[event].reverse();
+        // target.callbacks[event].reverse();
         target.callbacks[event].forEach(function (fn) {
             fn.apply(target, arguments);
         });
-        //target.callbacks[event].reverse();
+        // target.callbacks[event].reverse();
     };
 
     return target;
