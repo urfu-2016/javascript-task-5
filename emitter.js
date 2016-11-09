@@ -48,21 +48,22 @@ function getEmitter() {
 
             if (eventListeners.hasOwnProperty(event)) {
                 var events = Object.keys(eventListeners);
+                var searchedEvents = [event];
 
-                eventListeners[event].splice(0, 1);
                 events.forEach(function (searchedEvent) {
                     var checkEventNames = searchedEvent.split('.');
                     for (var i = 0; i < checkEventNames.length; i++) {
                         if (searchedEvent.indexOf(event) === 0) {
-                            eventListeners[searchedEvent].filter(function (subscriber, id) {
-                                if (subscriber.context === context) {
-                                    return eventListeners[searchedEvent].splice(id, 1);
-                                }
-
-                                return eventListeners[searchedEvent];
-                            });
+                            searchedEvents.push(searchedEvent);
                         }
                     }
+                });
+                searchedEvents.forEach(function (searchEvent) {
+                    eventListeners[searchEvent].forEach(function (subscriber, i) {
+                        if (subscriber.context === context) {
+                            eventListeners[searchEvent].splice(i, 1);
+                        }
+                    });
                 });
             }
 
