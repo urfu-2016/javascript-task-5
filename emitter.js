@@ -1,6 +1,6 @@
 'use strict';
 
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function getEmitter() {
@@ -24,7 +24,8 @@ function getEmitter() {
             }
             events[event].push({
                 context: context,
-                handler: handler
+                handler: handler,
+                iteration: 0
             });
 
             return this;
@@ -47,7 +48,7 @@ function getEmitter() {
             eventsForEmit.forEach(function (eventForEmit) {
                 if (events.hasOwnProperty(eventForEmit)) {
                     events[eventForEmit].forEach(function (humon) {
-                        humon.handler.call(humon.context);
+                        humon.handler.call(humon.context, humon);
                     });
                 }
             });
@@ -56,11 +57,28 @@ function getEmitter() {
         },
 
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            var newHandler = function (humon) {
+                humon.iteration++;
+                if (humon.iteration <= times) {
+                    handler.call(this);
+                }
+            };
+            this.on(event, context, newHandler);
+
+            return this;
         },
 
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            var newHandler = function (humon) {
+                if (humon.iteration % frequency === 0) {
+                    handler.call(this);
+                    humon.iteration = 0;
+                }
+                humon.iteration++;
+            };
+            this.on(event, context, newHandler);
+
+            return this;
         }
     };
 }
