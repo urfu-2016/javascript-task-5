@@ -43,7 +43,7 @@ function getEmitter() {
          * @returns {this}
          */
         off: function (event, context) {
-            Object.keys(NAME_SPACE).forEach(function (keys) {
+            Object.keys(NAME_SPACE).forEach(function () {
                 if (NAME_SPACE.hasOwnProperty(event)) {
                     NAME_SPACE[event].map(function (record, index) {
                         if (record.context === context) {
