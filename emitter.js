@@ -108,26 +108,18 @@ function getEmitter() {
         /**
          * Подписаться на событие с ограничением по количеству полученных уведомлений
          * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         * @param {Emitter}
+         * @returns {Object}
          */
-        several: function (event, context, handler, times) {
+        several: function () {
             return this;
         },
 
         /**
          * Подписаться на событие с ограничением по частоте получения уведомлений
          * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         * @return {Emitter}
+         * @returns {Object}
          */
-        through: function (event, context, handler, frequency) {
+        through: function () {
             return this;
         }
     };
