@@ -6,7 +6,6 @@
  */
 getEmitter.isStar = false;
 module.exports = getEmitter;
-var events = [];
 
 /**
  * Возвращает новый emitter
@@ -14,6 +13,7 @@ var events = [];
  */
 function getEmitter() {
     return {
+        events: [],
 
         /**
          * Подписаться на событие
@@ -25,7 +25,7 @@ function getEmitter() {
         on: function (event, context, handler) {
             console.info(event, context, handler);
 
-            events.push({ event: event, context: context, handler: handler });
+            this.events.push({ event: event, context: context, handler: handler });
 
             return this;
         },
@@ -39,7 +39,8 @@ function getEmitter() {
         off: function (event, context) {
             console.info(event, context);
 
-            events.forEach(function (studentEvent) {
+            var events = this.events;
+            this.events.forEach(function (studentEvent) {
                 var eventNames = [];
                 for (var i = 1; i <= studentEvent.event.split('.').length; i++) {
                     eventNames.push(studentEvent.event.split('.').slice(0, i)
@@ -67,6 +68,7 @@ function getEmitter() {
                 eventNames.push(event.split('.').slice(0, i)
                     .join('.'));
             }
+            var events = this.events;
             eventNames.forEach(function (eventName) {
                 events.forEach(function (studentEvent) {
                     if (studentEvent.event === eventName) {
