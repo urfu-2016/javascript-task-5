@@ -9,12 +9,9 @@ module.exports = getEmitter;
 
 function EventTarget(target) {
     target.callbacks = target.callbacks || {};
-    target.on = function (event, fn, currentIdx) {
+    target.on = function (event, fn) {
         target.callbacks[event] = target.callbacks[event] || [];
-        target.callbacks[event].push({
-            fn: fn,
-            idx: currentIdx
-        });
+        target.callbacks[event].push(fn);
     };
     target.off = function (event) {
         Object.keys(target.callbacks).forEach(function (subscribedEvent) {
@@ -55,7 +52,6 @@ function getAllNamespacedEvents(event) {
 function getEmitter() {
     return {
         observers: {},
-        currentHandlerIdx: 0,
 
         /**
          * Подписаться на событие
@@ -67,12 +63,11 @@ function getEmitter() {
         on: function (event, context, handler) {
             console.info(event, context, handler);
             context = new EventTarget(context);
-            context.on(event, handler, this.currentHandlerIdx);
+            context.on(event, handler);
             this.observers[event] = this.observers[event] || [];
             if (this.observers[event].indexOf(context) === -1) {
                 this.observers[event].push(context);
             }
-            this.currentHandlerIdx += 1;
 
             return this;
         },
@@ -89,7 +84,7 @@ function getEmitter() {
             var self = this;
             Object.keys(this.observers).forEach(function (subscribedEvent) {
                 var targetIdx = self.observers[subscribedEvent].indexOf(context);
-                if (subscribedEvent.indexOf(event) === 0 && subscribedEvent) {
+                if (subscribedEvent.indexOf(event) === 0 && subscribedEvent && targetIdx !== -1) {
                     self.observers[subscribedEvent].splice(targetIdx, 1);
                 }
             });
@@ -112,21 +107,8 @@ function getEmitter() {
                     return;
                 }
                 // self.observers[eventWithoutNamespace].reverse();
-                var allHandlers = [];
                 self.observers[eventWithoutNamespace].forEach(function (target) {
-                    // target.dispatch(eventWithoutNamespace);
-                    target.callbacks[eventWithoutNamespace].forEach(function (targetHandler) {
-                        var handlerWithTarget = Object.assign({
-                            target: target
-                        }, targetHandler);
-                        allHandlers.push(handlerWithTarget);
-                    });
-                });
-                allHandlers.sort(function (a, b) {
-                    return a.idx - b.idx;
-                });
-                allHandlers.forEach(function (handler) {
-                    handler.fn.apply(handler.target, arguments);
+                    target.dispatch(eventWithoutNamespace);
                 });
                 // self.observers[eventWithoutNamespace].reverse();
             });
