@@ -27,12 +27,7 @@ function executeEvent(event, events) {
     return events;
 }
 
-function toSubscribe(events, event, arrayCharacteristics) {
-    var subscriber = {};
-    var characteristics = ['context', 'handler', 'times', 'frequency', 'frequencyCounter'];
-    characteristics.forEach(function (characteristic) {
-        subscriber[characteristic] = arrayCharacteristics[characteristics.indexOf(characteristic)];
-    });
+function toSubscribe(events, event, subscriber) {
     if (events.hasOwnProperty(event)) {
         events[event].push(subscriber);
     } else {
@@ -59,7 +54,9 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            events = toSubscribe(events, event, [context, handler, undefined, undefined, 0]);
+            events = toSubscribe(events, event, { context: context,
+                                                  handler: handler,
+                                                  frequencyCounter: 0 });
 
             return this;
         },
@@ -115,7 +112,10 @@ function getEmitter() {
             if (times <= 0) {
                 return this.on(event, context, handler);
             }
-            events = toSubscribe(events, event, [context, handler, times, undefined, 0]);
+            events = toSubscribe(events, event, { context: context,
+                                                  handler: handler,
+                                                  times: times,
+                                                  frequencyCounter: 0 });
 
             return this;
         },
@@ -133,7 +133,10 @@ function getEmitter() {
             if (frequency <= 0) {
                 return this.on(event, context, handler);
             }
-            events = toSubscribe(events, event, [context, handler, undefined, frequency, 0]);
+            events = toSubscribe(events, event, { context: context,
+                                                  handler: handler,
+                                                  frequency: frequency,
+                                                  frequencyCounter: 0 });
 
             return this;
         }
