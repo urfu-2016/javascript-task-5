@@ -12,7 +12,14 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
-    var studentEvents = [];
+    var hashMap = {};
+    function addEvent(event, subscription) {
+        if (event in hashMap) {
+            hashMap[event].push(subscription);
+        } else {
+            hashMap[event] = [subscription];
+        }
+    }
 
     return {
 
@@ -23,7 +30,7 @@ function getEmitter() {
          * @param {Function} handler
          */
         on: function (event, context, handler) {
-            studentEvents.push(createSubscription(event, context, handler));
+            addEvent(event, createSubscription(context, handler));
 
             return this;
         },
@@ -34,12 +41,14 @@ function getEmitter() {
          * @param {Object} context
          */
         off: function (event, context) {
-            studentEvents = studentEvents.filter(function (element) {
-                var isNotEqualEvents = element.nameEvent !== event;
-                var isNotEqualEventWithPoint = element.nameEvent.indexOf(event + '.') !== 0;
-                var isNotEqualContext = element.context !== context;
+            var foundEvents = Object.keys(hashMap).filter(function (key) {
+                return event === key || key.indexOf(event + '.') === 0;
+            });
 
-                return isNotEqualContext || isNotEqualEvents && isNotEqualEventWithPoint;
+            foundEvents.forEach(function (foundEvent) {
+                hashMap[foundEvent] = (hashMap[foundEvent] || []).filter(function (hashContext) {
+                    return hashContext.context !== context;
+                });
             });
 
             return this;
@@ -50,19 +59,18 @@ function getEmitter() {
          * @param {String} event
          */
         emit: function (event) {
-            var events = event.split('.');
-            var currentEvent = event;
-            events.forEach(function () {
-                studentEvents.forEach(function (studentEvent) {
-                    if (studentEvent.nameEvent === currentEvent) {
-                        if (studentEvent.isMatch()) {
-                            studentEvent.handler.call(studentEvent.context);
-                        }
-                        studentEvent.countCall++;
-                    }
-                });
+            var events = [];
+            while (event !== '') {
+                events.push(event);
+                event = sliceEvent(event);
+            }
+            events.forEach(function (currentEvent) {
+                hashMap[currentEvent] = (hashMap[currentEvent] || [])
+                    .filter(function (suscription) {
+                        suscription.callEvent();
 
-                currentEvent = sliceEvent(currentEvent);
+                        return suscription.maxCount > suscription.countCall;
+                    });
             });
 
             return this;
@@ -80,9 +88,9 @@ function getEmitter() {
             if (times < 1) {
                 this.on(event, context, handler);
             } else {
-                var subscription = createSubscription(event, context, handler);
+                var subscription = createSubscription(context, handler);
                 subscription.maxCount = times;
-                studentEvents.push(subscription);
+                addEvent(event, subscription);
             }
 
             return this;
@@ -100,9 +108,9 @@ function getEmitter() {
             if (frequency < 1) {
                 this.on(event, context, handler);
             } else {
-                var subscription = createSubscription(event, context, handler);
-                subscription.thisFrequency = frequency;
-                studentEvents.push(subscription);
+                var subscription = createSubscription(context, handler);
+                subscription.frequency = frequency;
+                addEvent(event, subscription);
             }
 
             return this;
@@ -110,19 +118,25 @@ function getEmitter() {
     };
 }
 
-function createSubscription(event, context, handler) {
+function createSubscription(context, handler) {
     return {
         isMatch: function () {
-            var isCorrectFriquency = (this.countCall) % this.thisFrequency === 0;
+            var isCorrectFrequency = (this.countCall) % this.frequency === 0;
             var isCorrectCount = this.maxCount > this.countCall;
 
-            return isCorrectFriquency && isCorrectCount;
+            return isCorrectFrequency && isCorrectCount;
         },
 
-        thisFrequency: 1,
+        callEvent: function () {
+            if (this.isMatch()) {
+                this.handler.call(this.context);
+            }
+            this.countCall++;
+        },
+
+        frequency: 1,
         countCall: 0,
         maxCount: Infinity,
-        nameEvent: event,
         context: context,
         handler: handler
     };
