@@ -12,6 +12,28 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var events = {};
+
+    function on (event, context, handler, params) {
+        if (!events[event]) {
+            events[event] = [];
+        }
+
+        var subscription = {
+            context: context,
+            callback: handler,
+            count: 0
+        };
+
+        if (params) {
+            subscription.totalCount = params.totalCount;
+            subscription.frequency = params.frequency;
+        }
+        events[event].push(subscription);
+
+        return this;
+    }
+
     return {
 
         /**
@@ -19,26 +41,48 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            return on.call(this, event, context, handler);
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(events)
+                .filter(function (consideredEvent) {
+                    return event === consideredEvent || consideredEvent.indexOf(event + '.') === 0;
+                })
+                .forEach(function (eventName) {
+                    events[eventName] = events[eventName].filter(function (subscription) {
+                        return subscription.context !== context;
+                    });
+                });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            while (event) {
+                if (events[event]) {
+                    callEventListeners(events[event]);
+                }
+
+                var outerEventIndex = event.lastIndexOf('.');
+                event = event.substring(0, outerEventIndex);
+            }
+
+            return this;
         },
 
         /**
@@ -48,9 +92,14 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times <= 0) {
+                times = undefined;
+            }
+
+            return on.call(this, event, context, handler, { totalCount: times });
         },
 
         /**
@@ -60,9 +109,30 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (frequency <= 0) {
+                frequency = undefined;
+            }
+
+            return on.call(this, event, context, handler, { frequency: frequency });
         }
     };
+}
+
+function callEventListeners(eventListeners) {
+    eventListeners.forEach(function (item) {
+        if (item.totalCount !== undefined) {
+            if (item.count++ >= item.totalCount) {
+                return;
+            }
+        } else if (item.frequency !== undefined) {
+            if (item.count++ % item.frequency !== 0) {
+                return;
+            }
+        }
+
+        item.callback.call(item.context);
+    });
 }
