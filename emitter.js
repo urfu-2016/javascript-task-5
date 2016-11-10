@@ -39,17 +39,15 @@ function getEmitter() {
         off: function (event, context) {
             console.info(event, context);
 
-            var events = this.events;
-            this.events.forEach(function (studentEvent) {
+            this.events = this.events.filter(function (studentEvent) {
                 var eventNames = [];
                 for (var i = 1; i <= studentEvent.event.split('.').length; i++) {
                     eventNames.push(studentEvent.event.split('.').slice(0, i)
                         .join('.'));
                 }
-                if (eventNames.indexOf(event) !== -1 &&
-                    studentEvent.context === context) {
-                    events.splice(events.indexOf(studentEvent), 1);
-                }
+
+                return !(eventNames.indexOf(event) !== -1 &&
+                    studentEvent.context === context);
             });
 
             return this;
