@@ -106,19 +106,9 @@ function getEmitter() {
         callbacks: [],
 
         contains: function (fullScope, scope) {
-            if (fullScope === scope) {
-                return true;
-            }
+            console.info('RegExp match:', fullScope.match(new RegExp('^' + scope + '(.|$)')));
 
-            while (fullScope.lastIndexOf('.') !== -1) {
-                fullScope = fullScope.substr(0, fullScope.lastIndexOf('.'));
-
-                if (fullScope === scope) {
-                    return true;
-                }
-            }
-
-            return false;
+            return fullScope.match(new RegExp('^' + scope + '(.|$)'));
         },
 
         /**
