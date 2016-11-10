@@ -106,9 +106,9 @@ function getEmitter() {
         callbacks: [],
 
         contains: function (fullScope, scope) {
-            console.info('RegExp match:', fullScope.match(new RegExp('^' + scope + '(.|$)')));
+            console.info('RegExp match:', fullScope.match(new RegExp('^' + scope + '(\\.|$)')));
 
-            return fullScope.match(new RegExp('^' + scope + '(.|$)'));
+            return fullScope.match(new RegExp('^' + scope + '(\\.|$)'));
         },
 
         /**
