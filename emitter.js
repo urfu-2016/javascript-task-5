@@ -8,20 +8,38 @@ getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function executeEvent(event, events) {
-    if (events.hasOwnProperty(event)) {
-        events[event].forEach(function (student) {
-            if (student.times > 0) {
-                student.handler.call(student.context);
-                student.times = student.times === undefined ? undefined : student.times - 1;
-            } else if (student.frequency !== undefined && student.frequencyCounter %
-                    student.frequency === 0) {
-                student.handler.call(student.context);
-            } else if (student.frequency === undefined && student.times === undefined) {
-                student.handler.call(student.context);
-            }
-            student.frequencyCounter++;
-        });
+    if (!events.hasOwnProperty(event)) {
+        return events;
     }
+    events[event].forEach(function (student) {
+        if (student.times > 0) {
+            student.handler.call(student.context);
+            student.times = student.times === undefined ? undefined : student.times - 1;
+        } else if (student.frequency !== undefined && student.frequencyCounter %
+                student.frequency === 0) {
+            student.handler.call(student.context);
+        } else if (student.frequency === undefined && student.times === undefined) {
+            student.handler.call(student.context);
+        }
+        student.frequencyCounter++;
+    });
+
+    return events;
+}
+
+function toSubscribe(events, event, arrayCharacteristics) {
+    var subscriber = {};
+    var characteristics = ['context', 'handler', 'times', 'frequency', 'frequencyCounter'];
+    characteristics.forEach(function (characteristic) {
+        subscriber[characteristic] = arrayCharacteristics[characteristics.indexOf(characteristic)];
+    });
+    if (events.hasOwnProperty(event)) {
+        events[event].push(subscriber);
+    } else {
+        events[event] = [subscriber];
+    }
+
+    return events;
 }
 
 /**
@@ -41,23 +59,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (events.hasOwnProperty(event)) {
-                events[event].push({
-                    context: context,
-                    handler: handler,
-                    times: undefined,
-                    frequency: undefined,
-                    frequencyCounter: 0
-                });
-            } else {
-                events[event] = [{
-                    context: context,
-                    handler: handler,
-                    times: undefined,
-                    frequency: undefined,
-                    frequencyCounter: 0
-                }];
-            }
+            events = toSubscribe(events, event, [context, handler, undefined, undefined, 0]);
 
             return this;
         },
@@ -90,11 +92,11 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            executeEvent(event, events);
+            events = executeEvent(event, events);
             while (event.indexOf('.') !== -1) {
                 event = event.split('.').slice(0, -1)
                 .join('.');
-                executeEvent(event, events);
+                events = executeEvent(event, events);
             }
 
             return this;
@@ -110,7 +112,12 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            return severalOrThrough(event, context, handler, undefined, times, events, this);
+            if (times <= 0) {
+                return this.on(event, context, handler);
+            }
+            events = toSubscribe(events, event, [context, handler, times, undefined, 0]);
+
+            return this;
         },
 
         /**
@@ -123,35 +130,12 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            return severalOrThrough(event, context, handler, frequency, undefined, events, this);
+            if (frequency <= 0) {
+                return this.on(event, context, handler);
+            }
+            events = toSubscribe(events, event, [context, handler, undefined, frequency, 0]);
+
+            return this;
         }
     };
-}
-
-function severalOrThrough(event, context, handler, frequency) {
-    var times = arguments[4];
-    var events = arguments[5];
-    var this_ = arguments[6];
-    if (frequency <= 0 || times <= 0) {
-        return this_.on(event, context, handler);
-    }
-    if (events.hasOwnProperty(event)) {
-        events[event].push({
-            context: context,
-            handler: handler,
-            times: times,
-            frequency: frequency,
-            frequencyCounter: 0
-        });
-    } else {
-        events[event] = [{
-            context: context,
-            handler: handler,
-            times: times,
-            frequency: frequency,
-            frequencyCounter: 0
-        }];
-    }
-
-    return this_;
 }
