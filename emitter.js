@@ -7,17 +7,16 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function SubscribeHandler(arg) {
+function SubscribeHandler(subscribeInfo) {
     return {
-        event: arg.event,
-        context: arg.context,
-        contextHandler: arg.handler,
-        maxCount: arg.times || Number.POSITIVE_INFINITY,
-        frequency: arg.frequency || 1,
+        event: subscribeInfo.event,
+        context: subscribeInfo.context,
+        contextHandler: subscribeInfo.handler,
+        maxCount: subscribeInfo.times || Number.POSITIVE_INFINITY,
+        frequency: subscribeInfo.frequency || 1,
         count: 0,
         processEvent: function () {
-            var keepDoing = (this.maxCount - this.count) > 0;
-            if (this.count % this.frequency === 0 && keepDoing) {
+            if (this.count % this.frequency === 0 && (this.maxCount - this.count) > 0) {
                 this.contextHandler.call(this.context);
             }
             this.count++;
@@ -31,31 +30,29 @@ function addSubscribe(event, context, handler, subscribeQueue) {
     subscribeQueue.push(newSubscribe);
 }
 
-function getSubEvents(event) {
+function decomposeEvent(event) {
     var events = event.split('.');
-    var subEvents = [];
+    var decomposedEvents = [];
     for (var i = 1; i <= events.length; i++) {
-        subEvents.push(events.slice(0, i).join('.'));
+        decomposedEvents.push(events.slice(0, i).join('.'));
     }
 
-    return subEvents;
+    return decomposedEvents;
 }
 
-function deleteSubscribe(event, context, subscribeQueue) {
+function filterSubscribe(event, context, subscribeQueue) {
     return subscribeQueue.filter(function (eventHandler) {
-        var same = context === eventHandler.context;
-        var subEvents = getSubEvents(eventHandler.event);
+        var childEvents = decomposeEvent(eventHandler.event);
 
-        return !(same && subEvents.indexOf(event) !== -1);
+        return !(context === eventHandler.context && childEvents.indexOf(event) !== -1);
     });
 }
 
 function handleEvent(event, subscribeQueue) {
-    var subEvents = getSubEvents(event).reverse();
-    console.info(subEvents);
-    subEvents.forEach(function (subEvent) {
+    var childEvents = decomposeEvent(event).reverse();
+    childEvents.forEach(function (oneEvent) {
         subscribeQueue.forEach(function (eventHandler) {
-            if (eventHandler.event === subEvent) {
+            if (eventHandler.event === oneEvent) {
                 eventHandler.processEvent();
             }
         });
@@ -103,7 +100,7 @@ function getEmitter() {
          */
         off: function (event, context) {
             // console.info(event, context);
-            subscribeQueue = deleteSubscribe(event, context, subscribeQueue);
+            subscribeQueue = filterSubscribe(event, context, subscribeQueue);
 
             return this;
         },
