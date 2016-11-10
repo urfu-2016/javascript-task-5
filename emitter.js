@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function emitEvent(events, event) {
@@ -88,9 +88,23 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times < 0) {
+                return this.on(event, context, handler);
+            }
+            var newHandler = function () {
+
+                return function () {
+                    if (times > 0) {
+                        times--;
+                        handler.call(context);
+                    }
+                };
+            };
+
+            return this.on(event, context, newHandler());
         },
 
         /**
@@ -100,9 +114,24 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            var timesCount = 0;
+            if (frequency <= 0) {
+                return this.on(event, context, handler);
+            }
+            var newHandler = function () {
+
+                return function () {
+                    if (timesCount % frequency === 0) {
+                        handler.call(context);
+                    }
+                    timesCount++;
+                };
+            };
+
+            return this.on(event, context, newHandler());
         }
     };
 }
