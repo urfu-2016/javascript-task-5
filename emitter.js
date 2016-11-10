@@ -7,30 +7,18 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
+var eventListeners = {};
+var currentIssueEvent = 0;
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
-    var eventListeners = {};
-    var currentIssueEvent = 0;
-
-    function runEventHandlers(event) {
-        var eventsKeys = Object.keys(eventListeners);
-        var eventIssue = eventsKeys.indexOf(event.split('.')[0]);
-
-        if (currentIssueEvent - eventIssue > -1) {
-            currentIssueEvent = eventIssue + 1;
-            eventListeners[event].forEach(function (subscriber) {
-                subscriber.handler.call(subscriber.context);
-            });
-        }
-    }
 
     return {
 
         on: function (event, context, handler) {
-            // console.info(event, context, handler);
             if (!eventListeners.hasOwnProperty(event)) {
                 eventListeners[event] = [];
             }
@@ -44,7 +32,6 @@ function getEmitter() {
         },
 
         off: function (event, context) {
-            // console.info(event, context);
 
             if (eventListeners.hasOwnProperty(event)) {
                 var events = Object.keys(eventListeners);
@@ -71,7 +58,6 @@ function getEmitter() {
         },
 
         emit: function (event) {
-            // console.info(event);
             var namesEvent = event.split('.');
 
             for (var i = namesEvent.length; i > -1; i--) {
@@ -108,4 +94,16 @@ function getEmitter() {
             console.info(event, context, handler, frequency);
         }
     };
+}
+
+function runEventHandlers(event) {
+    var eventsKeys = Object.keys(eventListeners);
+    var eventIssue = eventsKeys.indexOf(event.split('.')[0]);
+
+    if (currentIssueEvent - eventIssue > -1) {
+        currentIssueEvent = eventIssue + 1;
+        eventListeners[event].forEach(function (subscriber) {
+            subscriber.handler.call(subscriber.context);
+        });
+    }
 }
