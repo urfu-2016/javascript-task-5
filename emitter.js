@@ -52,7 +52,7 @@ function getEmitter() {
                 this._events[event] = [];
             }
             this._events[event].push(
-                initEvent(context, handler.bind(context), -1, 1));
+                initEvent(context, handler.bind(context), -1, 1, 1));
 
             return this;
         },
