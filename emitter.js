@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 
@@ -17,20 +17,6 @@ function getAllEvents(event) {
 
     return events;
 }
-
-
-function initEvent() {
-    var args = [].slice.call(arguments, 0);
-
-    return {
-        context: args[0],
-        handler: args[1],
-        count: args[2],
-        countExecuted: args[3],
-        delta: args[4]
-    };
-}
-
 
 /**
  * Возвращает новый emitter
@@ -51,8 +37,10 @@ function getEmitter() {
             if (!this._events.hasOwnProperty(event)) {
                 this._events[event] = [];
             }
-            this._events[event].push(
-                initEvent(context, handler.bind(context), -1, 1, 1));
+            this._events[event].push({
+                context: context,
+                handler: handler.bind(context)
+            });
 
             return this;
         },
@@ -90,19 +78,12 @@ function getEmitter() {
         emit: function (event) {
             var events = getAllEvents(event).reverse();
             for (var i = 0; i < events.length; i++) {
-                var currentEvent = events[i];
-                if (!this._events[currentEvent]) {
+                var currEvent = events[i];
+                if (!this._events[currEvent]) {
                     continue;
                 }
-                this._events[currentEvent].forEach(function (item) {
-                    if (item.count === 0) {
-                        return;
-                    }
-                    if (item.countExecuted % item.delta === 0) {
-                        item.handler();
-                    }
-                    item.countExecuted++;
-                    item.count--;
+                this._events[currEvent].forEach(function (item) {
+                    item.handler();
                 });
             }
 
@@ -116,16 +97,9 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
-         * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            if (!this._events.hasOwnProperty(event)) {
-                this._events[event] = [];
-            }
-            this._events[event].push(
-                initEvent(context, handler.bind(context), times, 1, 1));
-
-            return this;
+            console.info(event, context, handler, times);
         },
 
         /**
@@ -135,16 +109,9 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
-         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            if (!this._events.hasOwnProperty(event)) {
-                this._events[event] = [];
-            }
-            this._events[event].push(
-                initEvent(context, handler.bind(context), -1, 1, frequency));
-
-            return this;
+            console.info(event, context, handler, frequency);
         }
     };
 }
