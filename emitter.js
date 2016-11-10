@@ -14,6 +14,26 @@ module.exports = getEmitter;
 function getEmitter() {
     var events = {};
 
+    function on (event, context, handler, params) {
+        if (!events[event]) {
+            events[event] = [];
+        }
+
+        var subscription = {
+            context: context,
+            callback: handler,
+            count: 0
+        };
+
+        if (params) {
+            subscription.totalCount = params.totalCount;
+            subscription.frequency = params.frequency;
+        }
+        events[event].push(subscription);
+
+        return this;
+    }
+
     return {
 
         /**
@@ -24,24 +44,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (!events[event]) {
-                events[event] = [];
-            }
-
-            var subscription = {
-                student: context,
-                callback: handler,
-                count: 0
-            };
-
-            var params = arguments[3];
-            if (params) {
-                subscription.totalCount = params.totalCount;
-                subscription.frequency = params.frequency;
-            }
-            events[event].push(subscription);
-
-            return this;
+            return on.call(this, event, context, handler);
         },
 
         /**
@@ -57,7 +60,7 @@ function getEmitter() {
                 })
                 .forEach(function (eventName) {
                     events[eventName] = events[eventName].filter(function (subscription) {
-                        return subscription.student !== context;
+                        return subscription.context !== context;
                     });
                 });
 
@@ -72,7 +75,7 @@ function getEmitter() {
         emit: function (event) {
             while (event) {
                 if (events[event]) {
-                    performEvent(events[event]);
+                    callEventListeners(events[event]);
                 }
 
                 var outerEventIndex = event.lastIndexOf('.');
@@ -96,7 +99,7 @@ function getEmitter() {
                 times = undefined;
             }
 
-            return this.on(event, context, handler, { totalCount: times });
+            return on.call(this, event, context, handler, { totalCount: times });
         },
 
         /**
@@ -113,13 +116,13 @@ function getEmitter() {
                 frequency = undefined;
             }
 
-            return this.on(event, context, handler, { frequency: frequency });
+            return on.call(this, event, context, handler, { frequency: frequency });
         }
     };
 }
 
-function performEvent(event) {
-    event.forEach(function (item) {
+function callEventListeners(eventListeners) {
+    eventListeners.forEach(function (item) {
         if (item.totalCount !== undefined) {
             if (item.count++ >= item.totalCount) {
                 return;
@@ -130,6 +133,6 @@ function performEvent(event) {
             }
         }
 
-        item.callback.call(item.student);
+        item.callback.call(item.context);
     });
 }
