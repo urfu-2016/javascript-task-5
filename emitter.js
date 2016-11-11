@@ -15,26 +15,27 @@ function getEmitter() {
     var events = [];
 
     function addEvent(event, context, handler) {
+        var times = arguments[3] > 0 ? arguments[3] : Infinity;
+        var frequency = arguments[4] > 0 ? arguments[4] : 1;
         events.push(
             {
                 event: event,
                 context: context,
                 handler: handler,
                 eventNumber: 0,
-                eventCount: arguments[3] || Infinity,
-                frequency: arguments[4] || 1
+                eventCount: times,
+                frequency: frequency
             }
         );
     }
 
     function challengeEvents(event) {
-        event.eventNumber++;
-        if (event.eventNumber === 1 ||
+        if (event.eventNumber === 0 ||
             event.eventNumber % event.frequency === 0 &&
-                event.eventCount >= event.eventNumber) {
+                event.eventCount > event.eventNumber) {
             event.handler.call(event.context);
-            event.eventNumber *= event.frequency;
         }
+        event.eventNumber++;
     }
 
     return {
@@ -109,7 +110,6 @@ function getEmitter() {
          */
 
         several: function (event, context, handler, times) {
-            times = times > 0 ? times : Infinity;
             addEvent(event, context, handler, times);
 
             return this;
@@ -126,7 +126,6 @@ function getEmitter() {
          */
 
         through: function (event, context, handler, frequency) {
-            frequency = frequency > 0 ? frequency : 1;
             addEvent(event, context, handler, null, frequency);
 
             return this;
