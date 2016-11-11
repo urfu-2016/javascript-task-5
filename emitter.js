@@ -16,9 +16,9 @@ function getParentEvents(event) {
 
 function getSubEvents(allEvents, event) {
     var subEvents = [];
-    allEvents.forEach(function (elem) {
-        if (elem.startsWith(event + '.') || elem === event) {
-            subEvents.push(elem);
+    allEvents.forEach(function (event_) {
+        if (event_.startsWith(event + '.') || event_ === event) {
+            subEvents.push(event_);
         }
     });
 
@@ -41,10 +41,10 @@ function getEmitter() {
         off: function (event, context) {
             var allEvents = Object.keys(subscribers);
             var subEvents = getSubEvents(allEvents, event);
-            subEvents.forEach(function (elem) {
-                subscribers[elem].forEach(function (subscriber) {
+            subEvents.forEach(function (subEvent) {
+                subscribers[subEvent].forEach(function (subscriber) {
                     if (subscriber.context === context) {
-                        subscribers[elem].splice(subscribers[elem].indexOf(subscriber), 1);
+                        subscribers[subEvent].splice(subscribers[subEvent].indexOf(subscriber), 1);
                     }
                 });
             });
@@ -54,8 +54,8 @@ function getEmitter() {
 
 
         emit: function (event) {
-            var upperEvents = getParentEvents(event);
-            upperEvents.forEach(function (elem) {
+            var parentEvents = getParentEvents(event);
+            parentEvents.forEach(function (elem) {
                 if (subscribers.hasOwnProperty(elem)) {
                     subscribers[elem].forEach(function (subscriber) {
                         subscriber.handler.call();
