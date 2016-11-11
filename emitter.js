@@ -8,9 +8,7 @@ getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function getParentEvents(event) {
-    var subEvents = event.split('.');
-
-    return subEvents.reduce(function (parents, subEvent) {
+    return event.split('.').reduce(function (parents, subEvent) {
         var nextParent = parents.length ? parents.slice(-1).pop() + '.' + subEvent : subEvent;
         parents.push(nextParent);
 
