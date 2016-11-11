@@ -92,8 +92,9 @@ function getEmitter() {
         emit: function (event) {
             events = executeEvent(event, events);
             while (event.indexOf('.') !== -1) {
-                event = event.split('.').slice(0, -1)
+                var shortenedEvent = event.split('.').slice(0, -1)
                                         .join('.');
+                event = shortenedEvent;
                 events = executeEvent(event, events);
             }
 
