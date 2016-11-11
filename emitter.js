@@ -70,7 +70,8 @@ function getEmitter() {
         off: function (event, context) {
             var countPartsInEvent = event.split('.').length;
             Object.keys(events).forEach(function (keyEvent) {
-                if (keyEvent.split('.').length < countPartsInEvent ||
+                var countParts = keyEvent.split('.').length;
+                if (countParts < countPartsInEvent ||
                     keyEvent.split('.').slice(0, countPartsInEvent)
                     .join('.') !== event) {
                     return;

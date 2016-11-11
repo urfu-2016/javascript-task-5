@@ -1,161 +1,162 @@
+/* eslint-disable no-invalid-this */
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
-getEmitter.isStar = true;
-module.exports = getEmitter;
+var getEmitter = require('./emitter');
 
-function executeEvent(event, events) {
-    if (events.hasOwnProperty(event)) {
-        events[event].forEach(function (student) {
-            if (student.times > 0) {
-                student.handler.call(student.context);
-                student.times = student.times === undefined ? undefined : student.times - 1;
-            } else if (student.frequency !== undefined && student.frequencyCounter %
-                    student.frequency === 0) {
-                student.handler.call(student.context);
-            } else if (student.frequency === undefined && student.times === undefined) {
-                student.handler.call(student.context);
-            }
-            student.frequencyCounter++;
-        });
+var students = {
+    Sam: {
+        focus: 100,
+        wisdom: 50
+    },
+    Sally: {
+        focus: 100,
+        wisdom: 60
+    },
+    Bill: {
+        focus: 90,
+        wisdom: 50
+    },
+    Sharon: {
+        focus: 110,
+        wisdom: 40
     }
-}
+};
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
-function getEmitter() {
-    var events = {};
+var lecturer = getEmitter();
 
-    return {
+// С началом лекции у всех резко повышаются показатели
+lecturer
+    .on('begin', students.Sam, function () {
+        this.focus += 10;
+    })
+    .on('begin', students.Sally, function () {
+        this.focus += 10;
+    })
+    .on('begin', students.Bill, function () {
+        this.focus += 10;
+        this.wisdom += 5;
+    })
+    .on('begin', students.Sharon, function () {
+        this.focus += 20;
+    });
 
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @returns {Object}
-         */
-        on: function (event, context, handler) {
-            if (events.hasOwnProperty(event)) {
-                events[event].push({
-                    context: context,
-                    handler: handler,
-                    times: undefined,
-                    frequency: undefined,
-                    frequencyCounter: 0
-                });
-            } else {
-                events[event] = [{
-                    context: context,
-                    handler: handler,
-                    times: undefined,
-                    frequency: undefined,
-                    frequencyCounter: 0
-                }];
-            }
+// На каждый слайд внимательность падает, но растет мудрость
+lecturer
+    .on('slide', students.Sam, function () {
+        this.wisdom += Math.round(this.focus * 0.1);
+        this.focus -= 10;
+    })
+    .on('slide', students.Sally, function () {
+        this.wisdom += Math.round(this.focus * 0.15);
+        this.focus -= 5;
+    })
+    .on('slide', students.Bill, function () {
+        this.wisdom += Math.round(this.focus * 0.05);
+        this.focus -= 10;
+    })
+    .on('slide', students.Sharon, function () {
+        this.wisdom += Math.round(this.focus * 0.01);
+        this.focus -= 5;
+    });
 
-            return this;
+// На каждый веселый слайд всё наоборот
+lecturer
+    .on('slide.funny', students.Sam, function () {
+        this.focus += 5;
+        this.wisdom -= 10;
+    })
+    .on('slide.funny', students.Sally, function () {
+        this.focus += 5;
+        this.wisdom -= 5;
+    })
+    .on('slide.funny', students.Bill, function () {
+        this.focus += 5;
+        this.wisdom -= 10;
+    })
+    .on('slide.funny', students.Sharon, function () {
+        this.focus += 10;
+        this.wisdom -= 10;
+    });
+
+// Начинаем лекцию
+lecturer.emit('begin');
+// Sam(110,50); Sally(110,60); Bill(100,55); Sharon(130,40)
+
+lecturer
+    .emit('slide.text')
+    .emit('slide.text')
+    .emit('slide.text')
+    .emit('slide.funny');
+// Sam(75,79); Sally(95,118); Bill(65,63); Sharon(120,34)
+
+lecturer
+    .off('slide.funny', students.Sharon)
+    .emit('slide.text')
+    .emit('slide.text')
+    .emit('slide.funny');
+// Sam(50,90); Sally(85,155); Bill(40,62); Sharon(105,37)
+
+lecturer
+    .off('slide', students.Bill)
+    .emit('slide.text')
+    .emit('slide.text')
+    .emit('slide.text');
+
+lecturer.emit('end');
+// Sam(20,102); Sally(70,191); Bill(40,62); Sharon(90,40)
+
+if (getEmitter.isStar) {
+    students = {
+        Sam: {
+            focus: 100,
+            wisdom: 50
         },
-
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         * @returns {Object}
-         */
-        off: function (event, context) {
-            var countPartsInEvent = event.split('.').length;
-            Object.keys(events).forEach(function (keyEvent) {
-                if (keyEvent.split('.').length < countPartsInEvent ||
-                    keyEvent.split('.').slice(0, countPartsInEvent)
-                    .join('.') !== event) {
-                    return;
-                }
-                events[keyEvent] = events[keyEvent].filter(function (student) {
-                    return student.context !== context;
-                });
-            });
-
-            return this;
-        },
-
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         * @returns {Object}
-         */
-        emit: function (event) {
-            executeEvent(event, events);
-            while (event.indexOf('.') !== -1) {
-                event = event.split('.').slice(0, -1)
-                .join('.');
-                executeEvent(event, events);
-            }
-
-            return this;
-        },
-
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         * @returns {Object}
-         */
-        several: function (event, context, handler, times) {
-            return severalOrThrough(event, context, handler, undefined, times, events, this);
-        },
-
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         * @returns {Object}
-         */
-        through: function (event, context, handler, frequency) {
-            return severalOrThrough(event, context, handler, frequency, undefined, events, this);
+        Bill: {
+            focus: 90,
+            wisdom: 50
         }
     };
-}
 
-function severalOrThrough() {
-    var event = arguments[0];
-    var context = arguments[1];
-    var handler = arguments[2];
-    var frequency = arguments[3];
-    var times = arguments[4];
-    var events = arguments[5];
-    var this_ = arguments[6];
-    if (frequency <= 0 || times <= 0) {
-        return this_.on(event, context, handler);
-    }
-    if (events.hasOwnProperty(event)) {
-        events[event].push({
-            context: context,
-            handler: handler,
-            times: times,
-            frequency: frequency,
-            frequencyCounter: 0
+    lecturer = getEmitter()
+        .several('begin', students.Sam, function () {
+            this.focus += 10;
+        }, 1)
+        .several('begin', students.Bill, function () {
+            this.focus += 10;
+            this.wisdom += 5;
+        }, 1)
+        // На Сэма действуют только нечетные слайды
+        .through('slide', students.Sam, function () {
+            this.wisdom += Math.round(this.focus * 0.1);
+            this.focus -= 10;
+        }, 2)
+        // Концентрации Билла хватит ровно на 4 слайда
+        .several('slide', students.Bill, function () {
+            this.wisdom += Math.round(this.focus * 0.05);
+            this.focus -= 10;
+        }, 4)
+        .on('slide.funny', students.Sam, function () {
+            this.focus += 5;
+            this.wisdom -= 10;
+        })
+        .on('slide.funny', students.Bill, function () {
+            this.focus += 5;
+            this.wisdom -= 10;
         });
-    } else {
-        events[event] = [{
-            context: context,
-            handler: handler,
-            times: times,
-            frequency: frequency,
-            frequencyCounter: 0
-        }];
-    }
 
-    return this_;
+    lecturer.emit('begin');
+    // Sam(110,50); Bill(100,55)
+
+    lecturer
+        .emit('slide.text')
+        .emit('slide.text')
+        .emit('slide.text')
+        .emit('slide.funny');
+    // Sam(95,61); Bill(65,63)
+
+    lecturer
+        .emit('slide.text')
+        .emit('slide.text')
+        .emit('slide.funny');
+    // Sam(80,70); Bill(70,53)
 }
