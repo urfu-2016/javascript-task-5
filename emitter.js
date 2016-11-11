@@ -13,7 +13,8 @@ function getParentEvents(event) {
         parents.push(nextParent);
 
         return parents;
-    }, []).reverse();
+    }, [])
+        .reverse();
 }
 
 function getChildEvents(event, events) {
