@@ -71,9 +71,9 @@ function getEmitter() {
             var countPartsInEvent = event.split('.').length;
             Object.keys(events).forEach(function (keyEvent) {
                 var countParts = keyEvent.split('.').length;
-                if (countParts < countPartsInEvent ||
-                    keyEvent.split('.').slice(0, countPartsInEvent)
-                    .join('.') !== event) {
+                var eventFromEvents = keyEvent.split('.').slice(0, countPartsInEvent)
+                                                         .join('.');
+                if (countParts < countPartsInEvent || eventFromEvents !== event) {
                     return;
                 }
                 events[keyEvent] = events[keyEvent].filter(function (student) {
@@ -93,7 +93,7 @@ function getEmitter() {
             events = executeEvent(event, events);
             while (event.indexOf('.') !== -1) {
                 event = event.split('.').slice(0, -1)
-                .join('.');
+                                        .join('.');
                 events = executeEvent(event, events);
             }
 
