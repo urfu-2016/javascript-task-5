@@ -3,7 +3,7 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-function getUpperEvents(event) {
+function getParentEvents(event) {
     var upperEvents = [];
     while (event.lastIndexOf('.') > 0) {
         upperEvents.push(event);
@@ -54,7 +54,7 @@ function getEmitter() {
 
 
         emit: function (event) {
-            var upperEvents = getUpperEvents(event);
+            var upperEvents = getParentEvents(event);
             upperEvents.forEach(function (elem) {
                 if (subscribers.hasOwnProperty(elem)) {
                     subscribers[elem].forEach(function (subscriber) {
