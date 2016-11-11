@@ -9,12 +9,13 @@ module.exports = getEmitter;
 
 function getParentEvents(event) {
     var subEvents = event.split('.');
-    var parents = [];
-    for (var elements = subEvents.length; elements > 0; elements--) {
-        parents.push(subEvents.slice(0, elements).join('.'));
-    }
 
-    return parents;
+    return subEvents.reduce(function (parents, subEvent) {
+        var nextParent = parents.length ? parents.slice(-1).pop() + '.' + subEvent : subEvent;
+        parents.push(nextParent);
+
+        return parents;
+    }, []).reverse();
 }
 
 function getChildEvents(event, events) {
@@ -24,12 +25,13 @@ function getChildEvents(event, events) {
     });
 }
 
+function isEventImpossibleForHappen(eventInfo, subscription) {
+    return subscription.frequency && eventInfo.counter % subscription.frequency ||
+        subscription.hasOwnProperty('times') && subscription.times < 1;
+}
+
 function tryToHandleEvent(eventInfo, subscription) {
-    if (subscription.frequency &&
-        eventInfo.counter % subscription.frequency !== 0) {
-        return;
-    }
-    if (subscription.hasOwnProperty('times') && subscription.times < 1) {
+    if (isEventImpossibleForHappen(eventInfo, subscription)) {
         return;
     }
     if (subscription.times) {
@@ -105,8 +107,8 @@ function getEmitter() {
          */
         emit: function (event) {
             var events = this.events;
-            getParentEvents(event).map(function (parent) {
-                return emit(parent, events);
+            getParentEvents(event).forEach(function (parent) {
+                emit(parent, events);
             });
 
             return this;
