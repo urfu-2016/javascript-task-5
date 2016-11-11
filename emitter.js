@@ -98,11 +98,10 @@ function getEmitter() {
                 return this.on(event, context, handler);
             }
 
-            var i = times;
             var newHandler = function () {
-                if (i > 0) {
+                if (times > 0) {
                     handler.bind(context)();
-                    i--;
+                    times--;
                 }
             };
 
@@ -123,13 +122,13 @@ function getEmitter() {
                 return this.on(event, context, handler);
             }
 
-            var i = 0;
+            var numberOfHappenings = 0;
             var newHandler = function () {
-                if (i % frequency === 0) {
+                if (numberOfHappenings % frequency === 0) {
                     handler.bind(context)();
-                    i = 0;
+                    numberOfHappenings = 0;
                 }
-                i++;
+                numberOfHappenings++;
             };
 
             return this.on(event, context, newHandler);
