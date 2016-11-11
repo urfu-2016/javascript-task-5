@@ -30,9 +30,7 @@ function getEmitter() {
 
             events[event].push({
                 context: context,
-                handler: handler,
-                count: arguments[3] || null,
-                frequency: arguments[4] || null
+                handler: handler
             });
 
             return this;
@@ -50,8 +48,9 @@ function getEmitter() {
                     return event === eventName || eventName.indexOf(event + '.') === 0;
                 })
                 .forEach(function (eventName) {
-                    events[eventName] = events[eventName].filter(function (sub) {
-                        return sub.context !== context;
+                    events[eventName] = events[eventName].filter(function (subscribe) {
+
+                        return subscribe.context !== context;
                     });
                 });
 
@@ -65,16 +64,9 @@ function getEmitter() {
          */
         emit: function (event) {
 
-            while (event !== '') {
+            while (event) {
                 if (events[event]) {
                     events[event].forEach(function (item) {
-                        if (item.count && (item.count++ >= item.count)) {
-
-                            return;
-                        } else if (item.frequency && (item.count++ % item.frequency !== 0)) {
-
-                            return;
-                        }
                         item.handler.call(item.context);
                     });
                 }
