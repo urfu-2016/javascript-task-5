@@ -7,20 +7,14 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function isStudentEquils(student1, student2) {
-    return student1 === student2;
-}
-
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
-
-    var eventStore = {};
+    var eventsStore = {};
 
     return {
-
 
         /**
          * Подписаться на событие
@@ -30,10 +24,10 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-            if (!eventStore.hasOwnProperty(event)) {
-                eventStore[event] = [];
+            if (!eventsStore.hasOwnProperty(event)) {
+                eventsStore[event] = [];
             }
-            eventStore[event].push({
+            eventsStore[event].push({
                 context: context,
                 handler: handler
             });
@@ -48,11 +42,11 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context) {
-            Object.keys(eventStore).forEach(function (storedEvent) {
-                if (storedEvent === event || storedEvent.startsWith(event + '.')) {
-                    eventStore[storedEvent] = eventStore[storedEvent]
-                    .filter(function (studentActivity) {
-                        return !isStudentEquils(context, studentActivity.context);
+            Object.keys(eventsStore).forEach(function (storedEvent) {
+                if (storedEvent === event || storedEvent.indexOf(event + '.') === 0) {
+                    eventsStore[storedEvent] = eventsStore[storedEvent]
+                    .filter(function (studentHandler) {
+                        return context !== studentHandler.context;
                     });
                 }
             });
@@ -66,13 +60,14 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            while (event) {
-                if (eventStore.hasOwnProperty(event)) {
-                    eventStore[event].forEach(function (studentActivity) {
-                        studentActivity.handler.call(studentActivity.context);
+            var tmpEvent = event.substr(0);
+            while (tmpEvent) {
+                if (eventsStore.hasOwnProperty(tmpEvent)) {
+                    eventsStore[tmpEvent].forEach(function (studentHandler) {
+                        studentHandler.handler.call(studentHandler.context);
                     });
                 }
-                event = event.substring(0, event.lastIndexOf('.'));
+                tmpEvent = tmpEvent.substring(0, tmpEvent.lastIndexOf('.'));
             }
 
             return this;
@@ -92,13 +87,13 @@ function getEmitter() {
                 return this.on(event, context, handler);
             }
 
+            var curTimes = times;
             var severalOn = function () {
-                if (severalOn.currentCount > 0) {
+                if (curTimes > 0) {
                     handler.call(context);
-                    severalOn.currentCount--;
+                    curTimes--;
                 }
             };
-            severalOn.currentCount = times;
 
             this.on(event, context, severalOn);
 
@@ -119,15 +114,15 @@ function getEmitter() {
                 return this.on(event, context, handler);
             }
 
+            // подписывает на каждое n-ое событие, начиная с первого
+            var curTimeToNextAct = 1;
             var throughOn = function () {
-                throughOn.currentCount--;
-                if (throughOn.currentCount === 0) {
+                curTimeToNextAct--;
+                if (curTimeToNextAct === 0) {
                     handler.call(context);
-                    throughOn.currentCount = frequency;
+                    curTimeToNextAct = frequency;
                 }
             };
-            // подписывает на каждое n-ое событие, начиная с первого
-            throughOn.currentCount = 1;
 
             return this.on(event, context, throughOn);
         }
