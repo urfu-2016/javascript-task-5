@@ -7,11 +7,19 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+var NAMESPACE_PATTERN = '^{0}(?:$|\\..*)'; // По аналогии с String.Format в C#
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
+
+    /**
+     * @type {{event: Array.<{context: Object, handler: Function}>} events
+     */
+    var events = {};
+
     return {
 
         /**
@@ -19,26 +27,61 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object} this
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!events.hasOwnProperty(event)) {
+                events[event] = [];
+            }
+            events[event].push({
+                context: context,
+                handler: handler.bind(context)
+            });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object} this
          */
         off: function (event, context) {
-            console.info(event, context);
+            var namespacePattern = new RegExp(NAMESPACE_PATTERN.replace('{0}', event));
+            Object.keys(events).forEach(function (eventName) {
+                if (namespacePattern.test(eventName)) {
+                    events[eventName] = events[eventName].filter(function (handler) {
+                        return handler.context !== context;
+                    });
+                }
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object} this
          */
         emit: function (event) {
-            console.info(event);
+            Object.keys(events)
+                .filter(function (eventName) {
+                    var namespacePattern = new RegExp(NAMESPACE_PATTERN.replace('{0}', eventName));
+
+                    return namespacePattern.test(event);
+                })
+                .sort(function (eventName1, eventName2) {
+                    return eventName2 > eventName1;
+                })
+                .forEach(function (eventName) {
+                    events[eventName].forEach(function (handler) {
+                        handler.handler();
+                    });
+                });
+
+            return this;
         },
 
         /**
@@ -48,9 +91,21 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times <= 0) {
+                return this.on(event, context, handler);
+            }
+
+            var newHandler = function () {
+                if (times > 0) {
+                    handler.bind(context)();
+                    times--;
+                }
+            };
+
+            return this.on(event, context, newHandler);
         },
 
         /**
@@ -60,9 +115,23 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object} this
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (frequency <= 0) {
+                return this.on(event, context, handler);
+            }
+
+            var numberOfHappenings = 0;
+            var newHandler = function () {
+                if (numberOfHappenings % frequency === 0) {
+                    handler.bind(context)();
+                    numberOfHappenings = 0;
+                }
+                numberOfHappenings++;
+            };
+
+            return this.on(event, context, newHandler);
         }
     };
 }
