@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -13,6 +13,24 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     var subscriptions = [];
+    function addEvent(event, context, handler) {
+        var times = arguments[3] > 0 ? arguments[3] : Infinity;
+        var frequency = arguments[4] > 0 ? arguments[4] : 1;
+        subscriptions.push(
+            {
+                event: event,
+                context: context,
+                handler: handler,
+                frequency: frequency,
+                times: times,
+                count: 0
+            }
+        );
+    }
+    function isPassedLimits(subscription) {
+        return subscription.count % subscription.frequency === 0 &&
+            subscription.count < subscription.times;
+    }
 
     return {
 
@@ -24,13 +42,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            subscriptions.push(
-                {
-                    event: event,
-                    context: context,
-                    handler: handler
-                }
-            );
+            addEvent(event, context, handler, -1, -1);
 
             return this;
         },
@@ -67,7 +79,10 @@ function getEmitter() {
             eventsList.forEach(function (item) {
                 subscriptions.forEach(function (subscription) {
                     if (subscription.event === item) {
-                        subscription.handler.call(subscription.context);
+                        if (isPassedLimits(subscription)) {
+                            subscription.handler.call(subscription.context);
+                        }
+                        subscription.count++;
                     }
                 });
             });
@@ -82,9 +97,12 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            addEvent(event, context, handler, times);
+
+            return this;
         },
 
         /**
@@ -94,9 +112,12 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            addEvent(event, context, handler, -1, frequency);
+
+            return this;
         }
     };
 }
