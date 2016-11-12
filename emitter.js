@@ -15,17 +15,14 @@ function getEmitter() {
     }
 
     var launch = function (event) {
-        if (event.period % event.frequency === 0) {
-            if (event.times) {
+        if (event.period % event.frequency === 0 && event.times) {
                 event.callback.call(event.student);
                 event.times--;
-            }
         }
         event.period++;
     };
 
     return {
-
         on: function (event, context, handler) {
             addEvent(event, {
                 student: context,
