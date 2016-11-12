@@ -55,15 +55,15 @@ function getEmitter() {
          * @returns {Object}
          * */
         emit: function (event) {
-            var collectionOfHandlers = pathOfName(event);
-            collectionOfHandlers = collectionOfHandlers.reverse();
-            collectionOfHandlers.forEach(function (handler) {
-                eventsCollection.forEach(function (item) {
-                    if (item.event === handler) {
-                        if (item.countOfEvents === 0 && item.repeatCount === 0 ||
-                            (item.indexOfEvent < item.countOfEvents && item.countOfEvents !== 0) ||
-                            (item.repeatCount !== 0 &&
-                            (item.indexOfEvent % item.repeatCount) === 0)) {
+            var collectionOfEvents = pathOfName(event);
+            collectionOfEvents = collectionOfEvents.reverse();
+            var eventItemList = eventsCollection.filter(function (item) {
+                return collectionOfEvents.indexOf(item.event) > -1;
+            });
+            collectionOfEvents.forEach(function (eventName) {
+                eventItemList.forEach(function (item) {
+                    if (item.event === eventName) {
+                        if (isOn(item) || isSeveralPrevent(item) || isThroughlPrevent(item)) {
                             item.action.call(item.context);
                         }
                         item.indexOfEvent ++;
@@ -112,11 +112,23 @@ function getEmitter() {
 function pathOfName(nameOfEvent) {
     var parts = nameOfEvent.split('.');
     var collectionOfHandlers = [];
-    var fullHandler = '';
+    var fullHandler = [];
     parts.forEach(function (index) {
-        fullHandler += (fullHandler === '') ? index : '.' + index;
-        collectionOfHandlers.push(fullHandler);
+        fullHandler.push(index);
+        collectionOfHandlers.push(fullHandler.join('.'));
     });
 
     return collectionOfHandlers;
+}
+
+function isOn(item) {
+    return item.countOfEvents === 0 && item.repeatCount === 0;
+}
+
+function isSeveralPrevent(item) {
+    return (item.indexOfEvent < item.countOfEvents && item.countOfEvents !== 0);
+}
+
+function isThroughlPrevent(item) {
+    return (item.repeatCount !== 0 && (item.indexOfEvent % item.repeatCount) === 0);
 }
