@@ -19,6 +19,10 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
+            if (typeof event !== 'string' || typeof context !== 'object' ||
+                typeof handler !== 'function') {
+                throw new TypeError('Неверный формат входящих данных');
+            }
             addEvent(event, context, handler, events);
 
             return this;
