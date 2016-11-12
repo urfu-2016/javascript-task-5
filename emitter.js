@@ -23,35 +23,42 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            for (var i = 0; i < this.events.length; i++) {
-                if (this.events[i].name === event) {
-                    this.events[i].info.push({
+            var existsEvent = false;
+            this.events.forEach(function (eventsItem) {
+                if (eventsItem.name === event) {
+                    eventsItem.info.push({
                         context: context,
                         handler: handler
                     });
-
-                    return this;
+                    existsEvent = true;
                 }
-            }
-            this.events.push({
-                name: event,
-                info: [{
-                    context: context,
-                    handler: handler
-                }]
             });
+            if (existsEvent === false) {
+                this.events.push({
+                    name: event,
+                    info: [{
+                        context: context,
+                        handler: handler
+                    }]
+                });
+            }
 
             return this;
         },
 
-        offFromOneEvent: function (j, context) {
+        /**
+         * Отписаться от одного события
+         * @param {Number} indexOfEvent
+         * @param {Object} context
+         */
+        offFromOneEvent: function (indexOfEvent, context) {
             var savesInfo = [];
-            for (var i = 0; i < this.events[j].info.length; i++) {
-                if (this.events[j].info[i].context !== context) {
-                    savesInfo.push(this.events[j].info[i]);
+            this.events[indexOfEvent].info.forEach(function (info) {
+                if (info.context !== context) {
+                    savesInfo.push(info);
                 }
-            }
-            this.events[j].info = savesInfo;
+            });
+            this.events[indexOfEvent].info = savesInfo;
 
         },
 
@@ -62,12 +69,12 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            for (var i = 0; i < this.events.length; i++) {
-                var name = this.events[i].name;
+            this.events.forEach(function (eventsItem, indexOfEvent) {
+                var name = eventsItem.name;
                 if ((name === event) || (name.indexOf(event + '.') === 0)) {
-                    this.offFromOneEvent(i, context);
+                    this.offFromOneEvent(indexOfEvent, context);
                 }
-            }
+            }, this);
 
             return this;
         },
@@ -77,9 +84,9 @@ function getEmitter() {
          * @param {Object} info
          */
         emitForOneEvent: function (info) {
-            for (var i = 0; i < info.length; i++) {
-                info[i].handler.call(info[i].context);
-            }
+            info.forEach(function (infoItem) {
+                infoItem.handler.call(infoItem.context);
+            });
         },
 
         /**
@@ -91,13 +98,13 @@ function getEmitter() {
             var currentEvent = event;
             var sortedEvents = this.events.slice();
             sortedEvents = sortedEvents.sort().reverse();
-            for (var i = 0; i < sortedEvents.length; i++) {
-                var name = sortedEvents[i].name;
+            sortedEvents.forEach(function (sortedEvent) {
+                var name = sortedEvent.name;
                 if ((currentEvent === name) || (currentEvent.indexOf(name + '.') === 0)) {
-                    this.emitForOneEvent(sortedEvents[i].info);
-                    currentEvent = sortedEvents[i].name;
+                    this.emitForOneEvent(sortedEvent.info);
+                    currentEvent = sortedEvent.name;
                 }
-            }
+            }, this);
 
             return this;
         },
