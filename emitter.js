@@ -7,16 +7,6 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function emitEvent(events, event) {
-    if (Object.keys(events).indexOf(event) !== -1) {
-        events[event].forEach(function (subscriber) {
-            subscriber.handler();
-        });
-    }
-
-    return events;
-}
-
 /**
  * Возвращает новый emitter
  * @returns {Object}
@@ -55,7 +45,7 @@ function getEmitter() {
         off: function (event, context) {
             var searchString = event + '.';
             var eventsCopy = this.events;
-            Object.keys(this.events).forEach(function (currentEvent) {
+            Object.keys(eventsCopy).forEach(function (currentEvent) {
                 if (currentEvent.lastIndexOf(searchString) === 0 || currentEvent === event) {
                     eventsCopy[currentEvent] = eventsCopy[currentEvent].filter(function (note) {
                         return context !== note.listener;
@@ -72,10 +62,11 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            this.events = emitEvent(this.events, event);
-            while (event.indexOf('.') !== -1) {
-                event = event.slice(0, event.lastIndexOf('.'));
-                this.events = emitEvent(this.events, event);
+            var eventCopy = event;
+            this.events = emitEvent(this.events, eventCopy);
+            while (eventCopy.indexOf('.') !== -1) {
+                eventCopy = eventCopy.slice(0, eventCopy.lastIndexOf('.'));
+                this.events = emitEvent(this.events, eventCopy);
             }
 
             return this;
@@ -91,11 +82,10 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            if (times < 0) {
+            if (times <= 0) {
                 return this.on(event, context, handler);
             }
             var newHandler = function () {
-
                 return function () {
                     if (times > 0) {
                         times--;
@@ -134,4 +124,14 @@ function getEmitter() {
             return this.on(event, context, newHandler());
         }
     };
+}
+
+function emitEvent(events, event) {
+    if (Object.keys(events).indexOf(event) !== -1) {
+        events[event].forEach(function (subscriber) {
+            subscriber.handler();
+        });
+    }
+
+    return events;
 }
