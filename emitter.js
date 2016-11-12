@@ -10,7 +10,9 @@ module.exports = getEmitter;
 var SEPARATOR = '.';
 
 function cutEventName(string) {
-    return string.slice(0, string.lastIndexOf(SEPARATOR));
+    var separatorIndex = string.lastIndexOf(SEPARATOR);
+
+    return (separatorIndex !== -1) ? string.slice(0, separatorIndex) : '';
 }
 
 /**
