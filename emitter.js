@@ -6,21 +6,16 @@ module.exports = getEmitter;
 function getEmitter() {
     var events = {};
 
-    function addEvent(eventInfo) {
-        if (!events.hasOwnProperty(eventInfo.name)) {
-            events[eventInfo.name] = [];
+    function addEvent(eventName, eventInfo) {
+        if (!events.hasOwnProperty(eventName)) {
+            events[eventName] = [];
         }
-        events[eventInfo.name].push({
-            student: eventInfo.student,
-            callback: eventInfo.callback,
-            times: eventInfo.times,
-            frequency: eventInfo.frequency,
-            period: 0
-        });
+        eventInfo.period = 0;
+        events[eventInfo.name].push(eventInfo);
     }
 
     var launch = function (event) {
-        if (event.period % event.times === 0) {
+        if (event.period % event.frequency === 0) {
             if (event.times) {
                 event.callback.call(event.student);
                 event.times--;
@@ -32,8 +27,7 @@ function getEmitter() {
     return {
 
         on: function (event, context, handler) {
-            addEvent({
-                name: event,
+            addEvent(event, {
                 student: context,
                 callback: handler,
                 times: -1,
@@ -69,8 +63,7 @@ function getEmitter() {
         },
 
         several: function (event, context, handler, times) {
-            addEvent({
-                name: event,
+            addEvent(event, {
                 student: context,
                 callback: handler,
                 times: times || -1,
@@ -81,12 +74,11 @@ function getEmitter() {
         },
 
         through: function (event, context, handler, frequency) {
-            addEvent({
-                name: event,
+            addEvent(event, {
                 student: context,
                 callback: handler,
                 times: -1,
-                frequence: frequency || -1
+                frequence: frequency <= 0 ? 1 : frequency
             });
 
             return this;
