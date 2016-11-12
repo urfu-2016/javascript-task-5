@@ -7,21 +7,31 @@ function getEmitter() {
     var events = {};
 
     function addEvent(eventInfo) {
-        if (!(events.hasOwnProperty(eventInfo.name))) {
+        if (!events.hasOwnProperty(eventInfo.name)) {
             events[eventInfo.name] = [];
         }
         events[eventInfo.name].push({
             student: eventInfo.student,
             callback: eventInfo.callback,
             times: eventInfo.times,
-            type: eventInfo.type,
+            frequency: eventInfo.frequency,
             period: 0
         });
     }
 
-    var launch = {
+    var launch = function (event) {
+        if (event.period % event.times === 0) {
+            if (event.times) {
+                event.callback.call(event.student);
+                event.times--;
+            }
+        }
+        event.period++;
+    };
+
+    var launch1 = {
         'on_several': function (event) {
-            if (event.times !== 0) {
+            if (event.times) {
                 event.callback.call(event.student);
                 event.times--;
             }
@@ -64,7 +74,7 @@ function getEmitter() {
             while (event) {
                 if (events.hasOwnProperty(event)) {
                     events[event].forEach(function (e) {
-                        launch[e.type](e);
+                        launch(e);
                     });
                 }
                 event = event.replace(/.(\w+)$/, '');
@@ -78,8 +88,8 @@ function getEmitter() {
                 name: event,
                 student: context,
                 callback: handler,
-                times: times === 0 ? -1 : times,
-                type: 'on_several'
+                times: times || -1,
+                frequence: 1
             });
 
             return this;
@@ -90,8 +100,8 @@ function getEmitter() {
                 name: event,
                 student: context,
                 callback: handler,
-                times: frequency === 0 ? -1 : frequency,
-                type: frequency <= 0 ? 'on_several' : 'through'
+                times: -1,
+                frequence: frequency || -1
             });
 
             return this;
