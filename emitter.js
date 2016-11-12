@@ -37,7 +37,7 @@ function getEmitter() {
                 student: context,
                 callback: handler,
                 times: -1,
-                type: 'on_several'
+                frequency: 1
             });
 
             return this;
