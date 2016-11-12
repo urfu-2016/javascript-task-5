@@ -7,6 +7,12 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
+var eventsForCall = function (events) {
+    return events.map(function (value, index) {
+        return events.slice(0, events.length - index).join('.');
+    });
+};
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
@@ -61,18 +67,13 @@ function getEmitter() {
          */
         emit: function (event) {
             var arrayEvents = event.split('.');
-            var eventsForCall = [];
-            arrayEvents.map(function (value, index) {
-                var result = arrayEvents.slice(0, arrayEvents.length - index).join('.');
-
-                return eventsForCall.push(result);
-            });
-            eventsForCall.forEach(function (currentEvent) {
-                if (this.EVENTS.hasOwnProperty(currentEvent)) {
-                    this.EVENTS[currentEvent].forEach(function (record) {
-                        record.handler.call(record.context);
-                    }, this);
+            eventsForCall(arrayEvents).forEach(function (currentEvent) {
+                if (!this.EVENTS.hasOwnProperty(currentEvent)) {
+                    return;
                 }
+                this.EVENTS[currentEvent].forEach(function (record) {
+                    record.handler.call(record.context);
+                }, this);
             }, this);
 
 
