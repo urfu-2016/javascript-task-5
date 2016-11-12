@@ -11,7 +11,7 @@ function getEmitter() {
             events[eventName] = [];
         }
         eventInfo.period = 0;
-        events[eventInfo.name].push(eventInfo);
+        events[eventName].push(eventInfo);
     }
 
     var launch = function (event) {
@@ -67,7 +67,7 @@ function getEmitter() {
                 student: context,
                 callback: handler,
                 times: times || -1,
-                frequence: 1
+                frequency: 1
             });
 
             return this;
@@ -78,7 +78,7 @@ function getEmitter() {
                 student: context,
                 callback: handler,
                 times: -1,
-                frequence: frequency <= 0 ? 1 : frequency
+                frequency: frequency <= 0 ? 1 : frequency
             });
 
             return this;
