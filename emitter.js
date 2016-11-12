@@ -9,15 +9,18 @@ module.exports = getEmitter;
 
 var SEPARATOR = '.';
 
-function changeEvent(string) {
-    var separatorIndex = string.lastIndexOf(SEPARATOR);
-
-    return (separatorIndex !== -1) ? string.slice(0, separatorIndex) : '';
+function cutEventName(string) {
+    return string.slice(0, string.lastIndexOf(SEPARATOR));
 }
 
-function findIndex(collection, isSuitable) {
+/**
+ * @param {Array} collection
+ * @param {Function} callback
+ * @returns {Number} index
+ */
+function findIndex(collection, callback) {
     for (var i = 0; i < collection.length; i++) {
-        if (isSuitable(collection[i])) {
+        if (callback(collection[i])) {
             return i;
         }
     }
@@ -25,15 +28,9 @@ function findIndex(collection, isSuitable) {
     return -1;
 }
 
-function find(collection, functionI) {
-    var i = findIndex(collection, functionI);
-
-    return (i !== -1) ? collection[i] : undefined;
-}
-
 function deleteSubscriber(subscribers, subscriber) {
     var index = findIndex(subscribers, function (item) {
-        return item.object === subscriber;
+        return item.context === subscriber;
     });
 
     if (index !== -1) {
@@ -46,9 +43,9 @@ function deleteSubscriber(subscribers, subscriber) {
  * @returns {Object}
  */
 function getEmitter() {
-    return {
+    var events = {};
 
-        events: {},
+    return {
 
         /**
          * Подписаться на событие
@@ -58,22 +55,21 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-            if (!this.events.hasOwnProperty(event)) {
-                this.events[event] = [];
+            if (!events.hasOwnProperty(event)) {
+                events[event] = [];
             }
 
-            var subscribers = this.events[event];
+            var subscribers = events[event];
 
-            var subscriber = find(subscribers, function (item) {
-                return item.object === context;
+            var index = findIndex(subscribers, function (item) {
+                return item.context === context;
             });
 
-            if (subscriber === undefined) {
-                subscriber = { object: context, actions: [] };
-                subscribers.push(subscriber);
+            if (index === -1) {
+                subscribers.push({ context: context, actions: [handler] });
+            } else {
+                subscribers[index].actions.push(handler);
             }
-
-            subscriber.actions.push(handler);
 
             return this;
         },
@@ -85,22 +81,13 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context) {
-            var subscribers = this.events[event];
-            if (subscribers === undefined) {
-                return this;
-            }
-
-            deleteSubscriber(subscribers, context);
-
             var previousEvent = event + SEPARATOR;
 
-            var previousEvents = Object.keys(this.events).filter(function (eventItem) {
-                return eventItem.indexOf(previousEvent) === 0;
+            Object.keys(events).forEach(function (eventItem) {
+                if (eventItem === event || eventItem.indexOf(previousEvent) === 0) {
+                    deleteSubscriber(events[eventItem], context);
+                }
             });
-
-            previousEvents.forEach(function (eventItem) {
-                deleteSubscriber(this.events[eventItem], context);
-            }, this);
 
             return this;
         },
@@ -111,17 +98,18 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            while (event !== '') {
-                var subscribers = this.events[event];
-                event = changeEvent(event);
+            var currentEvent = event;
+            while (currentEvent !== '') {
+                var subscribers = events[currentEvent];
+                currentEvent = cutEventName(currentEvent);
 
                 if (subscribers === undefined) {
                     continue;
                 }
 
-                subscribers.forEach(function (subscriber) {
+                subscribers.slice().forEach(function (subscriber) {
                     subscriber.actions.forEach(function (action) {
-                        action.call(subscriber.object);
+                        action.call(subscriber.context);
                     });
                 });
             }
@@ -149,9 +137,11 @@ function getEmitter() {
             * @this {Object}
             */
             function wrapperOfHandler() {
-                if (countOfCall !== times) {
-                    handler.call(this);
-                    countOfCall++;
+                handler.call(this);
+                countOfCall++;
+
+                if (countOfCall === times) {
+                    deleteSubscriber(events[event], this);
                 }
             }
 
@@ -178,7 +168,7 @@ function getEmitter() {
             * @this {Object}
             */
             function wrapperOfHandler() {
-                if (countOfCall === 0) { //  2
+                if (countOfCall === 0) {
                     handler.call(this);
                 }
 
