@@ -5,14 +5,31 @@ module.exports = getEmitter;
 function getEmitter() {
     var events = {};
 
+    /**
+     * Возвращает новый emitter
+     * @returns {Object}
+     */
     return {
 
+        /**
+         * Подписаться на событие
+         * @param {String} event - событие
+         * @param {Object} context - чьё событие
+         * @param {Function} handler - воздействие события
+         * @returns {Object}
+         */
         on: function (event, context, handler) {
             addEvent(event, context, handler, events);
 
             return this;
         },
 
+        /**
+         * Отписка от события
+         * @param {String} event - событие
+         * @param {Object} context - чьё событие
+         * @returns {Object}
+         */
         off: function (event, context) {
             var deepCount = event.split('.').length;
             Object.keys(events).forEach(function (key) {
@@ -27,18 +44,30 @@ function getEmitter() {
             return this;
         },
 
+        /**
+         * Выполнить событие
+         * @param {String} event - событие
+         * @returns {Object}
+         */
         emit: function (event) {
-            var copyOfEvent = event.slice();
-            startEvents(copyOfEvent, events);
-            while (copyOfEvent.indexOf('.') !== -1) {
-                copyOfEvent = copyOfEvent.split('.').slice(0, -1)
-                    .join('.');
-                startEvents(copyOfEvent, events);
+            var copyOfEvent = event.split('.');
+            startEvents(copyOfEvent.join('.'), events);
+            while (copyOfEvent.length !== 0) {
+                copyOfEvent = copyOfEvent.slice(0, -1);
+                startEvents(copyOfEvent.join('.'), events);
             }
 
             return this;
         },
 
+        /**
+         * Подписаться на определённое число дынных событий
+         * @param {String} event - событие
+         * @param {Object} context - чьё событие
+         * @param {Function} handler - воздействие события
+         * @param {Number} times - сколько событий выполнить
+         * @returns {Object}
+         */
         several: function (event, context, handler, times) {
             addEvent(event, context, handler, events);
             events[event][(events[event]).length - 1].times = times;
@@ -47,6 +76,14 @@ function getEmitter() {
         },
 
 
+        /**
+         * Подписаться на все n-ые события
+         * @param {String} event - событие
+         * @param {Object} context - чьё событие
+         * @param {Function} handler - воздействие события
+         * @param {Number} frequency - через сколько событий выполнять
+         * @returns {Object}
+         */
         through: function (event, context, handler, frequency) {
             addEvent(event, context, handler, events);
             events[event][(events[event]).length - 1].frequency = frequency;
@@ -56,6 +93,13 @@ function getEmitter() {
     };
 }
 
+/**
+ * Добавить новое событие
+ * @param {String} event - событие
+ * @param {Object} context - чьё событие
+ * @param {Function} handler - воздействие события
+ * @param {Object} events - справочник всех событий
+ */
 function addEvent(event, context, handler, events) {
     var newEvent = {
         context: context,
@@ -71,6 +115,11 @@ function addEvent(event, context, handler, events) {
     }
 }
 
+/**
+ * Выполнить событие
+ * @param {String} event - событие
+ * @param {Object} events - справочник всех событий
+ */
 function startEvents(event, events) {
     if (events.hasOwnProperty(event)) {
         events[event].forEach(function (student) {
