@@ -29,21 +29,6 @@ function getEmitter() {
         event.period++;
     };
 
-    var launch1 = {
-        'on_several': function (event) {
-            if (event.times) {
-                event.callback.call(event.student);
-                event.times--;
-            }
-        },
-        'through': function (event) {
-            if (event.period % event.times === 0) {
-                event.callback.call(event.student);
-            }
-            event.period++;
-        }
-    };
-
     return {
 
         on: function (event, context, handler) {
