@@ -7,8 +7,6 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-var INFINITY = 999;
-
 function isEmiting(subscriber) {
     if (Object.keys(subscriber)[2] === 'frequency') {
         var currentFrequency = subscriber.frequency[1];
@@ -113,10 +111,9 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            var option = times > 0 ? { times: times } : INFINITY;
-            this.on(event, context, handler, option);
+            var option = times > 0 ? { times: times } : Infinity;
 
-            return this;
+            return this.on(event, context, handler, option);
         },
 
         /**
@@ -130,9 +127,8 @@ function getEmitter() {
          */
         through: function (event, context, handler, frequency) {
             var option = frequency > 0 ? { frequency: [frequency, 0] } : [1, 0];
-            this.on(event, context, handler, option);
 
-            return this;
+            return this.on(event, context, handler, option);
         }
     };
 }
