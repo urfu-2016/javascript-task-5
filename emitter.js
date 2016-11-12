@@ -16,8 +16,8 @@ function getEmitter() {
 
     var launch = function (event) {
         if (event.period % event.frequency === 0 && event.times) {
-                event.callback.call(event.student);
-                event.times--;
+            event.callback.call(event.student);
+            event.times--;
         }
         event.period++;
     };
