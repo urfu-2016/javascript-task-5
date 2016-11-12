@@ -7,24 +7,19 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function isEmiting(executor) {
-    if (executor.frequency !== undefined) {
-        if (executor.currentFrequency === 0) {
-            executor.currentFrequency = executor.frequency;
+var INFINITY = 999;
 
-            return true;
-        }
-        executor.currentFrequency--;
+function isEmiting(subscriber) {
+    if (Object.keys(subscriber)[2] === 'frequency') {
+        var currentFrequency = subscriber.frequency[1];
+        subscriber.frequency[1]++;
 
-        return false;
+        return currentFrequency % subscriber.frequency[0] === 0;
     }
-    if (executor.times !== undefined) {
-        executor.times--;
-        if (executor.times >= 0) {
-            return true;
-        }
+    if (Object.keys(subscriber)[2] === 'times') {
+        subscriber.times--;
 
-        return false;
+        return subscriber.times >= 0;
     }
 
     return true;
@@ -35,9 +30,9 @@ function isEmiting(executor) {
  * @returns {Object}
  */
 function getEmitter() {
-    return {
+    var events = {};
 
-        events: {},
+    return {
 
         /**
          * Подписаться на событие
@@ -47,20 +42,17 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (!(event in this.events)) {
-                this.events[event] = [];
+            if (!(event in events)) {
+                events[event] = [];
             }
-            var nameParam = '';
-            if (arguments[3]) {
-                nameParam = Object.keys(arguments[3]);
-            }
-            this.events[event].push({
+            events[event].push({
                 context: context,
-                handler: handler.bind(context),
-                times: (nameParam[0] === 'times') ? arguments[3].times : undefined,
-                frequency: (nameParam[0] === 'frequency') ? arguments[3].frequency - 1 : undefined,
-                currentFrequency: 0
+                handler: handler.bind(context)
             });
+            if (arguments[3]) {
+                var nameParams = Object.keys(arguments[3]);
+                events[event][events[event].length - 1][nameParams] = arguments[3][nameParams];
+            }
 
             return this;
         },
@@ -72,12 +64,12 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            var eventsForDelete = Object.keys(this.events).filter(function (eventForDelete) {
-                return eventForDelete.indexOf(event + '.') === 0 || event === eventForDelete;
+            var eventsForDelete = Object.keys(events).filter(function (storedEvent) {
+                return storedEvent.indexOf(event + '.') === 0 || event === storedEvent;
             });
             eventsForDelete.forEach(function (eventForDelete) {
-                this.events[eventForDelete] = this.events[eventForDelete].filter(function (signer) {
-                    return signer.context !== context;
+                events[eventForDelete] = events[eventForDelete].filter(function (subscriber) {
+                    return subscriber.context !== context;
                 });
             }, this);
 
@@ -90,23 +82,20 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            var parts = event.split('.');
-            var namesEvent = [];
-            namesEvent.push(parts[0]);
-            parts.reduce(function (prev, curr) {
-                prev += '.' + curr;
-                namesEvent.push(prev);
+            var nameEvents = event.split('.');
+            nameEvents[0] = event;
+            nameEvents.reduce(function (prev, curr, i) {
+                nameEvents[i] = prev.slice(0, prev.lastIndexOf('.'));
 
-                return prev;
+                return nameEvents[i];
             });
-            namesEvent.reverse();
-            var filteredNames = namesEvent.filter(function (eventForCheck) {
-                return (eventForCheck in this.events);
+            var filteredNames = nameEvents.filter(function (eventForCheck) {
+                return (eventForCheck in events);
             }, this);
             filteredNames.forEach(function (eventForCall) {
-                this.events[eventForCall].forEach(function (executor) {
-                    if (isEmiting(executor)) {
-                        executor.handler.call();
+                events[eventForCall].forEach(function (subscriber) {
+                    if (isEmiting(subscriber)) {
+                        subscriber.handler.call();
                     }
                 });
             }, this);
@@ -124,11 +113,8 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            if (times > 0) {
-                this.on(event, context, handler, { times: times });
-            } else {
-                this.on(event, context, handler);
-            }
+            var option = times > 0 ? { times: times } : INFINITY;
+            this.on(event, context, handler, option);
 
             return this;
         },
@@ -143,11 +129,8 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            if (frequency > 0) {
-                this.on(event, context, handler, { frequency: frequency });
-            } else {
-                this.on(event, context, handler);
-            }
+            var option = frequency > 0 ? { frequency: [frequency, 0] } : [1, 0];
+            this.on(event, context, handler, option);
 
             return this;
         }
