@@ -14,7 +14,7 @@ module.exports = getEmitter;
 function getEmitter() {
     return {
 
-        NAME_SPACE: {},
+        EVENTS: {},
 
         /**
          * Подписаться на событие
@@ -24,11 +24,11 @@ function getEmitter() {
          * @returns {this}
          */
         on: function (event, context, handler) {
-            if (!this.NAME_SPACE.hasOwnProperty(event)) {
-                this.NAME_SPACE[event] = [];
+            if (!this.EVENTS.hasOwnProperty(event)) {
+                this.EVENTS[event] = [];
             }
 
-            this.NAME_SPACE[event].push ({
+            this.EVENTS[event].push({
                 context: context,
                 handler: handler
             });
@@ -43,10 +43,10 @@ function getEmitter() {
          * @returns {this}
          */
         off: function (event, context) {
-            Object.keys(this.NAME_SPACE).forEach(function (keys) {
-                this.NAME_SPACE[keys] = this.NAME_SPACE[keys].filter(function (record) {
-                    return record.context !== context || keys !== event &&
-                    keys.indexOf(event + '.') !== 0;
+            Object.keys(this.EVENTS).forEach(function (currentEvent) {
+                this.EVENTS[currentEvent] = this.EVENTS[currentEvent].filter(function (record) {
+                    return record.context !== context || currentEvent !== event &&
+                    currentEvent.indexOf(event + '.') !== 0;
                 });
 
             }, this);
@@ -61,15 +61,20 @@ function getEmitter() {
          */
         emit: function (event) {
             var arrayEvents = event.split('.');
+            var eventsForCall = [];
             arrayEvents.map(function (value, index) {
-                return arrayEvents.slice(0, arrayEvents.length - index).join('.');
-            }).forEach(function (currentEvent) {
-                if (this.NAME_SPACE.hasOwnProperty(currentEvent)) {
-                    this.NAME_SPACE[currentEvent].forEach(function (record) {
+                var result = arrayEvents.slice(0, arrayEvents.length - index).join('.');
+
+                return eventsForCall.push(result);
+            });
+            eventsForCall.forEach(function (currentEvent) {
+                if (this.EVENTS.hasOwnProperty(currentEvent)) {
+                    this.EVENTS[currentEvent].forEach(function (record) {
                         record.handler.call(record.context);
                     }, this);
                 }
             }, this);
+
 
             return this;
         },
