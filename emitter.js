@@ -17,7 +17,7 @@ function getParentEvents(event) {
 function getSubEvents(allEvents, event) {
     var subEvents = [];
     allEvents.forEach(function (event_) {
-        if (event_.startsWith(event + '.') || event_ === event) {
+        if (event_.indexOf(event + '.') == 0 || event_ === event) {
             subEvents.push(event_);
         }
     });
