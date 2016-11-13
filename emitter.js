@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -14,7 +14,7 @@ module.exports = getEmitter;
 function getEmitter() {
     return {
 
-        listeners: [],
+        listeners: {},
         getEventsList: function (event) {
             var events = event.split('.');
             events = events.map(function (value, index) {
@@ -37,8 +37,18 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-            this.listeners.push({ event: event, context: context, handler: handler,
-                                count: Number.POSITIVE_INFINITY, module: 0, countModule: 0 });
+            var listener = { context: context,
+                    handler: handler,
+                    count: Number.POSITIVE_INFINITY,
+                    module: 0,
+                    countModule: 0 };
+            if (this.listeners.hasOwnProperty(event)) {
+                this.listeners[event].push(listener);
+            } else {
+                this.listeners[event] = [listener];
+            }
+            // this.listeners.push({ event: event, context: context, handler: handler,
+            //                    count: Number.POSITIVE_INFINITY, module: 0, countModule: 0 });
 
             return this;
         },
@@ -50,12 +60,18 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context) {
-            var _this = this;
             var lengthEvent = event.split('.').length;
-            this.listeners = this.listeners.filter(function (listener) {
-                return ((_this.getStartEvent(listener.event, lengthEvent) !== event) ||
-                        (listener.context !== context));
-            });
+            this.listeners.forEach(function (thisEvent) {
+                if (this.getStartEvent(thisEvent, lengthEvent) === event) {
+                    thisEvent.filter(function (eventListener) {
+                        return (eventListener.context !== context);
+                    });
+                }
+            }, this);
+            // this.listeners = this.listeners.filter(function (listener) {
+            //    return ((_this.getStartEvent(listener.event, lengthEvent) !== event) ||
+            //            (listener.context !== context));
+            // });
 
             return this;
         },
@@ -66,23 +82,19 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            var _this = this;
             var events = this.getEventsList(event);
             events.forEach(function (currentEvent) {
-                _this.listeners.forEach(function (listener) {
-                    if (listener.event === currentEvent &&
-                        listener.countModule === 0 && listener.count > 0) {
+                this.listeners[currentEvent].forEach(function (listener) {
+                    if (listener.countModule === 0 && listener.count > 0) {
                         listener.handler.call(listener.context);
                         listener.count--;
                         listener.countModule += listener.module;
-
                     }
-                    if (listener.event === currentEvent && listener.countModule > 0) {
+                    if (listener.countModule > 0) {
                         listener.countModule--;
                     }
-                });
-            });
-
+                }, this);
+            }, this);
 
             return this;
         },
@@ -97,7 +109,7 @@ function getEmitter() {
          * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            times = times > 0 ? times : Number.MAX_VALUE;
+            times = times > 0 ? times : Number.POSITIVE_INFINITY;
             this.listeners.push({ event: event, context: context, handler: handler,
                 count: times, module: 0, countModule: 0 });
 
