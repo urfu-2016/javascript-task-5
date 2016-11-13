@@ -43,11 +43,10 @@ function getEmitter() {
         off: function (event, context) {
             events.forEach(function (currentEvent, i) {
                 var partsEvent = currentEvent.event.split('.');
-                var templates = [];
-                partsEvent.forEach(function (currentPart, j) {
-                    templates.push(partsEvent.slice(0, partsEvent.length - j).join('.'));
+                var templates = partsEvent.map(function (currentPart, j) {
+                    return partsEvent.slice(0, partsEvent.length - j).join('.');
                 });
-                var checkEvent = (templates.indexOf(event) !== -1);
+                var checkEvent = templates.indexOf(event) !== -1;
                 if (checkEvent && currentEvent.propertyStudent === context) {
                     delete events[i];
                 }
