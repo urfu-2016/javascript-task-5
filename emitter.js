@@ -33,7 +33,7 @@ function getEmitter() {
                     existsEvent = true;
                 }
             });
-            if (existsEvent === false) {
+            if (!existsEvent) {
                 this.events.push({
                     name: event,
                     info: [{
