@@ -17,11 +17,10 @@ function getEmitter() {
         listeners: [],
         getEventsList: function (event) {
             var events = event.split('.');
-            events = events.map(function (value, index) {
+
+            return events.map(function (value, index) {
                 return events.slice(0, events.length - index).join('.');
             });
-
-            return events;
         },
 
         getStartEvent: function (event, lengthEvent) {
@@ -37,8 +36,10 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-            this.listeners.push({ event: event, context: context, handler: handler,
-                count: Number.POSITIVE_INFINITY, module: 0, countModule: 0 });
+            this.listeners.push({ event: event,
+                context: context,
+                handler: handler
+                });
 
             return this;
         },
@@ -50,12 +51,11 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context) {
-            var _this = this;
             var lengthEvent = event.split('.').length;
             this.listeners = this.listeners.filter(function (listener) {
-                return ((_this.getStartEvent(listener.event, lengthEvent) !== event) ||
+                return ((this.getStartEvent(listener.event, lengthEvent) !== event) ||
                 (listener.context !== context));
-            });
+            }, this);
 
             return this;
         },
@@ -66,23 +66,32 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            var _this = this;
             var events = this.getEventsList(event);
             events.forEach(function (currentEvent) {
-                _this.listeners.forEach(function (listener) {
-                    if (listener.event === currentEvent &&
-                        listener.countModule === 0 && listener.count > 0) {
-                        listener.handler.call(listener.context);
+                this.listeners.forEach(function (listener) {
+                    if (listener.event !== currentEvent) {
+                        return;
+                    }
+                    if (listener.hasOwnProperty('countModule')) {
+                        if (listener.countModule === 0) {
+                            listener.countModule += listener.module - 1;
+                        } else {
+                            listener.countModule--;
+
+                            return;
+                        }
+                    }
+                    if (listener.hasOwnProperty('count')) {
                         listener.count--;
-                        listener.countModule += listener.module;
-
+                        if (listener.count === 0) {
+                            this.listeners = this.listeners.filter(function (currentListener) {
+                                return ((currentListener != listener));
+                            }, this);
+                        }
                     }
-                    if (listener.event === currentEvent && listener.countModule > 0) {
-                        listener.countModule--;
-                    }
-                });
-            });
-
+                    listener.handler.call(listener.context);
+                }, this);
+            }, this);
 
             return this;
         },
@@ -97,9 +106,16 @@ function getEmitter() {
          * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            times = times > 0 ? times : Number.MAX_VALUE;
-            this.listeners.push({ event: event, context: context, handler: handler,
-                count: times, module: 0, countModule: 0 });
+            if (times > 0) {
+                this.listeners.push({
+                    event: event,
+                    context: context,
+                    handler: handler,
+                    count: times
+                });
+            } else {
+                this.on(event, context, handler);
+            }
 
             return this;
         },
@@ -114,9 +130,17 @@ function getEmitter() {
          * @returns {Object} this
          */
         through: function (event, context, handler, frequency) {
-            frequency = frequency > 0 ? frequency : 0;
-            this.listeners.push({ event: event, context: context, handler: handler,
-                count: Number.POSITIVE_INFINITY, module: frequency, countModule: 0 });
+            if (frequency > 0) {
+                this.listeners.push({
+                    event: event,
+                    context: context,
+                    handler: handler,
+                    module: frequency,
+                    countModule: 0
+                });
+            } else {
+                this.on(event, context, handler);
+            }
 
             return this;
         }
