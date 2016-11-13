@@ -56,7 +56,7 @@ function getEmitter() {
         off: function (event, context) {
             for (var subscription in this.subscriptions) {
                 if (this.subscriptions.hasOwnProperty(subscription) && (subscription === event ||
-                    subscription.indexOf(event.concat('.') !== -1))) {
+                    subscription.indexOf(event.concat('.') === 0))) {
                     this.subscriptions[event] = this.subscriptions[event].filter(function (name) {
                         return name.context !== context;
                     });
