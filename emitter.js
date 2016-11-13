@@ -13,11 +13,6 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
-
-        // eventsArray: {
-        //     events: {}
-        // },
-
         eventsTree: {
             subEvents: {}
         },
@@ -75,7 +70,9 @@ function getEmitter() {
                 .split('.')
                 .reduce(getLastEvent, this.eventsTree);
 
-            unsignContextFromSubTree(lastEvent, context);
+            if (lastEvent.hasOwnProperty('signedContexts')) {
+                unsignContextFromSubTree(lastEvent, context);
+            }
 
             return this;
         },
