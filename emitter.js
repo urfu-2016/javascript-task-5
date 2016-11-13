@@ -21,7 +21,9 @@ function getEmitter() {
                 return events.slice(0, events.length - index).join('.');
             });
 
-            return events;
+            return events.filter(function (currentEvent) {
+                return this.listeners.hasOwnProperty(currentEvent);
+            }, this);
         },
 
         getStartEvent: function (event, lengthEvent) {
@@ -47,8 +49,6 @@ function getEmitter() {
             } else {
                 this.listeners[event] = [listener];
             }
-            // this.listeners.push({ event: event, context: context, handler: handler,
-            //                    count: Number.POSITIVE_INFINITY, module: 0, countModule: 0 });
 
             return this;
         },
@@ -61,17 +61,14 @@ function getEmitter() {
          */
         off: function (event, context) {
             var lengthEvent = event.split('.').length;
-            this.listeners.forEach(function (thisEvent) {
-                if (this.getStartEvent(thisEvent, lengthEvent) === event) {
-                    thisEvent.filter(function (eventListener) {
+            for (var thisEvent in this.listeners) {
+                if (this.listeners.hasOwnProperty(thisEvent) &&
+                this.getStartEvent(thisEvent, lengthEvent) === event) {
+                    this.listeners[event] = this.listeners[event].filter(function (eventListener) {
                         return (eventListener.context !== context);
-                    });
+                    }, this);
                 }
-            }, this);
-            // this.listeners = this.listeners.filter(function (listener) {
-            //    return ((_this.getStartEvent(listener.event, lengthEvent) !== event) ||
-            //            (listener.context !== context));
-            // });
+            }
 
             return this;
         },
