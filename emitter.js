@@ -20,10 +20,12 @@ function getEmitter() {
             events = events.map(function (value, index) {
                 return events.slice(0, events.length - index).join('.');
             });
+
             return events;
-            return events.filter(function (currentEvent) {
-                return this.listeners.hasOwnProperty(currentEvent);
-            }, this);
+
+            // return events.filter(function (currentEvent) {
+            //    return this.listeners.hasOwnProperty(currentEvent);
+            // }, this);
         },
 
         getStartEvent: function (event, lengthEvent) {
