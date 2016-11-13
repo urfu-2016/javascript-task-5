@@ -25,19 +25,22 @@ function SubscribeHandler(subscribeInfo) {
 }
 
 function addSubscribe(event, context, handler, subscribeQueue) {
-    var newSubscribe = new SubscribeHandler(
-        { event: event, context: context, handler: handler });
+    var newSubscribe = new SubscribeHandler({
+        event: event,
+        context: context,
+        handler: handler
+    });
     subscribeQueue.push(newSubscribe);
 }
 
 function decomposeEvent(event) {
     var events = event.split('.');
-    var decomposedEvents = [];
-    for (var i = 1; i <= events.length; i++) {
-        decomposedEvents.push(events.slice(0, i).join('.'));
-    }
 
-    return decomposedEvents;
+    return events.slice(1).reduce(function (eventCollect, currentEvent) {
+        eventCollect.push(eventCollect[eventCollect.length - 1] + '.' + currentEvent);
+
+        return eventCollect;
+    }, [events[0]]);
 }
 
 function filterSubscribe(event, context, subscribeQueue) {
@@ -86,7 +89,6 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            // console.info(event, context, handler);
             addSubscribe(event, context, handler, subscribeQueue);
 
             return this;
@@ -99,7 +101,6 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            // console.info(event, context);
             subscribeQueue = filterSubscribe(event, context, subscribeQueue);
 
             return this;
@@ -111,7 +112,6 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            // console.info(event);
             handleEvent(event, subscribeQueue);
 
             return this;
@@ -127,10 +127,13 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            // console.info(event, context, handler, times);
-            times = times > 0 ? times : undefined;
-            var subscribeInfo = { event: event, context: context,
-                handler: handler, times: times };
+            times = times > 0 ? times : null;
+            var subscribeInfo = {
+                event: event,
+                context: context,
+                handler: handler,
+                times: times
+            };
             multipleAddSubscribe(subscribeInfo, subscribeQueue);
 
             return this;
@@ -148,8 +151,12 @@ function getEmitter() {
         through: function (event, context, handler, frequency) {
             // console.info(event, context, handler, frequency);
             frequency = frequency > 0 ? frequency : undefined;
-            var subscribeInfo = { event: event, context: context,
-                handler: handler, frequency: frequency };
+            var subscribeInfo = {
+                event: event,
+                context: context,
+                handler: handler,
+                frequency: frequency
+            };
             addFrequentlySubscribe(subscribeInfo, subscribeQueue);
 
             return this;
