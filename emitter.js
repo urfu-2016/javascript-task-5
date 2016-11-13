@@ -18,22 +18,15 @@ function startsWith(prefix, string) {
 
 /**
  * @param {String} event
- * @returns {Boolean}
- */
-function isUpperEvent(event) {
-    return event.indexOf('.') !== -1;
-}
-
-/**
- * @param {String} event
  * @returns {Array}
  */
 function getSubEvents(event) {
-    var result = [event];
+    var result = [];
+    var subEvents = event.split('.');
 
-    while (isUpperEvent(event)) {
-        event = event.slice(0, event.lastIndexOf('.'));
-        result.push(event);
+    while (subEvents.length !== 0) {
+        result.push(subEvents.join('.'));
+        subEvents.pop();
     }
 
     return result;
