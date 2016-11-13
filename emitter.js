@@ -83,9 +83,11 @@ function getEmitter() {
         emit: function (event) {
             var events = this.getEventsList(event);
             events.forEach(function (currentEvent) {
-                this.listeners[currentEvent].forEach(function (listener) {
-                    listener.handler.call(listener.context);
-                }, this);
+                if (this.listeners.hasOwnProperty(currentEvent)) {
+                    this.listeners[currentEvent].forEach(function (listener) {
+                        listener.handler.call(listener.context);
+                    }, this);
+                }
             }, this);
 
                 /*
