@@ -14,8 +14,12 @@ module.exports = getEmitter;
 function getEmitter() {
     return {
 
-        eventsArray: {
-            events: {}
+        // eventsArray: {
+        //     events: {}
+        // },
+
+        eventsTree: {
+            subEvents: {}
         },
 
         /**
@@ -27,26 +31,20 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler, additionalProperty) {
-            // var eventTree = event.split('.');
+            var eventsQuery = event.split('.');
+            var eventSubTree = eventsQuery
+                .reduce(function (currentSubTree, currentEvent) {
+                    if (!currentSubTree.subEvents.hasOwnProperty(currentEvent)) {
+                        currentSubTree.subEvents[currentEvent] = {
+                            subEvents: {},
+                            signedContexts: []
+                        };
+                    }
 
-            // var lastEvent = eventTree
-            //     .reduce(function (currentLeaf, currentEvent) {
-            //         if (!currentLeaf.hasOwnProperty(currentEvent)) {
-            //             currentLeaf[currentEvent] = {
-            //                 signedContexts: [],
-            //                 events: {}
-            //             };
-            //         }
-
-            //         return currentLeaf.events;
-            //     }, this.eventsArray.events);
-
-            if (!this.eventsArray.hasOwnProperty(event)) {
-                this.eventsArray[event] = [];
-            }
+                    return currentSubTree.subEvents[currentEvent];
+                }, this.eventsTree);
 
             additionalProperty = additionalProperty || {};
-
             var times = additionalProperty.times;
             var frequency = additionalProperty.frequency;
 
@@ -54,7 +52,7 @@ function getEmitter() {
             // Дефолтная частота вызовов emit = 1, т.е. вызывает каждое событие
             // emitCallsCount - сколько раз делали попытку вызова handler у этого объекта
             //      (он мог срабатывать не всегда из-за through)
-            this.eventsArray[event].push({
+            eventSubTree.signedContexts.push({
                 context: context,
                 handler: handler,
                 emitCallsCount: 0,
@@ -73,69 +71,11 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            Object
-                .keys(this.eventsArray)
-                // Получаем список событий, от которых надо отписаться (включая дочерние)
-                .filter(function (signedEvent) {
-                    // Либо это в точности переданное в функцию событие, либо его дочернее
-                    return signedEvent.indexOf(event) === 0 &&
-                        (event === signedEvent || signedEvent[event.length] === '.');
-                })
-                .forEach(function (eventToUnsign) {
-                    this.eventsArray[eventToUnsign] = this.eventsArray[eventToUnsign]
-                        .reduce(function (newEventArray, signedContext) {
-                            if (signedContext.context !== context) {
-                                newEventArray.push(signedContext);
-                            }
+            var lastEvent = event
+                .split('.')
+                .reduce(getLastEvent, this.eventsTree);
 
-                            return newEventArray;
-                        }, [], this);
-
-                }, this);
-
-            // var eventTree = event.split('.');
-
-            // var eventsSubTree = eventTree
-            //     .reduce(function (currentLeaf, currentEvent) {
-            //         if (currentLeaf.events.hasOwnProperty(currentEvent)) {
-            //             return currentLeaf.events[currentEvent];
-            //         }
-
-            //         return [];
-            //     }, this.eventsArray);
-
-            // (function foo(events) {
-            //     events.signedContexts = events
-            //         .signedContexts
-            //             .reduce(function (newSignedContexts, signedContext) {
-            //                 if (signedContext.context !== context) {
-            //                     newSignedContexts.push(signedContext);
-            //                 }
-
-            //                 return newSignedContexts;
-            //             }, []);
-
-            //     Object
-            //         .keys(events.events)
-            //         .forEach(function (key) {
-            //             foo(events.events[key]);
-            //         });
-            // }(eventsSubTree));
-
-            // while (Object.keys(eventsSubTree.events).length !== 0 ||
-            //     eventsSubTree.signedContexts.length !== 0) {
-
-            //     eventsSubTree.signedContexts = eventsSubTree
-            //         .signedContexts
-            //         .reduce(function (newSignedContexts, signedContext) {
-            //             if (signedContext.context !== context) {
-            //                     newSignedContexts.push(signedContext);
-            //             }
-
-            //             return newSignedContexts;
-            //         }, []);
-
-            // }
+            unsignContextFromSubTree(lastEvent, context);
 
             return this;
         },
@@ -146,51 +86,25 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
+            event
+                .split('.')
+                .forEach(function (currentEventQuery, index, eventsArray) {
+                    var eventSubTree = eventsArray.slice(0, eventsArray.length - index);
+                    var lastEvent = eventSubTree.reduce(getLastEvent, this.eventsTree);
 
-            var splittedEvents = event.split('.');
-            var splittedEventsCount = splittedEvents.length;
-
-            splittedEvents
-                // Получаем список событий (исходное + его родители и т.д.)
-                .map(function (partOfEvent, index) {
-                    return splittedEvents
-                        .slice(0, splittedEventsCount - index)
-                        .join('.');
-                })
-                // Вызываем каждое событие
-                .forEach(function (currentEvent) {
-                    if (this.eventsArray.hasOwnProperty(currentEvent)) {
-                        this.eventsArray[currentEvent]
-                            .forEach(function (signedContext) {
-                                if (signedContext.emitCallsCount < signedContext.times) {
-                                    tryToCallHandler(signedContext);
-                                } else {
-                                    this.off(currentEvent, signedContext);
-                                }
-                            }, this);
+                    if (!lastEvent.hasOwnProperty('signedContexts')) {
+                        return;
                     }
+
+                    lastEvent.signedContexts
+                        .forEach(function (signedContext) {
+                            if (signedContext.emitCallsCount < signedContext.times) {
+                                tryToCallHandler(signedContext);
+                            } else {
+                                unsignContextFromSignedContexts(lastEvent, signedContext);
+                            }
+                        });
                 }, this);
-
-            // var eventsTree = event.split('.');
-            // eventsTree
-            //     .forEach(function (currEvent, index) {
-            //         var eventsSubTree = eventsTree.slice(0, eventsTree.length - index);
-            //         var lastEv = '';
-            //         eventsSubTree
-            //             .reduce(function (lastEvent, currentEvent) {
-            //                 lastEv = currentEvent;
-
-            //                 return lastEvent.events[currentEvent];
-            //             }, this.eventsArray)
-            //             .signedContexts
-            //             .forEach(function (signedContext) {
-            //                 if (signedContext.emitCallsCount < signedContext.times) {
-            //                     tryToCallHandler(signedContext);
-            //                 } else {
-            //                     this.off(lastEv, signedContext);
-            //                 }
-            //             }, this);
-            //     }, this);
 
             return this;
         },
@@ -225,6 +139,35 @@ function getEmitter() {
             return this;
         }
     };
+}
+
+function getLastEvent(currentSubTree, currentEvent) {
+    if (currentSubTree.subEvents.hasOwnProperty(currentEvent)) {
+        return currentSubTree.subEvents[currentEvent];
+    }
+
+    return {};
+}
+
+function unsignContextFromSubTree(eventSubTree, context) {
+    unsignContextFromSignedContexts(eventSubTree, context);
+
+    Object
+        .keys(eventSubTree.subEvents)
+        .forEach(function (event) {
+            unsignContextFromSubTree(eventSubTree.subEvents[event], context);
+        });
+}
+
+function unsignContextFromSignedContexts(eventSubTree, context) {
+    eventSubTree.signedContexts = eventSubTree.signedContexts
+        .reduce(function (newEventsArray, signedContext) {
+            if (signedContext.context !== context) {
+                newEventsArray.push(signedContext);
+            }
+
+            return newEventsArray;
+        }, []);
 }
 
 function tryToCallHandler(signedContext) {
