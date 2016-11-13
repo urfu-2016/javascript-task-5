@@ -101,7 +101,7 @@ function getEmitter() {
                             if (signedContext.emitCallsCount < signedContext.times) {
                                 tryToCallHandler(signedContext);
                             } else {
-                                // unsignContextFromSubTree(lastEvent, signedContext);
+                                unsignContextFromEvent(lastEvent, signedContext);
                             }
                         });
                 }, this);
