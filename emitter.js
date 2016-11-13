@@ -17,7 +17,7 @@ function getAllNamespaces(str) {
     return namespaces;
 }
 
-function processExpires(item) {
+function isNotExpires(item) {
     if (item.expires === null) {
         return true;
     }
@@ -47,9 +47,10 @@ function removeUnusedEvents(events) {
     }
 }
 
-function filterOneEvent(e, context, event, events) {
-    return events[e].filter(function (item) {
-        return item.context !== context || getAllNamespaces(e).indexOf(event) === -1;
+function filterOneEvent(eventToFilter, context, eventFilter, events) {
+    return events[eventToFilter].filter(function (item) {
+        return item.context !== context ||
+            getAllNamespaces(eventToFilter).indexOf(eventFilter) === -1;
     });
 }
 
@@ -72,7 +73,9 @@ function getEmitter() {
             if (!this.events[event]) {
                 this.events[event] = [];
             }
-            this.events[event].push({ context: context, handler: handler,
+            this.events[event].push({
+                context: context,
+                handler: handler,
                 expires: arguments[3] === undefined ? null : arguments[3],
                 frequency: arguments[4] || null });
 
@@ -84,7 +87,6 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @returns {Object}
-         * jshint loop-func:true
          */
         off: function (event, context) {
             for (var e in this.events) {
@@ -103,13 +105,14 @@ function getEmitter() {
          */
         emit: function (event) {
             getAllNamespaces(event).forEach(function (eventNamespace) {
-                if (this.events[eventNamespace]) {
-                    this.events[eventNamespace].forEach(function (item) {
-                        if (processExpires(item)) {
-                            item.handler.call(item.context);
-                        }
-                    });
+                if (!this.events[eventNamespace]) {
+                    return;
                 }
+                this.events[eventNamespace].forEach(function (item) {
+                    if (isNotExpires(item)) {
+                        item.handler.call(item.context);
+                    }
+                });
             }, this);
             removeUnusedEvents(this.events);
 
