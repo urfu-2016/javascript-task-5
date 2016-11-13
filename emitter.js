@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -14,7 +14,7 @@ module.exports = getEmitter;
 function getEmitter() {
     return {
 
-        listeners: {},
+        listeners: [],
         getEventsList: function (event) {
             var events = event.split('.');
             events = events.map(function (value, index) {
@@ -22,10 +22,6 @@ function getEmitter() {
             });
 
             return events;
-
-            // return events.filter(function (currentEvent) {
-            //    return this.listeners.hasOwnProperty(currentEvent);
-            // }, this);
         },
 
         getStartEvent: function (event, lengthEvent) {
@@ -41,16 +37,8 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-            var listener = { context: context,
-                    handler: handler,
-                    count: Number.POSITIVE_INFINITY,
-                    module: 0,
-                    countModule: 0 };
-            if (this.listeners.hasOwnProperty(event)) {
-                this.listeners[event].push(listener);
-            } else {
-                this.listeners[event] = [listener];
-            }
+            this.listeners.push({ event: event, context: context, handler: handler,
+                count: Number.POSITIVE_INFINITY, module: 0, countModule: 0 });
 
             return this;
         },
@@ -62,15 +50,12 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context) {
+            var _this = this;
             var lengthEvent = event.split('.').length;
-            for (var thisEvent in this.listeners) {
-                if (this.listeners.hasOwnProperty(thisEvent) &&
-                this.getStartEvent(thisEvent, lengthEvent) === event) {
-                    this.listeners[event] = this.listeners[event].filter(function (eventListener) {
-                        return (eventListener.context !== context);
-                    }, this);
-                }
-            }
+            this.listeners = this.listeners.filter(function (listener) {
+                return ((_this.getStartEvent(listener.event, lengthEvent) !== event) ||
+                (listener.context !== context));
+            });
 
             return this;
         },
@@ -81,27 +66,23 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
+            var _this = this;
             var events = this.getEventsList(event);
             events.forEach(function (currentEvent) {
-                if (this.listeners.hasOwnProperty(currentEvent)) {
-                    this.listeners[currentEvent].forEach(function (listener) {
-                        listener.handler.call(listener.context);
-                    }, this);
-                }
-            }, this);
-
-                /*
-                this.listeners[currentEvent].forEach(function (listener) {
-                    if (listener.countModule === 0 && listener.count > 0) {
+                _this.listeners.forEach(function (listener) {
+                    if (listener.event === currentEvent &&
+                        listener.countModule === 0 && listener.count > 0) {
                         listener.handler.call(listener.context);
                         listener.count--;
                         listener.countModule += listener.module;
+
                     }
-                    if (listener.countModule > 0) {
+                    if (listener.event === currentEvent && listener.countModule > 0) {
                         listener.countModule--;
                     }
-                }, this);
-            }, this);*/
+                });
+            });
+
 
             return this;
         },
@@ -116,7 +97,7 @@ function getEmitter() {
          * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            times = times > 0 ? times : Number.POSITIVE_INFINITY;
+            times = times > 0 ? times : Number.MAX_VALUE;
             this.listeners.push({ event: event, context: context, handler: handler,
                 count: times, module: 0, countModule: 0 });
 
