@@ -145,7 +145,7 @@ if (getEmitter.isStar) {
 
     lecturer.emit('begin');
     // Sam(110,50); Bill(100,55)
-    //console.info(lecturer.listeners);
+    // console.info(lecturer.listeners);
     lecturer
         .emit('slide.text')
         .emit('slide.text')
@@ -154,7 +154,7 @@ if (getEmitter.isStar) {
     // Sam(95,61); Bill(65,63)
     console.info(students.Sam);
     console.info(students.Bill);
-    //console.info(lecturer.listeners);
+    // console.info(lecturer.listeners);
 
     lecturer
         .emit('slide.text')
