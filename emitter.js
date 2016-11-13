@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = false;
+getEmitter.isStar = true;
 module.exports = getEmitter;
 
 /**
@@ -31,8 +31,8 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler, additionalProperty) {
-            var eventsQuery = event.split('.');
-            var eventSubTree = eventsQuery
+            var eventSubTree = event
+                .split('.')
                 .reduce(function (currentSubTree, currentEvent) {
                     if (!currentSubTree.subEvents.hasOwnProperty(currentEvent)) {
                         currentSubTree.subEvents[currentEvent] = {
@@ -101,7 +101,7 @@ function getEmitter() {
                             if (signedContext.emitCallsCount < signedContext.times) {
                                 tryToCallHandler(signedContext);
                             } else {
-                                unsignContextFromSignedContexts(lastEvent, signedContext);
+                                // unsignContextFromSubTree(lastEvent, signedContext);
                             }
                         });
                 }, this);
@@ -150,7 +150,7 @@ function getLastEvent(currentSubTree, currentEvent) {
 }
 
 function unsignContextFromSubTree(eventSubTree, context) {
-    unsignContextFromSignedContexts(eventSubTree, context);
+    unsignContextFromEvent(eventSubTree, context);
 
     Object
         .keys(eventSubTree.subEvents)
@@ -159,8 +159,8 @@ function unsignContextFromSubTree(eventSubTree, context) {
         });
 }
 
-function unsignContextFromSignedContexts(eventSubTree, context) {
-    eventSubTree.signedContexts = eventSubTree.signedContexts
+function unsignContextFromEvent(eventObject, context) {
+    eventObject.signedContexts = eventObject.signedContexts
         .reduce(function (newEventsArray, signedContext) {
             if (signedContext.context !== context) {
                 newEventsArray.push(signedContext);
