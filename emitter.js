@@ -49,7 +49,9 @@ function getEmitter() {
             });
             if (arguments[3]) {
                 var nameParams = Object.keys(arguments[3]);
-                events[event][events[event].length - 1][nameParams] = arguments[3][nameParams];
+                var extraParam = arguments[3][nameParams];
+                var numberOfLastSubscriber = events[event].length - 1;
+                events[event][numberOfLastSubscriber][nameParams] = extraParam;
             }
 
             return this;
