@@ -85,7 +85,7 @@ function getEmitter() {
                         listener.count--;
                         if (listener.count === 0) {
                             this.listeners = this.listeners.filter(function (currentListener) {
-                                return ((currentListener != listener));
+                                return ((currentListener !== listener));
                             }, this);
                         }
                     }
