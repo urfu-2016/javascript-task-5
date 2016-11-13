@@ -8,9 +8,9 @@ getEmitter.isStar = false;
 module.exports = getEmitter;
 
 function subscribersFilter(subscribers, context, i) {
-    var keys = Object.keys(subscribers);
-    for (var j = 0; j < subscribers[keys[i]].length; j++) {
-        subscribers[keys[i]] = subscribers[keys[i]].filter(function (listener) {
+    var events = Object.keys(subscribers);
+    for (var j = 0; j < subscribers[events[i]].length; j++) {
+        subscribers[events[i]] = subscribers[events[i]].filter(function (listener) {
             return listener.context !== context;
         });
     }
@@ -53,9 +53,9 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            var keys = Object.keys(subscribers);
-            for (var k = 0; k < keys.length; k++) {
-                if (keys[k] === event || keys[k].slice(0, event.length + 1) === event + '.') {
+            var events = Object.keys(subscribers);
+            for (var k = 0; k < events.length; k++) {
+                if (events[k] === event || events[k].slice(0, event.length + 1) === event + '.') {
                     subscribers = subscribersFilter(subscribers, context, k);
                 }
             }
@@ -70,13 +70,13 @@ function getEmitter() {
          */
         emit: function (event) {
             var events = [];
-            for (var i = 1; i <= event.split('.').length; i++) {
-                events.push(event.split('.').slice(0, i)
+            var splittedEvent = event.split('.');
+            for (var i = splittedEvent.length; i >= 1; i--) {
+                events.push(splittedEvent.slice(0, i)
                     .join('.'));
             }
-            events.reverse();
             for (var j = 0; j < events.length; j++) {
-                if (subscribers[events[j]] !== undefined) {
+                if (subscribers[events[j]]) {
                     subscribers[events[j]].forEach(function (listener) {
                         listener.handler();
                     });
