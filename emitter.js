@@ -82,6 +82,12 @@ function getEmitter() {
             var events = this.getEventsList(event);
             events.forEach(function (currentEvent) {
                 this.listeners[currentEvent].forEach(function (listener) {
+                    listener.handler.call(listener.context);
+                }, this);
+            }, this);
+
+                /*
+                this.listeners[currentEvent].forEach(function (listener) {
                     if (listener.countModule === 0 && listener.count > 0) {
                         listener.handler.call(listener.context);
                         listener.count--;
@@ -91,7 +97,7 @@ function getEmitter() {
                         listener.countModule--;
                     }
                 }, this);
-            }, this);
+            }, this);*/
 
             return this;
         },
