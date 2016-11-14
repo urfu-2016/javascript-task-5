@@ -46,10 +46,7 @@ function getEmitter() {
         off: function (event, context) {
             for (var i = 0; i < events.length; i++) {
                 if (compareNamespaces(events[i].event, event) && context === events[i].context) {
-                    events[i].handler = function () {
-                        this.focus += 0;
-                        this.wisdom += 0;
-                    };
+                    delete events[i].handler;
                 }
             }
 
@@ -58,7 +55,7 @@ function getEmitter() {
 
         emit: function (event) {
             for (var i = 0; i < events.length; i++) {
-                if (compareNamespaces(event, events[i].event)) {
+                if (compareNamespaces(event, events[i].event) && events[i].hasOwnProperty('handler')){
                     events[i].handler.call(events[i].context);
                 }
             }
