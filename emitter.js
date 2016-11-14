@@ -21,18 +21,18 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @param {Object} options
          * @returns {Object} this
          */
-        on: function (event, context, handler) {
+        on: function (event, context, handler, options) {
             events[event] = events[event] || [];
-            var times = arguments[3] || Infinity;
-            var frequency = arguments[4] || 1;
+            options = options || {};
             events[event].push({
                 context: context,
                 handler: handler,
-                times: times,
-                frequency: frequency,
-                eventNumber: 0
+                times: options.times || Infinity,
+                frequency: options.frequency || 1,
+                emitsCount: 0
             });
 
             return this;
@@ -49,7 +49,7 @@ function getEmitter() {
                 if (!events.hasOwnProperty(event)) {
                     continue;
                 }
-                if (event === eventOff || event.split('.')[0] === eventOff) {
+                if (event === eventOff || event.indexOf(eventOff + '.') === 0) {
                     events[event] = events[event].filter(function (listener) {
                         return listener.context !== context;
                     });
@@ -66,19 +66,19 @@ function getEmitter() {
          */
         emit: function (event) {
             var subEvents = event.split('.');
-            var end = subEvents.length;
-            while (end) {
-                var subEvent = subEvents.slice(0, end).join('.');
+            var emitsCount = subEvents.length;
+            while (emitsCount) {
+                var subEvent = subEvents.slice(0, emitsCount).join('.');
                 if (events[subEvent]) {
                     events[subEvent].forEach(function (listener) {
-                        if (listener.eventNumber < listener.times &&
-                            listener.eventNumber % listener.frequency === 0) {
+                        if (listener.emitsCount < listener.times &&
+                            listener.emitsCount % listener.frequency === 0) {
                             listener.handler.call(listener.context);
                         }
-                        listener.eventNumber++;
+                        listener.emitsCount++;
                     });
                 }
-                end--;
+                emitsCount--;
             }
 
             return this;
@@ -96,7 +96,7 @@ function getEmitter() {
         several: function (event, context, handler, times) {
             times = (times > 0) ? times : undefined;
 
-            return this.on(event, context, handler, times);
+            return this.on(event, context, handler, { times: times });
         },
 
         /**
@@ -111,7 +111,7 @@ function getEmitter() {
         through: function (event, context, handler, frequency) {
             frequency = (frequency > 0) ? frequency : undefined;
 
-            return this.on(event, context, handler, undefined, frequency);
+            return this.on(event, context, handler, { frequency: frequency });
         }
     };
 }
