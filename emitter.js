@@ -13,9 +13,12 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     var subscriptions = [];
-    function addEvent(event, context, handler) {
-        var times = arguments[3] > 0 ? arguments[3] : Infinity;
-        var frequency = arguments[4] > 0 ? arguments[4] : 1;
+    function addEvent(args) {
+        var event = args.event;
+        var context = args.context;
+        var handler = args.handler;
+        var times = args.times > 0 ? args.times : Infinity;
+        var frequency = args.frequency > 0 ? args.frequency : 1;
         subscriptions.push(
             {
                 event: event,
@@ -42,7 +45,12 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            addEvent(event, context, handler, -1, -1);
+            var args = {
+                event: event,
+                context: context,
+                handler: handler
+            };
+            addEvent(args);
 
             return this;
         },
@@ -100,7 +108,13 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            addEvent(event, context, handler, times);
+            var args = {
+                event: event,
+                context: context,
+                handler: handler,
+                times: times
+            };
+            addEvent(args);
 
             return this;
         },
@@ -115,7 +129,13 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            addEvent(event, context, handler, -1, frequency);
+            var args = {
+                event: event,
+                context: context,
+                handler: handler,
+                frequency: frequency
+            };
+            addEvent(args);
 
             return this;
         }
