@@ -33,33 +33,31 @@ function getEmitter() {
                     existsEvent = true;
                 }
             });
-            if (!existsEvent) {
+            if (existsEvent === false) {
                 this.events.push({
                     name: event,
                     info: [{
                         context: context,
                         handler: handler
-                    }]
+                    }],
+                    off: function (cont) {
+                        var savesInfo = [];
+                        this.info.forEach(function (infoItem) {
+                            if (infoItem.context !== cont) {
+                                savesInfo.push(infoItem);
+                            }
+                        });
+                        this.info = savesInfo;
+                    },
+                    emit: function () {
+                        this.info.forEach(function (infoItem) {
+                            infoItem.handler.call(infoItem.context);
+                        });
+                    }
                 });
             }
 
             return this;
-        },
-
-        /**
-         * Отписаться от одного события
-         * @param {Number} indexOfEvent
-         * @param {Object} context
-         */
-        offFromOneEvent: function (indexOfEvent, context) {
-            var savesInfo = [];
-            this.events[indexOfEvent].info.forEach(function (info) {
-                if (info.context !== context) {
-                    savesInfo.push(info);
-                }
-            });
-            this.events[indexOfEvent].info = savesInfo;
-
         },
 
         /**
@@ -69,24 +67,14 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            this.events.forEach(function (eventsItem, indexOfEvent) {
+            this.events.forEach(function (eventsItem) {
                 var name = eventsItem.name;
                 if ((name === event) || (name.indexOf(event + '.') === 0)) {
-                    this.offFromOneEvent(indexOfEvent, context);
+                    eventsItem.off(context);
                 }
-            }, this);
+            });
 
             return this;
-        },
-
-        /**
-         * Уведомить об одном событие
-         * @param {Object} info
-         */
-        emitForOneEvent: function (info) {
-            info.forEach(function (infoItem) {
-                infoItem.handler.call(infoItem.context);
-            });
         },
 
         /**
@@ -95,16 +83,18 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            var currentEvent = event;
-            var sortedEvents = this.events.slice();
-            sortedEvents = sortedEvents.sort().reverse();
-            sortedEvents.forEach(function (sortedEvent) {
-                var name = sortedEvent.name;
-                if ((currentEvent === name) || (currentEvent.indexOf(name + '.') === 0)) {
-                    this.emitForOneEvent(sortedEvent.info);
-                    currentEvent = sortedEvent.name;
+//  eventsInReverseOrder содержит "подсобытия" события event по возрастанию длины имен
+            var eventsInOrder = [];
+            this.events.forEach(function (eventsItem) {
+                var name = eventsItem.name;
+                if ((name === event) || (event.indexOf(name + '.') === 0)) {
+                    var indexEvent = eventsItem.name.split('.').length + 1;
+                    eventsInOrder[indexEvent] = eventsItem;
                 }
-            }, this);
+            });
+            eventsInOrder.reverse().forEach(function (eventsItem) {
+                eventsItem.emit();
+            });
 
             return this;
         },
