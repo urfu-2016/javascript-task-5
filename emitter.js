@@ -37,9 +37,10 @@ function getEmitter() {
 
         off: function (event, context) {
             allEvents = allEvents.filter(function (nextEvent) {
+                var regExp = new RegExp(event + '$|' + event + '.');
 
                 return nextEvent.subscriber !== context ||
-                    nextEvent.eventName.indexOf(event) === -1;
+                    nextEvent.eventName.search(regExp) === -1;
             });
 
             return this;
