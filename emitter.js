@@ -12,8 +12,9 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var eventStudents = {};
+
     return {
-        eventStudents: {},
 
         /**
          * Подписаться на событие
@@ -26,10 +27,10 @@ function getEmitter() {
         on: function (event, context, handler) {
             console.info(event, context, handler);
 
-            if (!this.eventStudents.hasOwnProperty(event)) {
-                this.eventStudents[event] = [];
+            if (!eventStudents.hasOwnProperty(event)) {
+                eventStudents[event] = [];
             }
-            this.eventStudents[event].push({
+            eventStudents[event].push({
                 context: context,
                 handler: handler
             });
@@ -45,23 +46,34 @@ function getEmitter() {
          */
         off: function (event, context) {
             console.info(event, context);
-            Object.keys(this.eventStudents).forEach(function (currentEvent) {
+            Object.keys(eventStudents).forEach(function (currentEvent) {
                 if (this.isHasEvent(event, currentEvent)) {
-                    this.eventStudents[currentEvent] =
-                        this.filterEvents(this.eventStudents[currentEvent], context);
+                    eventStudents[currentEvent] =
+                        this.filterEvents(eventStudents[currentEvent], context);
                 }
             }, this);
 
             return this;
         },
 
+        /**
+         * Проверяем равняется ли событие данному или содержится в нем
+         * @param {String} event
+         * @param {String} currentEvent
+         * @returns {Boolean}
+         */
         isHasEvent: function (event, currentEvent) {
-            return (currentEvent.indexOf(event + '.') === 0) || (event === currentEvent);
+            return (event === currentEvent) || (currentEvent.indexOf(event + '.') === 0);
         },
 
+        /**
+         * Возвращаем только те события, которые не равны данному
+         * @param {Array} arrayEvents
+         * @param {String} context
+         * @returns {Boolean}
+         */
         filterEvents: function (arrayEvents, context) {
             return arrayEvents.filter(function (item) {
-
                 return item.context !== context;
             });
         },
@@ -76,7 +88,7 @@ function getEmitter() {
             var events = this.createAllEvents(event);
 
             events.forEach(function (currentEvent) {
-                this.eventStudents[currentEvent].forEach(function (student) {
+                eventStudents[currentEvent].forEach(function (student) {
                     student.handler.call(student.context);
                 }, this);
             }, this);
@@ -84,9 +96,16 @@ function getEmitter() {
             return this;
         },
 
+        /**
+         * Подается строка в виде "str1.str2.str3"
+         * и мы выводим все события и подсобытия из данной строки
+         * вывод "str1", "str1.str2", "str1.str2.str3"
+         * @param {String} event
+         * @returns {this}
+         */
         createAllEvents: function (event) {
             var eventNames = event.split('.');
-            if (eventNames.length === 1 && this.eventStudents.hasOwnProperty(event)) {
+            if (eventNames.length === 1 && eventStudents.hasOwnProperty(event)) {
                 return [event];
             }
             var rootEvent = eventNames.shift();
@@ -98,8 +117,50 @@ function getEmitter() {
             });
 
             return eventsArray.filter(function (current) {
-                return this.eventStudents.hasOwnProperty(current);
+                return eventStudents.hasOwnProperty(current);
             }, this);
+        },
+
+        /**
+         * Модифицируем handler под подсчет кол-ва его вызовов
+         * @param {Object} context
+         * @param {Function} handler
+         * @param {Number} times – сколько раз получить уведомление
+         * @returns {Function}
+         */
+        modifiedHandlerSeveral: function (context, handler, times) {
+            var counter = times;
+            var hand = handler;
+            var currentContext = context;
+
+            return function () {
+                if (counter > 0) {
+                    counter--;
+
+                    return hand.call(currentContext);
+                }
+            };
+        },
+
+        /**
+         * Модифицируем handler под вызово каждый n-й раз
+         * @param {Object} context
+         * @param {Function} handler
+         * @param {Number} frequency – как часто уведомлять
+         * @returns {Function}
+         */
+        modifiedHandlerThrough: function (context, handler, frequency) {
+            var currentFrequency = -1;
+            var mustFrequency = frequency;
+            var hand = handler;
+            var currentContext = context;
+
+            return function () {
+                currentFrequency++;
+                if (currentFrequency % mustFrequency === 0) {
+                    return hand.call(currentContext);
+                }
+            };
         },
 
         /**
@@ -117,20 +178,7 @@ function getEmitter() {
                 this.on(event, context, handler);
             }
 
-            var modifiedHandler = function () {
-                var counter = times;
-                var hand = handler;
-                var currentContext = context;
-
-                return function () {
-                    if (counter > 0) {
-                        counter--;
-
-                        return hand.call(currentContext);
-                    }
-                };
-            };
-            this.on(event, context, modifiedHandler());
+            this.on(event, context, this.modifiedHandlerSeveral(context, handler, times));
 
             return this;
         },
@@ -150,20 +198,7 @@ function getEmitter() {
                 this.on(event, context, handler);
             }
 
-            var modifiedHandler = function () {
-                var currentFrequency = -1;
-                var mustFrequency = frequency;
-                var hand = handler;
-                var currentContext = context;
-
-                return function () {
-                    currentFrequency++;
-                    if (currentFrequency % mustFrequency === 0) {
-                        return hand.call(currentContext);
-                    }
-                };
-            };
-            this.on(event, context, modifiedHandler());
+            this.on(event, context, this.modifiedHandlerThrough(context, handler, frequency));
 
             return this;
         }
