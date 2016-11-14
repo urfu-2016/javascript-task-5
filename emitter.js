@@ -1,10 +1,6 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -12,6 +8,8 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    var allEvents = [];
+
     return {
 
         /**
@@ -20,8 +18,15 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          */
+
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            allEvents.push({
+                eventName: event,
+                subscriber: context,
+                action: handler
+            });
+
+            return this;
         },
 
         /**
@@ -29,40 +34,39 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          */
+
         off: function (event, context) {
-            console.info(event, context);
+            allEvents = allEvents.filter(function (nextEvent) {
+
+                return nextEvent.subscriber !== context ||
+                    nextEvent.eventName.indexOf(event) === -1;
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
          */
+
         emit: function (event) {
-            console.info(event);
-        },
+            var splittedEvent = event.split('.');
+            var splitLength = splittedEvent.length;
+            var partsOfEventToCall = [];
+            for (var i = 0; i < splitLength; i++) {
+                var nextPart = splittedEvent.slice(0, splitLength - i).join('.');
+                partsOfEventToCall.push(nextPart);
+            }
+            partsOfEventToCall.forEach(function (nextToCall) {
+                allEvents.forEach(function (nextEvent) {
+                    if (nextEvent.eventName === nextToCall) {
+                        nextEvent.action.call(nextEvent.subscriber);
+                    }
+                });
+            });
 
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
-        several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
-        },
-
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
-        through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            return this;
         }
     };
 }
