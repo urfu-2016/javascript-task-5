@@ -7,51 +7,52 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-function isNotExistParameters(event, context, student) {
-    var isNotExistElement = student.event !== event;
-    var isNotRootEventName = !student.event.startsWith(event + '.');
-    var isNotExistStudent = student.parameters !== context;
-
-    return (isNotRootEventName && isNotExistElement) || isNotExistStudent;
-}
-
 function getEmitter() {
-    var subscriptions = [];
+    var subscriptions = {};
+
+    function searchNamespaces(event) {
+
+        return Object.keys(subscriptions).filter(function (currentEvent) {
+            return event === currentEvent || currentEvent.indexOf(event + '.') === 0;
+        });
+    }
 
     return {
 
         on: function (event, context, handler) {
-            subscriptions.push({
-                parameters: context,
-                event: event,
-                func: handler
+            if (!(event in subscriptions)) {
+                subscriptions[event] = [];
+            }
+            subscriptions[event].push({
+                context: context,
+                handler: handler
             });
 
             return this;
         },
 
         off: function (event, context) {
-            subscriptions = subscriptions.filter(function (student) {
-                return isNotExistParameters(event, context, student);
+            var events = searchNamespaces(event);
+            events.forEach(function (currentEvent) {
+                subscriptions[currentEvent] = subscriptions[currentEvent]
+                .filter(function (handler) {
+                    return handler.context !== context;
+                });
             });
 
             return this;
         },
 
         emit: function (event) {
-            var namespace = event;
-            event.split('.').forEach(function () {
-                subscriptions.forEach(function (student) {
-                    if (student.event === namespace) {
-                        student.func.call(student.parameters);
-                    }
-                });
-
-                namespace = namespace
-                    .split('.')
-                    .slice(0, -1)
-                    .join('.');
-            });
+            var currentEvent = event;
+            while (currentEvent) {
+                if (currentEvent in subscriptions) {
+                    subscriptions[currentEvent].forEach(function (events) {
+                        events.handler.call(events.context);
+                    });
+                }
+                currentEvent = currentEvent.substring(0, currentEvent.lastIndexOf('.'));
+            }
 
             return this;
         },
