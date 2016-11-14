@@ -7,11 +7,46 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+var SEPARATOR = '.';
+
+function cutEventName(string) {
+    var separatorIndex = string.lastIndexOf(SEPARATOR);
+
+    return (separatorIndex !== -1) ? string.slice(0, separatorIndex) : '';
+}
+
+/**
+ * @param {Array} collection
+ * @param {Function} callback
+ * @returns {Number} index
+ */
+function findIndex(collection, callback) {
+    for (var i = 0; i < collection.length; i++) {
+        if (callback(collection[i])) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+function deleteSubscriber(subscribers, subscriber) {
+    var index = findIndex(subscribers, function (item) {
+        return item.context === subscriber;
+    });
+
+    if (index !== -1) {
+        subscribers.splice(index, 1);
+    }
+}
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
+    var events = {};
+
     return {
 
         /**
@@ -19,26 +54,72 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object} this
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!events.hasOwnProperty(event)) {
+                events[event] = [];
+            }
+
+            var subscribers = events[event];
+
+            var index = findIndex(subscribers, function (item) {
+                return item.context === context;
+            });
+
+            if (index === -1) {
+                subscribers.push({ context: context, actions: [handler] });
+            } else {
+                subscribers[index].actions.push(handler);
+            }
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object} this
          */
         off: function (event, context) {
-            console.info(event, context);
+            var previousEvent = event + SEPARATOR;
+
+            Object.keys(events).forEach(function (eventItem) {
+                if (eventItem === event || eventItem.indexOf(previousEvent) === 0) {
+                    deleteSubscriber(events[eventItem], context);
+                }
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object} this
          */
         emit: function (event) {
-            console.info(event);
+            for (var e = event; e !== ''; e = cutEventName(e)) {
+                var subscribers = events[e];
+
+                if (subscribers === undefined) {
+                    continue;
+                }
+
+                for (var i = 0; i < subscribers.length;) {
+                    var oldLength = subscribers.length;
+                    var subscriber = subscribers[i];
+
+                    subscriber.actions.forEach(function (action) {
+                        action.call(this.context);
+                    }, subscriber);
+
+                    i = (oldLength === subscribers.length) ? i + 1 : i;
+                }
+            }
+
+            return this;
         },
 
         /**
@@ -48,9 +129,28 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times <= 0) {
+                return this.on(event, context, handler);
+            }
+
+            var countOfCall = 0;
+
+            /**
+            * @this {Object}
+            */
+            function wrapperOfHandler() {
+                handler.call(this);
+                countOfCall++;
+
+                if (countOfCall === times) {
+                    deleteSubscriber(events[event], this);
+                }
+            }
+
+            return this.on(event, context, wrapperOfHandler);
         },
 
         /**
@@ -60,9 +160,31 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object} this
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (frequency <= 0) {
+                return this.on(event, context, handler);
+            }
+
+            var countOfCall = 0;
+
+            /**
+            * @this {Object}
+            */
+            function wrapperOfHandler() {
+                if (countOfCall === 0) {
+                    handler.call(this);
+                }
+
+                countOfCall++;
+
+                if (countOfCall === frequency) {
+                    countOfCall = 0;
+                }
+            }
+
+            return this.on(event, context, wrapperOfHandler);
         }
     };
 }
