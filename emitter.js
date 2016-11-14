@@ -39,23 +39,21 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            var _this = this;
-
-            _this.subscriptions.forEach(function (subscription, i) {
+            this.subscriptions.forEach(function (subscription, i) {
                 var subscriptionContext = subscription.context;
                 var isNeededContext = context === subscriptionContext;
 
                 var subscriptionEvent = subscription.event;
-                var indexOfEvent = subscriptionEvent.indexOf(event);
-                var nextSymbol = subscriptionEvent[indexOfEvent + event.length];
+                var eventIndex = subscriptionEvent.indexOf(event);
+                var nextSymbol = subscriptionEvent[eventIndex + event.length];
                 var isTrueEvent = nextSymbol === '.' || nextSymbol === undefined;
 
-                if (isNeededContext && indexOfEvent === 0 && isTrueEvent) {
-                    delete _this.subscriptions[i];
+                if (isNeededContext && eventIndex === 0 && isTrueEvent) {
+                    delete this.subscriptions[i];
                 }
-            });
+            }, this);
 
-            return _this;
+            return this;
         },
 
         /**
@@ -69,21 +67,18 @@ function getEmitter() {
 
             for (var i = 0; i < eventParts.length; i++) {
                 var newEvent = eventParts.slice(0, i + 1).join('.');
-                events.push(newEvent);
+                events.unshift(newEvent);
             }
-            events = events.reverse();
-
-            var _this = this;
 
             events.forEach(function (e) {
-                _this.subscriptions.forEach(function (subscription) {
+                this.subscriptions.forEach(function (subscription) {
                     if (subscription.event === e) {
                         subscription.handler.call(subscription.context);
                     }
                 });
-            });
+            }, this);
 
-            return _this;
+            return this;
         }
     };
 }
