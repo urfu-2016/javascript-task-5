@@ -100,20 +100,23 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            var currentEvent = event;
-            while (currentEvent !== '') {
-                var subscribers = events[currentEvent];
-                currentEvent = cutEventName(currentEvent);
+            for (var e = event; e !== ''; e = cutEventName(e)) {
+                var subscribers = events[e];
 
                 if (subscribers === undefined) {
                     continue;
                 }
 
-                subscribers.slice().forEach(function (subscriber) {
+                for (var i = 0; i < subscribers.length;) {
+                    var oldLength = subscribers.length;
+                    var subscriber = subscribers[i];
+
                     subscriber.actions.forEach(function (action) {
-                        action.call(subscriber.context);
-                    });
-                });
+                        action.call(this.context);
+                    }, subscriber);
+
+                    i = (oldLength === subscribers.length) ? i + 1 : i;
+                }
             }
 
             return this;
