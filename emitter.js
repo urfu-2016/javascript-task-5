@@ -24,7 +24,7 @@ function getSubEvents(event) {
     var result = [];
     var subEvents = event.split('.');
 
-    while (subEvents.length !== 0) {
+    while (subEvents.length) {
         result.push(subEvents.join('.'));
         subEvents.pop();
     }
@@ -72,10 +72,9 @@ function getEmitter() {
         off: function (eventToOff, context) {
             var handlers = this.handlers;
             var events = Object.keys(handlers);
+            var eventPrefix = eventToOff + '.';
 
             events = events.filter(function (event) {
-                var eventPrefix = eventToOff + '.';
-
                 return event === eventToOff || startsWith(eventPrefix, event);
             });
 
