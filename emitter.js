@@ -60,14 +60,14 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            var tmpEvent = event.substr(0);
-            while (tmpEvent) {
-                if (eventsStore.hasOwnProperty(tmpEvent)) {
-                    eventsStore[tmpEvent].forEach(function (studentHandler) {
+            var currentEvent = event.substr(0);
+            while (currentEvent) {
+                if (eventsStore.hasOwnProperty(currentEvent)) {
+                    eventsStore[currentEvent].forEach(function (studentHandler) {
                         studentHandler.handler.call(studentHandler.context);
                     });
                 }
-                tmpEvent = tmpEvent.substring(0, tmpEvent.lastIndexOf('.'));
+                currentEvent = currentEvent.substring(0, currentEvent.lastIndexOf('.'));
             }
 
             return this;
