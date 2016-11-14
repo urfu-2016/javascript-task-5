@@ -43,6 +43,7 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Array}
          */
         on: function (event, context, handler) {
             events.push(
@@ -61,9 +62,10 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Array}
          */
         off: function (event, context) {
-            events.forEach(function (item, i) {
+            events.forEach(function (item) {
                 if (compareNamespaces(item.event, event) && context === item.context) {
                     delete item.handler;
                 }
@@ -75,14 +77,15 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Array}
          */
         emit: function (event) {
-            for (var i = 0; i < events.length; i++) {
-                if (compareNamespaces(event, events[i].event) &&
-                    events[i].hasOwnProperty('handler')) {
-                    events[i].handler.call(events[i].context);
+            events.forEach(function (item) {
+                if (compareNamespaces(event, item.event) &&
+                    item.hasOwnProperty('handler')) {
+                    item.handler.call(item.context);
                 }
-            }
+            });
 
             return this;
         },
