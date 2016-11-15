@@ -7,13 +7,14 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
+var events = {};
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
     return {
-        events: [],
 
         /**
          * Подписаться на событие
@@ -24,8 +25,8 @@ function getEmitter() {
          */
         on: function (event, context, handler) {
             console.info(event, context, handler);
-
-            this.events.push({ event: event, context: context, handler: handler });
+            events[event] = events[event] || [];
+            events[event].push({ context: context, handler: handler });
 
             return this;
         },
@@ -38,16 +39,22 @@ function getEmitter() {
          */
         off: function (event, context) {
             console.info(event, context);
-
-            this.events = this.events.filter(function (studentEvent) {
-                var eventNames = [];
-                for (var i = 1; i <= studentEvent.event.split('.').length; i++) {
-                    eventNames.push(studentEvent.event.split('.').slice(0, i)
-                        .join('.'));
+            if (!events[event]) {
+                return this;
+            }
+            var eventNames = Object.keys(events);
+            var appropriateEvents = [];
+            eventNames.forEach(function (eventName) {
+                if (eventName === event || eventName.indexOf(event + '.') === 0) {
+                    appropriateEvents.push(eventName);
                 }
+            });
+            appropriateEvents.forEach(function (eventName) {
+                events[eventName] = events[eventName].filter(function (studentEvent) {
 
-                return !(eventNames.indexOf(event) !== -1 &&
-                    studentEvent.context === context);
+                    return !(eventNames.indexOf(event) !== -1 &&
+                        studentEvent.context === context);
+                });
             });
 
             return this;
@@ -60,19 +67,17 @@ function getEmitter() {
          */
         emit: function (event) {
             console.info(event);
-
             var eventNames = [];
-            for (var i = event.split('.').length; i > 0; i--) {
-                eventNames.push(event.split('.').slice(0, i)
-                    .join('.'));
+            var splittedEvent = event.split('.');
+            for (var i = splittedEvent.length; i > 0; i--) {
+                eventNames.push(splittedEvent.slice(0, i).join('.'));
             }
-            var events = this.events;
             eventNames.forEach(function (eventName) {
-                events.forEach(function (studentEvent) {
-                    if (studentEvent.event === eventName) {
+                if (events[eventName]) {
+                    events[eventName].forEach(function (studentEvent) {
                         studentEvent.handler.call(studentEvent.context);
-                    }
-                });
+                    });
+                }
             });
 
             return this;
