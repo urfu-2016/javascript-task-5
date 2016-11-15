@@ -7,13 +7,17 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-function subscribersFilter(subscribers, context, i) {
-    var events = Object.keys(subscribers);
-    for (var j = 0; j < subscribers[events[i]].length; j++) {
-        subscribers[events[i]] = subscribers[events[i]].filter(function (listener) {
-            return listener.context !== context;
+/**
+ * Возвращает новый, отфильтрованный по подписчикам, объект subscribers
+ * @param {Object} subscribers
+ * @param {Object} context
+ * @param {Number} i
+ * @returns {Object}
+*/ 
+function filterSubscribers(subscribers, context, ev) {
+    subscribers[ev] = subscribers[ev].filter(function (listener) {
+        return listener.context !== context;
         });
-    }
 
     return subscribers;
 }
@@ -54,11 +58,11 @@ function getEmitter() {
          */
         off: function (event, context) {
             var events = Object.keys(subscribers);
-            for (var k = 0; k < events.length; k++) {
-                if (events[k] === event || events[k].slice(0, event.length + 1) === event + '.') {
-                    subscribers = subscribersFilter(subscribers, context, k);
+            events.forEach(function (ev) {
+                if (ev === event || ev.slice(0, event.length + 1) === event + '.') {
+                    subscribers = filterSubscribers(subscribers, context, ev);
                 }
-            }
+            });
 
             return this;
         },
@@ -72,15 +76,13 @@ function getEmitter() {
             var events = [];
             var splittedEvent = event.split('.');
             for (var i = splittedEvent.length; i >= 1; i--) {
-                events.push(splittedEvent.slice(0, i)
-                    .join('.'));
+                events.push(splittedEvent.slice(0, i).join('.'));
             }
             for (var j = 0; j < events.length; j++) {
-                if (subscribers[events[j]]) {
-                    subscribers[events[j]].forEach(function (listener) {
-                        listener.handler();
+                if (!subscribers[events[j]]) continue;
+                subscribers[events[j]].forEach(function (listener) {
+                    listener.handler();
                     });
-                }
             }
 
             return this;
