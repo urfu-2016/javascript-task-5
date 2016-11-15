@@ -6,15 +6,18 @@ module.exports = getEmitter;
 function getEmitter() {
     var events = {};
     function getEventsForEmit(event) {
-        var eventsForEmit = [];
-        var nameEvent = '';
-        event.split('.').forEach(function (e) {
-            nameEvent += e;
-            eventsForEmit.push(nameEvent);
-            nameEvent += '.';
-        });
+        var nameOfEvent = '';
 
-        return eventsForEmit.reverse();
+        return event
+            .split('.')
+            .reduce(function (eventsForEmit, e) {
+                nameOfEvent += e;
+                eventsForEmit.push(nameOfEvent);
+                nameOfEvent += '.';
+
+                return eventsForEmit;
+            }, [])
+            .reverse();
     }
 
     return {
@@ -34,8 +37,8 @@ function getEmitter() {
         off: function (event, context) {
             Object.keys(events).forEach(function (eventForOff) {
                 if (eventForOff === event || eventForOff.indexOf(event + '.') === 0) {
-                    events[eventForOff] = events[eventForOff].filter(function (humon) {
-                        return humon.context !== context;
+                    events[eventForOff] = events[eventForOff].filter(function (record) {
+                        return record.context !== context;
                     });
                 }
             });
@@ -47,8 +50,8 @@ function getEmitter() {
             var eventsForEmit = getEventsForEmit(event);
             eventsForEmit.forEach(function (eventForEmit) {
                 if (events.hasOwnProperty(eventForEmit)) {
-                    events[eventForEmit].forEach(function (humon) {
-                        humon.handler.call(humon.context, humon);
+                    events[eventForEmit].forEach(function (record) {
+                        record.handler.call(record.context, record);
                     });
                 }
             });
@@ -57,26 +60,26 @@ function getEmitter() {
         },
 
         several: function (event, context, handler, times) {
-            var newHandler = function (humon) {
-                humon.iteration++;
-                if (humon.iteration <= times) {
-                    handler.call(humon.context);
+            var handlerWrapper = function (record) {
+                record.iteration++;
+                if (record.iteration <= times) {
+                    handler.call(record.context);
                 }
             };
-            this.on(event, context, newHandler);
+            this.on(event, context, handlerWrapper);
 
             return this;
         },
 
         through: function (event, context, handler, frequency) {
-            var newHandler = function (humon) {
-                if (humon.iteration % frequency === 0) {
-                    handler.call(humon.context);
-                    humon.iteration = 0;
+            var handlerWrapper = function (record) {
+                if (record.iteration % frequency === 0) {
+                    handler.call(record.context);
+                    record.iteration = 0;
                 }
-                humon.iteration++;
+                record.iteration++;
             };
-            this.on(event, context, newHandler);
+            this.on(event, context, handlerWrapper);
 
             return this;
         }
