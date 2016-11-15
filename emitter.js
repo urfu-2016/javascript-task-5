@@ -49,6 +49,12 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
+            if (typeof event !== 'string' ||
+                typeof context !== 'object' ||
+                typeof handler !== 'function') {
+                throw new TypeError('Incorrect arguments types');
+            }
+
             if (!this.handlers[event]) {
                 this.handlers[event] = [];
             }
@@ -70,6 +76,11 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (eventToOff, context) {
+            if (typeof eventToOff !== 'string' ||
+                typeof context !== 'object') {
+                throw new TypeError('Incorrect arguments types');
+            }
+
             var handlers = this.handlers;
             var events = Object.keys(handlers);
             var eventPrefix = eventToOff + '.';
@@ -93,6 +104,9 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
+            if (typeof event !== 'string') {
+                throw new TypeError('Incorrect arguments types');
+            }
             var handlers = this.handlers;
             var eventsToEmit = getSubEvents(event);
 
