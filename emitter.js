@@ -3,6 +3,20 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
+// из строки с событием получаем массив со всеми частями, которые тоже нужно вывзвать, например:
+// 'funny.slide.lol'  ===> ['funny.slide.lol', 'funny.slide', 'funny']
+function makeArrayWithPartsOfEvent(event) {
+    var splittedEvent = event.split('.');
+    var splitLength = splittedEvent.length;
+    var arrayWithPartsToCall = [];
+    for (var i = 0; i < splitLength; i++) {
+        var nextPart = splittedEvent.slice(0, splitLength - i).join('.');
+        arrayWithPartsToCall.push(nextPart);
+    }
+
+    return arrayWithPartsToCall;
+}
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
@@ -37,10 +51,9 @@ function getEmitter() {
 
         off: function (event, context) {
             allEvents = allEvents.filter(function (nextEvent) {
-                var regExp = new RegExp(event + '$|' + event + '.');
 
                 return nextEvent.subscriber !== context ||
-                    nextEvent.eventName.search(regExp) === -1;
+                    makeArrayWithPartsOfEvent(nextEvent.eventName).indexOf(event) === -1;
             });
 
             return this;
@@ -52,13 +65,7 @@ function getEmitter() {
          */
 
         emit: function (event) {
-            var splittedEvent = event.split('.');
-            var splitLength = splittedEvent.length;
-            var partsOfEventToCall = [];
-            for (var i = 0; i < splitLength; i++) {
-                var nextPart = splittedEvent.slice(0, splitLength - i).join('.');
-                partsOfEventToCall.push(nextPart);
-            }
+            var partsOfEventToCall = makeArrayWithPartsOfEvent(event);
             partsOfEventToCall.forEach(function (nextToCall) {
                 allEvents.forEach(function (nextEvent) {
                     if (nextEvent.eventName === nextToCall) {
