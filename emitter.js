@@ -15,20 +15,14 @@ function Handler(context, handlerFunc) {
     };
 }
 
-function filterByPrefix(strings, prefix) {
-    return strings.filter(function (string) {
-        return string.startsWith(prefix);
-    });
-}
-
 function getEmittedEvents(eventName) {
     var emmitedEvents = [];
     var eventNameParts = eventName.split('.');
-    for (var i = 0; i < eventNameParts.length; i++) {
-        emmitedEvents.push(eventNameParts.slice(0, i + 1).join('.'));
+    for (var i = eventNameParts.length; i > 0; i--) {
+        emmitedEvents.push(eventNameParts.slice(0, i).join('.'));
     }
 
-    return emmitedEvents.reverse();
+    return emmitedEvents;
 }
 
 /**
@@ -57,22 +51,21 @@ function getEmitter() {
 
         /**
          * Отписаться от события
-         * @param {String} event
+         * @param {String} eventPrefix
          * @param {Object} context
          * @returns {Object} emitter
          */
-        off: function (event, context) {
-            var eventsNameForOff = filterByPrefix(Object.keys(this.eventToHandlers), event + '.');
-            if (this.eventToHandlers.hasOwnProperty(event)) {
-                eventsNameForOff.push(event);
-            }
-            var evetns = this.eventToHandlers;
+        off: function (eventPrefix, context) {
+            var eventsForOff = Object.keys(this.eventToHandlers).filter(function (event) {
+                return getEmittedEvents(event).indexOf(eventPrefix) !== -1;
+            });
 
-            eventsNameForOff.forEach(function (eventForOff) {
-                evetns[eventForOff] = evetns[eventForOff].filter(function (handler) {
+            eventsForOff.forEach(function (eventForOff) {
+                this.eventToHandlers[eventForOff] = this.eventToHandlers[eventForOff]
+                .filter(function (handler) {
                     return handler.context !== context;
                 });
-            });
+            }, this);
 
             return this;
         },
@@ -83,13 +76,11 @@ function getEmitter() {
          * @returns {Object} emitter
          */
         emit: function (event) {
-            var emmitedEvents = getEmittedEvents(event);
-            var events = this.eventToHandlers;
-            emmitedEvents.forEach(function (emmitedEvent) {
-                (events[emmitedEvent] || []).forEach(function (handler) {
+            getEmittedEvents(event).forEach(function (emmitedEvent) {
+                (this.eventToHandlers[emmitedEvent] || []).forEach(function (handler) {
                     handler.notify();
                 });
-            });
+            }, this);
 
             return this;
         },
