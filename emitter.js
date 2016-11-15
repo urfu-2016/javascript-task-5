@@ -4,14 +4,31 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
+
+/**
+ * Возвращает новый, отфильтрованный по подписчикам, объект subscribers
+ * @param {Object} subscribers
+ * @param {Object} context
+ * @param {String} ev
+ * @returns {Object}
+*/
+function filterSubscribers(subscribers, context, ev) {
+    subscribers[ev] = subscribers[ev].filter(function (listener) {
+        return listener.context !== context;
+    });
+
+    return subscribers;
+}
 
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
+    var subscribers = {};
+
     return {
 
         /**
@@ -19,26 +36,58 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!subscribers[event]) {
+                subscribers[event] = [];
+            }
+            subscribers[event].push({
+                context: context,
+                handler: handler.bind(context)
+            });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            var events = Object.keys(subscribers);
+            events.forEach(function (ev) {
+                if (ev === event || ev.slice(0, event.length + 1) === event + '.') {
+                    subscribers = filterSubscribers(subscribers, context, ev);
+                }
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            var events = [];
+            var splittedEvent = event.split('.');
+            for (var i = splittedEvent.length; i >= 1; i--) {
+                events.push(splittedEvent.slice(0, i).join('.'));
+            }
+            events.forEach(function (ev) {
+                if (!subscribers[ev]) {
+                    return;
+                }
+                subscribers[ev].forEach(function (listener) {
+                    listener.handler();
+                });
+            });
+
+            return this;
         },
 
         /**
