@@ -8,7 +8,7 @@ getEmitter.isStar = false;
 module.exports = getEmitter;
 
 function comparer(a, b) {
-    return (a.event >= b.event) ? -1 : 1;
+    return b.event - a.event;
 }
 
 /**
@@ -40,10 +40,10 @@ function getEmitter() {
 
         /**
          * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @returns {Array}
+         * @param {String} event - событие
+         * @param {Object} context - субьект, который подписывается событие
+         * @param {Function} handler - функция, меняющая характеристики субьекта
+         * @returns {Object}
          */
         on: function (event, context, handler) {
             events.push(
@@ -60,9 +60,9 @@ function getEmitter() {
 
         /**
          * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         * @returns {Array}
+         * @param {String} event - событие
+         * @param {Object} context - субьект, который отписывается от события
+         * @returns {Object}
          */
         off: function (event, context) {
             events.forEach(function (item) {
@@ -76,8 +76,8 @@ function getEmitter() {
 
         /**
          * Уведомить о событии
-         * @param {String} event
-         * @returns {Array}
+         * @param {String} event - событие
+         * @returns {Object}
          */
         emit: function (event) {
             events.forEach(function (item) {
