@@ -1,68 +1,69 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
+function getevents(event) {
+    var events = [];
+    var lastDotIndex = event.lastIndexOf('.');
+    while (lastDotIndex > 0) {
+        events.push(event);
+        event = event.slice(0, lastDotIndex);
+        lastDotIndex = event.lastIndexOf('.');
+    }
+    events.push(event);
+
+    return events;
+}
+
+function getSubEvents(allEvents, event) {
+    var subEvents = [];
+    allEvents.forEach(function (elem) {
+        if (elem.startsWith(event + '.') || elem === event) {
+            subEvents.push(elem);
+        }
+    });
+
+    return subEvents;
+}
+
 function getEmitter() {
+    var subscribers = {};
+
     return {
-
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!subscribers.hasOwnProperty(event)) {
+                subscribers[event] = [];
+            }
+            subscribers[event].push({ 'context': context, 'handler': handler });
+
+            return this;
         },
 
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         */
         off: function (event, context) {
-            console.info(event, context);
+            var allEvents = Object.keys(subscribers);
+            var subEvents = getSubEvents(allEvents, event);
+            subEvents.forEach(function (elem) {
+                subscribers[elem] = subscribers[elem].filter(function (subscriber) {
+                    return subscriber.context !== context;
+                });
+            });
+
+            return this;
         },
 
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         */
+
         emit: function (event) {
-            console.info(event);
-        },
+            var events = getevents(event);
+            events.forEach(function (elem) {
+                if (subscribers.hasOwnProperty(elem)) {
+                    subscribers[elem].forEach(function (subscriber) {
+                        subscriber.handler.call(subscriber.context);
+                    });
+                }
+            });
 
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
-        several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
-        },
-
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
-        through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            return this;
         }
     };
 }
