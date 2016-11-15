@@ -6,6 +6,7 @@
  */
 getEmitter.isStar = false;
 module.exports = getEmitter;
+var HashMap = require('hashmap');
 
 /**
  * Возвращает новый emitter
@@ -13,7 +14,7 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
-        events: [],
+        events: new HashMap(),
 
         /**
          * Подписаться на событие
@@ -23,36 +24,31 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            var existsEvent = false;
-            this.events.forEach(function (eventsItem) {
-                if (eventsItem.name === event) {
-                    eventsItem.info.push({
-                        context: context,
-                        handler: handler
-                    });
-                    existsEvent = true;
-                }
-            });
-            if (existsEvent === false) {
-                this.events.push({
+            if (this.events.has(event)) {
+                this.events.get(event).info.push({
+                    context: context,
+                    handler: handler
+                });
+            } else {
+                this.events.set(event, {
                     name: event,
                     info: [{
                         context: context,
                         handler: handler
                     }],
+                    _runHandler: function (infoItem) {
+                        infoItem.handler.call(infoItem.context);
+                    },
                     off: function (cont) {
-                        var savesInfo = [];
-                        this.info.forEach(function (infoItem) {
-                            if (infoItem.context !== cont) {
-                                savesInfo.push(infoItem);
-                            }
+                        this.info = this.info.filter(function (infoItem) {
+
+                            return (infoItem.context !== cont);
                         });
-                        this.info = savesInfo;
                     },
                     emit: function () {
                         this.info.forEach(function (infoItem) {
-                            infoItem.handler.call(infoItem.context);
-                        });
+                            this._runHandler(infoItem);
+                        }, this);
                     }
                 });
             }
@@ -61,20 +57,42 @@ function getEmitter() {
         },
 
         /**
+         * Должно ли запускаться name1 после name2
+         * @param {String} name1
+         * @param {String} name2
+         * @returns {Boolean}
+         */
+        _isSubName: function (name1, name2) {
+
+            return (name1 === name2) || (name2.indexOf(name1 + '.') === 0);
+        },
+
+        /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
          * @returns {Object}
          */
+
         off: function (event, context) {
-            this.events.forEach(function (eventsItem) {
-                var name = eventsItem.name;
-                if ((name === event) || (name.indexOf(event + '.') === 0)) {
-                    eventsItem.off(context);
+            this.events.forEach(function (value, key) {
+                if (this._isSubName(event, key)) {
+                    this.events.get(key).off(context);
                 }
-            });
+            }, this);
 
             return this;
+        },
+
+        /**
+         * Удалить из строки все правее последней звездочки включительно
+         * @param {String} str
+         * @returns {String}
+         */
+        _deleteLastDot: function (str) {
+            var indexLastDot = str.lastIndexOf('.');
+
+            return str.substring(0, indexLastDot);
         },
 
         /**
@@ -83,18 +101,13 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-//  eventsInReverseOrder содержит "подсобытия" события event по возрастанию длины имен
-            var eventsInOrder = [];
-            this.events.forEach(function (eventsItem) {
-                var name = eventsItem.name;
-                if ((name === event) || (event.indexOf(name + '.') === 0)) {
-                    var indexEvent = eventsItem.name.split('.').length + 1;
-                    eventsInOrder[indexEvent] = eventsItem;
+            var currentEvent = event;
+            while (currentEvent !== '') {
+                if (this.events.has(currentEvent)) {
+                    this.events.get(currentEvent).emit();
                 }
-            });
-            eventsInOrder.reverse().forEach(function (eventsItem) {
-                eventsItem.emit();
-            });
+                currentEvent = this._deleteLastDot(currentEvent);
+            }
 
             return this;
         },
