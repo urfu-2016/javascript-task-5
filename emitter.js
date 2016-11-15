@@ -7,17 +7,17 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function isEmiting(subscriber) {
-    if (Object.keys(subscriber)[2] === 'frequency') {
-        var currentFrequency = subscriber.frequency[1];
-        subscriber.frequency[1]++;
+function isEmitting(subscriber) {
+    if ('frequency' in subscriber) {
+        var currentFrequency = subscriber.frequency.currentFrequency;
+        subscriber.frequency.currentFrequency++;
 
-        return currentFrequency % subscriber.frequency[0] === 0;
+        return currentFrequency % subscriber.frequency.frequency === 0;
     }
-    if (Object.keys(subscriber)[2] === 'times') {
-        subscriber.times--;
+    if ('times' in subscriber) {
+        subscriber.times.times--;
 
-        return subscriber.times >= 0;
+        return subscriber.times.times >= 0;
     }
 
     return true;
@@ -37,9 +37,10 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @param {Object} extraParam
          * @returns {Object}
          */
-        on: function (event, context, handler) {
+        on: function (event, context, handler, extraParam) {
             if (!(event in events)) {
                 events[event] = [];
             }
@@ -47,11 +48,10 @@ function getEmitter() {
                 context: context,
                 handler: handler.bind(context)
             });
-            if (arguments[3]) {
-                var nameParams = Object.keys(arguments[3]);
-                var extraParam = arguments[3][nameParams];
+            if (extraParam) {
+                var nameParam = Object.keys(extraParam)[0];
                 var numberOfLastSubscriber = events[event].length - 1;
-                events[event][numberOfLastSubscriber][nameParams] = extraParam;
+                events[event][numberOfLastSubscriber][nameParam] = extraParam;
             }
 
             return this;
@@ -71,7 +71,7 @@ function getEmitter() {
                 events[eventForDelete] = events[eventForDelete].filter(function (subscriber) {
                     return subscriber.context !== context;
                 });
-            }, this);
+            });
 
             return this;
         },
@@ -82,23 +82,24 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            var nameEvents = event.split('.');
-            nameEvents[0] = event;
-            nameEvents.reduce(function (prev, curr, i) {
-                nameEvents[i] = prev.slice(0, prev.lastIndexOf('.'));
-
-                return nameEvents[i];
-            });
-            var filteredNames = nameEvents.filter(function (eventForCheck) {
-                return (eventForCheck in events);
-            }, this);
+            var filteredNames = [];
+            var countDots = 0;
+            if (event.match(/\./g)) {
+                countDots = event.match(/\./g).length;
+            }
+            for (var i = 0; i < countDots + 1; i++) {
+                if (event in events) {
+                    filteredNames.push(event);
+                }
+                event = event.slice(0, event.lastIndexOf('.'));
+            }
             filteredNames.forEach(function (eventForCall) {
                 events[eventForCall].forEach(function (subscriber) {
-                    if (isEmiting(subscriber)) {
-                        subscriber.handler.call();
+                    if (isEmitting(subscriber)) {
+                        subscriber.handler();
                     }
                 });
-            }, this);
+            });
 
             return this;
         },
@@ -113,7 +114,7 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            var option = times > 0 ? { times: times } : Infinity;
+            var option = times > 0 ? { times: times } : { times: Infinity };
 
             return this.on(event, context, handler, option);
         },
@@ -128,7 +129,9 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            var option = frequency > 0 ? { frequency: [frequency, 0] } : [1, 0];
+            var option = frequency > 0
+            ? { frequency: frequency, currentFrequency: 0 }
+            : { frequency: 1, currentFrequency: 0 };
 
             return this.on(event, context, handler, option);
         }
