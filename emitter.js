@@ -3,22 +3,24 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-function getParentEvents(event) {
-    var upperEvents = [];
-    while (event.lastIndexOf('.') > 0) {
-        upperEvents.push(event);
-        event = event.slice(0, event.lastIndexOf('.'));
+function getevents(event) {
+    var events = [];
+    var lastDotIndex = event.lastIndexOf('.');
+    while (lastDotIndex > 0) {
+        events.push(event);
+        event = event.slice(0, lastDotIndex);
+        lastDotIndex = event.lastIndexOf('.');
     }
-    upperEvents.push(event);
+    events.push(event);
 
-    return upperEvents;
+    return events;
 }
 
 function getSubEvents(allEvents, event) {
     var subEvents = [];
-    allEvents.forEach(function (event_) {
-        if (event_.indexOf(event + '.') === 0 || event_ === event) {
-            subEvents.push(event_);
+    allEvents.forEach(function (elem) {
+        if (elem.startsWith(event + '.') || elem === event) {
+            subEvents.push(elem);
         }
     });
 
@@ -33,7 +35,7 @@ function getEmitter() {
             if (!subscribers.hasOwnProperty(event)) {
                 subscribers[event] = [];
             }
-            subscribers[event].push({ 'context': context, 'handler': handler.bind(context) });
+            subscribers[event].push({ 'context': context, 'handler': handler });
 
             return this;
         },
@@ -41,11 +43,9 @@ function getEmitter() {
         off: function (event, context) {
             var allEvents = Object.keys(subscribers);
             var subEvents = getSubEvents(allEvents, event);
-            subEvents.forEach(function (subEvent) {
-                subscribers[subEvent].forEach(function (subscriber) {
-                    if (subscriber.context === context) {
-                        subscribers[subEvent].splice(subscribers[subEvent].indexOf(subscriber), 1);
-                    }
+            subEvents.forEach(function (elem) {
+                subscribers[elem] = subscribers[elem].filter(function (subscriber) {
+                    return subscriber.context !== context;
                 });
             });
 
@@ -54,11 +54,11 @@ function getEmitter() {
 
 
         emit: function (event) {
-            var parentEvents = getParentEvents(event);
-            parentEvents.forEach(function (elem) {
+            var events = getevents(event);
+            events.forEach(function (elem) {
                 if (subscribers.hasOwnProperty(elem)) {
                     subscribers[elem].forEach(function (subscriber) {
-                        subscriber.handler.call();
+                        subscriber.handler.call(subscriber.context);
                     });
                 }
             });
