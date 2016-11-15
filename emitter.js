@@ -139,11 +139,9 @@ function getEmitter() {
 }
 
 function getLastEvent(currentSubTree, currentEvent) {
-    if (currentSubTree.subEvents.hasOwnProperty(currentEvent)) {
-        return currentSubTree.subEvents[currentEvent];
-    }
+    var isTreeHasEvent = currentSubTree.subEvents.hasOwnProperty(currentEvent);
 
-    return {};
+    return isTreeHasEvent ? currentSubTree.subEvents[currentEvent] : {};
 }
 
 function unsignContextFromSubTree(eventSubTree, context) {
@@ -158,13 +156,9 @@ function unsignContextFromSubTree(eventSubTree, context) {
 
 function unsignContextFromEvent(eventObject, context) {
     eventObject.signedContexts = eventObject.signedContexts
-        .reduce(function (newEventsArray, signedContext) {
-            if (signedContext.context !== context) {
-                newEventsArray.push(signedContext);
-            }
-
-            return newEventsArray;
-        }, []);
+        .filter(function (signedContext) {
+            return signedContext.context !== context;
+        });
 }
 
 function tryToCallHandler(signedContext) {
