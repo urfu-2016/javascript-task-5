@@ -8,7 +8,7 @@ getEmitter.isStar = false;
 module.exports = getEmitter;
 
 function comparer(a, b) {
-    return b.event - a.event;
+    return (b.event - a.event);
 }
 
 /**
