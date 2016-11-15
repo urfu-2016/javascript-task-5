@@ -1,6 +1,7 @@
 /* eslint-disable no-invalid-this */
 'use strict';
 
+
 var getEmitter = require('./emitter');
 
 var students = {
