@@ -11,13 +11,13 @@ module.exports = getEmitter;
  * Возвращает новый, отфильтрованный по подписчикам, объект subscribers
  * @param {Object} subscribers
  * @param {Object} context
- * @param {Number} i
+ * @param {String} ev
  * @returns {Object}
-*/ 
+*/
 function filterSubscribers(subscribers, context, ev) {
     subscribers[ev] = subscribers[ev].filter(function (listener) {
         return listener.context !== context;
-        });
+    });
 
     return subscribers;
 }
@@ -79,10 +79,10 @@ function getEmitter() {
                 events.push(splittedEvent.slice(0, i).join('.'));
             }
             for (var j = 0; j < events.length; j++) {
-                if (!subscribers[events[j]]) continue;
+                if (!subscribers[events[j]]) { continue;}
                 subscribers[events[j]].forEach(function (listener) {
                     listener.handler();
-                    });
+                });
             }
 
             return this;
