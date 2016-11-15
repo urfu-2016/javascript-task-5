@@ -78,11 +78,11 @@ function getEmitter() {
             for (var i = splittedEvent.length; i >= 1; i--) {
                 events.push(splittedEvent.slice(0, i).join('.'));
             }
-            events.forEach(function (event) {
-                if (!subscribers[event]) {
+            events.forEach(function (ev) {
+                if (!subscribers[ev]) {
                     return;
                 }
-                subscribers[event].forEach(function (listener) {
+                subscribers[ev].forEach(function (listener) {
                     listener.handler();
                 });
             });
