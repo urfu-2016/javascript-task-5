@@ -6,7 +6,6 @@
  */
 getEmitter.isStar = false;
 module.exports = getEmitter;
-var HashMap = require('hashmap');
 
 /**
  * Возвращает новый emitter
@@ -14,7 +13,7 @@ var HashMap = require('hashmap');
  */
 function getEmitter() {
     return {
-        events: new HashMap(),
+        events: {},
 
         /**
          * Подписаться на событие
@@ -24,14 +23,13 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (this.events.has(event)) {
-                this.events.get(event).info.push({
+            if (event in this.events) {
+                this.events[event].info.push({
                     context: context,
                     handler: handler
                 });
             } else {
-                this.events.set(event, {
-                    name: event,
+                this.events[event] = {
                     info: [{
                         context: context,
                         handler: handler
@@ -75,9 +73,9 @@ function getEmitter() {
          */
 
         off: function (event, context) {
-            this.events.forEach(function (value, key) {
+            for (key in this.events) {
                 if (this._isSubName(event, key)) {
-                    this.events.get(key).off(context);
+                    this.events[key].off(context);
                 }
             }, this);
 
@@ -103,8 +101,8 @@ function getEmitter() {
         emit: function (event) {
             var currentEvent = event;
             while (currentEvent !== '') {
-                if (this.events.has(currentEvent)) {
-                    this.events.get(currentEvent).emit();
+                if (currentEvent in this.events) {
+                    this.events[currentEvent].emit();
                 }
                 currentEvent = this._deleteLastDot(currentEvent);
             }
