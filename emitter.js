@@ -8,16 +8,16 @@ getEmitter.isStar = true;
 module.exports = getEmitter;
 
 function isEmitting(subscriber) {
-    if ('frequency' in subscriber) {
-        var currentFrequency = subscriber.frequency.currentFrequency;
-        subscriber.frequency.currentFrequency++;
+    if ('options' in subscriber && 'frequency' in subscriber.options) {
+        var currentFrequency = subscriber.options.currentFrequency;
+        subscriber.options.currentFrequency++;
 
-        return currentFrequency % subscriber.frequency.frequency === 0;
+        return currentFrequency % subscriber.options.frequency === 0;
     }
-    if ('times' in subscriber) {
-        subscriber.times.times--;
+    if ('options' in subscriber && 'times' in subscriber.options) {
+        subscriber.options.times--;
 
-        return subscriber.times.times >= 0;
+        return subscriber.options.times >= 0;
     }
 
     return true;
@@ -37,10 +37,10 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
-         * @param {Object} extraParam
+         * @param {Object} options
          * @returns {Object}
          */
-        on: function (event, context, handler, extraParam) {
+        on: function (event, context, handler, options) {
             if (!(event in events)) {
                 events[event] = [];
             }
@@ -48,10 +48,9 @@ function getEmitter() {
                 context: context,
                 handler: handler.bind(context)
             });
-            if (extraParam) {
-                var nameParam = Object.keys(extraParam)[0];
+            if (options) {
                 var numberOfLastSubscriber = events[event].length - 1;
-                events[event][numberOfLastSubscriber][nameParam] = extraParam;
+                events[event][numberOfLastSubscriber].options = options;
             }
 
             return this;
@@ -83,10 +82,7 @@ function getEmitter() {
          */
         emit: function (event) {
             var filteredNames = [];
-            var countDots = 0;
-            if (event.match(/\./g)) {
-                countDots = event.match(/\./g).length;
-            }
+            var countDots = (event.lastIndexOf('.') !== -1) ? event.match(/\./g).length : 0;
             for (var i = 0; i < countDots + 1; i++) {
                 if (event in events) {
                     filteredNames.push(event);
@@ -114,9 +110,9 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            var option = times > 0 ? { times: times } : { times: Infinity };
+            var options = times > 0 ? { times: times } : { times: Infinity };
 
-            return this.on(event, context, handler, option);
+            return this.on(event, context, handler, options);
         },
 
         /**
@@ -129,11 +125,11 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            var option = frequency > 0
+            var options = frequency > 0
             ? { frequency: frequency, currentFrequency: 0 }
             : { frequency: 1, currentFrequency: 0 };
 
-            return this.on(event, context, handler, option);
+            return this.on(event, context, handler, options);
         }
     };
 }
