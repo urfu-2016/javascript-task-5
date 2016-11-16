@@ -1,44 +1,59 @@
 'use strict';
 
 /**
- * Сделано задание на звездочку
+ * Сделано задание на звездочку.
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
 function getEmitter() {
+    var subscriptions = {};
+    function searchNamespaces(event) {
+
+        return Object.keys(subscriptions).filter(function (currentEvent) {
+            return event === currentEvent || currentEvent.indexOf(event + '.') === 0;
+        });
+    }
+
     return {
 
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!subscriptions.hasOwnProperty(event)) {
+                subscriptions[event] = [];
+            }
+            subscriptions[event].push({
+                context: context,
+                handler: handler
+            });
+
+            return this;
         },
 
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         */
         off: function (event, context) {
-            console.info(event, context);
+            var events = searchNamespaces(event);
+            events.forEach(function (currentEvent) {
+                subscriptions[currentEvent] = subscriptions[currentEvent]
+                .filter(function (handler) {
+                    return handler.context !== context;
+                });
+            });
+
+            return this;
         },
 
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         */
         emit: function (event) {
-            console.info(event);
+            var currentEvent = event;
+            while (currentEvent) {
+                if (subscriptions.hasOwnProperty(currentEvent)) {
+                    subscriptions[currentEvent].forEach(function (events) {
+                        events.handler.call(events.context);
+                    });
+                }
+                currentEvent = currentEvent.substring(0, currentEvent.lastIndexOf('.'));
+            }
+
+            return this;
         },
 
         /**
