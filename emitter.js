@@ -29,14 +29,11 @@ function getEmitter() {
         },
 
         isOrder: function (listener) {
-            //  console.info(this.listeners.indexOf(listener));
             var currentListener = this.listeners[this.listeners.indexOf(listener)];
-            //  console.info(currentListener);
             if (!currentListener.hasOwnProperty('countModule')) {
                 return false;
             }
             if (currentListener.countModule === 0) {
-                // listener.countModule += listener.module - 1;
                 currentListener.countModule += currentListener.module - 1;
 
                 return true;
@@ -46,7 +43,13 @@ function getEmitter() {
             return false;
         },
         decrimentCount: function (listener) {
-            return listener;
+            var currentListener = this.listeners[this.listeners.indexOf(listener)];
+            currentListener.count--;
+            if (currentListener.count === 0) {
+                this.listeners = this.listeners.filter(function (checkedListener) {
+                    return ((checkedListener !== currentListener));
+                }, this);
+            }
         },
 
         /**
@@ -91,20 +94,12 @@ function getEmitter() {
             var events = this.getEventsList(event);
             events.forEach(function (currentEvent) {
                 this.listeners.forEach(function (listener) {
-                    if (listener.event !== currentEvent) {
-                        return;
-                    }
-                    if (listener.hasOwnProperty('countModule') && !this.isOrder(listener)) {
-
+                    if (listener.event !== currentEvent ||
+                        (listener.hasOwnProperty('countModule') && !this.isOrder(listener))) {
                         return;
                     }
                     if (listener.hasOwnProperty('count')) {
-                        listener.count--;
-                        if (listener.count === 0) {
-                            this.listeners = this.listeners.filter(function (currentListener) {
-                                return ((currentListener !== listener));
-                            }, this);
-                        }
+                        this.decrimentCount(listener);
                     }
                     listener.handler.call(listener.context);
                 }, this);

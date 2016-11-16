@@ -77,6 +77,7 @@ lecturer
         this.focus += 10;
         this.wisdom -= 10;
     });
+
 // Начинаем лекцию
 lecturer.emit('begin');
 // Sam(110,50); Sally(110,60); Bill(100,55); Sharon(130,40)
@@ -145,22 +146,17 @@ if (getEmitter.isStar) {
 
     lecturer.emit('begin');
     // Sam(110,50); Bill(100,55)
-    // console.info(lecturer.listeners);
+
     lecturer
         .emit('slide.text')
         .emit('slide.text')
         .emit('slide.text')
         .emit('slide.funny');
     // Sam(95,61); Bill(65,63)
-    console.info(students.Sam);
-    console.info(students.Bill);
-    // console.info(lecturer.listeners);
 
     lecturer
         .emit('slide.text')
         .emit('slide.text')
         .emit('slide.funny');
     // Sam(80,70); Bill(70,53)
-    console.info(students.Sam);
-    console.info(students.Bill);
 }
