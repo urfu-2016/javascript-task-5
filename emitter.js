@@ -10,13 +10,11 @@ function getEmitter() {
 
         return event
             .split('.')
-            .reduce(function (eventsForEmit, e) {
-                nameOfEvent += e;
-                eventsForEmit.push(nameOfEvent);
-                nameOfEvent += '.';
+            .map(function (e) {
+                nameOfEvent += e + '.';
 
-                return eventsForEmit;
-            }, [])
+                return nameOfEvent.slice(0, -1);
+            })
             .reverse();
     }
 
