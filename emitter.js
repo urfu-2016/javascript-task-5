@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -13,32 +13,63 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
+        events: {},
 
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!this.events.hasOwnProperty(event)) {
+                this.events[event] = [];
+            }
+            this.events[event].push({
+                context: context,
+                handler: handler
+            });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
+            var eventWithDot = event + '.';
+            var eventsForOff = Object.keys(this.events).filter(function (value) {
+                return value === event || value.indexOf(eventWithDot) === 0;
+            });
+            eventsForOff.forEach(function (eventForOff) {
+                this.events[eventForOff] = this.events[eventForOff].filter(function (value) {
+                    return value.context !== context;
+                });
+            }, this);
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            while (event) {
+                if (this.events.hasOwnProperty(event)) {
+                    this.events[event].forEach(function (contextAndHandler) {
+                        contextAndHandler.handler.call(contextAndHandler.context);
+                    });
+                }
+                event = event.substring(0, event.lastIndexOf('.'));
+            }
+
+            return this;
         },
 
         /**
