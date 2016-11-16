@@ -23,7 +23,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (!this.events[event]) {
+            if (!this.events.hasOwnProperty(event)) {
                 this.events[event] = [];
             }
             this.events[event].push({
@@ -61,7 +61,7 @@ function getEmitter() {
          */
         emit: function (event) {
             while (event !== '') {
-                if (!this.events[event]) {
+                if (!this.events.hasOwnProperty(event)) {
                     event = event.substring(0, event.lastIndexOf('.'));
                     continue;
                 }
