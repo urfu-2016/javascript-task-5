@@ -1,68 +1,80 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
+
+// из строки с событием получаем массив со всеми подсобытиями, которые нужно вывзвать, например:
+// 'funny.slide.lol'  ===> ['funny.slide.lol', 'funny.slide', 'funny']
+function getSubevents(eventName) {
+    var eventParts = eventName.split('.');
+    var partsNumber = eventParts.length;
+    var subevents = [];
+
+    for (var i = 0; i < partsNumber; i++) {
+        var subevent = eventParts.slice(0, partsNumber - i).join('.');
+        subevents.push(subevent);
+    }
+
+    return subevents;
+}
 
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
+    var events = [];
+
     return {
 
         /**
          * Подписаться на событие
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          * @param {Function} handler
          */
-        on: function (event, context, handler) {
-            console.info(event, context, handler);
+
+        on: function (eventName, context, handler) {
+            events.push({
+                eventName: eventName,
+                context: context,
+                handler: handler
+            });
+
+            return this;
         },
 
         /**
          * Отписаться от события
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          */
-        off: function (event, context) {
-            console.info(event, context);
+
+        off: function (eventName, context) {
+            events = events.filter(function (event) {
+                return event.context !== context ||
+                    getSubevents(event.eventName).indexOf(eventName) === -1;
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
-         * @param {String} event
+         * @param {String} eventName
          */
-        emit: function (event) {
-            console.info(event);
-        },
 
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
-        several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
-        },
+        emit: function (eventName) {
+            var subeventsToCall = getSubevents(eventName);
+            subeventsToCall.forEach(function (subeventToCall) {
+                events.forEach(function (event) {
+                    if (event.eventName === subeventToCall) {
+                        event.handler.call(event.context);
+                    }
+                });
+            });
 
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
-        through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            return this;
         }
     };
 }
