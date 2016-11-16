@@ -3,18 +3,19 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-// из строки с событием получаем массив со всеми частями, которые тоже нужно вывзвать, например:
+// из строки с событием получаем массив со всеми подсобытиями, которые нужно вывзвать, например:
 // 'funny.slide.lol'  ===> ['funny.slide.lol', 'funny.slide', 'funny']
-function makeArrayWithPartsOfEvent(event) {
-    var splittedEvent = event.split('.');
-    var splitLength = splittedEvent.length;
-    var arrayWithPartsToCall = [];
-    for (var i = 0; i < splitLength; i++) {
-        var nextPart = splittedEvent.slice(0, splitLength - i).join('.');
-        arrayWithPartsToCall.push(nextPart);
+function getSubevents(eventName) {
+    var eventParts = eventName.split('.');
+    var partsNumber = eventParts.length;
+    var subevents = [];
+
+    for (var i = 0; i < partsNumber; i++) {
+        var subevent = eventParts.slice(0, partsNumber - i).join('.');
+        subevents.push(subevent);
     }
 
-    return arrayWithPartsToCall;
+    return subevents;
 }
 
 /**
@@ -22,22 +23,22 @@ function makeArrayWithPartsOfEvent(event) {
  * @returns {Object}
  */
 function getEmitter() {
-    var allEvents = [];
+    var events = [];
 
     return {
 
         /**
          * Подписаться на событие
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          * @param {Function} handler
          */
 
-        on: function (event, context, handler) {
-            allEvents.push({
-                eventName: event,
-                subscriber: context,
-                action: handler
+        on: function (eventName, context, handler) {
+            events.push({
+                eventName: eventName,
+                context: context,
+                handler: handler
             });
 
             return this;
@@ -45,15 +46,14 @@ function getEmitter() {
 
         /**
          * Отписаться от события
-         * @param {String} event
+         * @param {String} eventName
          * @param {Object} context
          */
 
-        off: function (event, context) {
-            allEvents = allEvents.filter(function (nextEvent) {
-
-                return nextEvent.subscriber !== context ||
-                    makeArrayWithPartsOfEvent(nextEvent.eventName).indexOf(event) === -1;
+        off: function (eventName, context) {
+            events = events.filter(function (event) {
+                return event.context !== context ||
+                    getSubevents(event.eventName).indexOf(eventName) === -1;
             });
 
             return this;
@@ -61,15 +61,15 @@ function getEmitter() {
 
         /**
          * Уведомить о событии
-         * @param {String} event
+         * @param {String} eventName
          */
 
-        emit: function (event) {
-            var partsOfEventToCall = makeArrayWithPartsOfEvent(event);
-            partsOfEventToCall.forEach(function (nextToCall) {
-                allEvents.forEach(function (nextEvent) {
-                    if (nextEvent.eventName === nextToCall) {
-                        nextEvent.action.call(nextEvent.subscriber);
+        emit: function (eventName) {
+            var subeventsToCall = getSubevents(eventName);
+            subeventsToCall.forEach(function (subeventToCall) {
+                events.forEach(function (event) {
+                    if (event.eventName === subeventToCall) {
+                        event.handler.call(event.context);
                     }
                 });
             });
