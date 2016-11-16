@@ -90,7 +90,7 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(this.events).map(function (e) {
-                return this.events[e].filter(function (item) {
+                this.events[e] = this.events[e].filter(function (item) {
                     return checkOneEvent(e, event, item.context, context);
                 }, this);
             }, this);
