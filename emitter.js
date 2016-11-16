@@ -28,6 +28,27 @@ function getEmitter() {
                 .join('.');
         },
 
+        isOrder: function (listener) {
+            //  console.info(this.listeners.indexOf(listener));
+            var currentListener = this.listeners[this.listeners.indexOf(listener)];
+            //  console.info(currentListener);
+            if (!currentListener.hasOwnProperty('countModule')) {
+                return false;
+            }
+            if (currentListener.countModule === 0) {
+                // listener.countModule += listener.module - 1;
+                currentListener.countModule += currentListener.module - 1;
+
+                return true;
+            }
+            currentListener.countModule--;
+
+            return false;
+        },
+        decrimentCount: function (listener) {
+            return listener;
+        },
+
         /**
          * Подписаться на событие
          * @param {String} event
@@ -36,10 +57,11 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-            this.listeners.push({ event: event,
+            this.listeners.push({
+                event: event,
                 context: context,
                 handler: handler
-                });
+            });
 
             return this;
         },
@@ -72,14 +94,9 @@ function getEmitter() {
                     if (listener.event !== currentEvent) {
                         return;
                     }
-                    if (listener.hasOwnProperty('countModule')) {
-                        if (listener.countModule === 0) {
-                            listener.countModule += listener.module - 1;
-                        } else {
-                            listener.countModule--;
+                    if (listener.hasOwnProperty('countModule') && !this.isOrder(listener)) {
 
-                            return;
-                        }
+                        return;
                     }
                     if (listener.hasOwnProperty('count')) {
                         listener.count--;
