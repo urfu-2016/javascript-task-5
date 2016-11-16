@@ -14,31 +14,98 @@ module.exports = getEmitter;
 function getEmitter() {
     return {
 
+        listeners: [],
+        getEventsList: function (event) {
+            var events = event.split('.');
+
+            return events.map(function (value, index) {
+                return events.slice(0, events.length - index).join('.');
+            });
+        },
+
+        getStartEvent: function (event, lengthEvent) {
+            return event.split('.').slice(0, lengthEvent)
+                .join('.');
+        },
+
+        isOrder: function (listener) {
+            var currentListener = this.listeners[this.listeners.indexOf(listener)];
+            if (!currentListener.hasOwnProperty('countModule')) {
+                return false;
+            }
+            if (currentListener.countModule === 0) {
+                currentListener.countModule += currentListener.module - 1;
+
+                return true;
+            }
+            currentListener.countModule--;
+
+            return false;
+        },
+        decrimentCount: function (listener) {
+            var currentListener = this.listeners[this.listeners.indexOf(listener)];
+            currentListener.count--;
+            if (currentListener.count === 0) {
+                this.listeners = this.listeners.filter(function (checkedListener) {
+                    return ((checkedListener !== currentListener));
+                }, this);
+            }
+        },
+
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object} this
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            this.listeners.push({
+                event: event,
+                context: context,
+                handler: handler
+            });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object} this
          */
         off: function (event, context) {
-            console.info(event, context);
+            var lengthEvent = event.split('.').length;
+            this.listeners = this.listeners.filter(function (listener) {
+                return ((this.getStartEvent(listener.event, lengthEvent) !== event) ||
+                (listener.context !== context));
+            }, this);
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object} this
          */
         emit: function (event) {
-            console.info(event);
+            var events = this.getEventsList(event);
+            events.forEach(function (currentEvent) {
+                this.listeners.forEach(function (listener) {
+                    if (listener.event !== currentEvent ||
+                        (listener.hasOwnProperty('countModule') && !this.isOrder(listener))) {
+                        return;
+                    }
+                    if (listener.hasOwnProperty('count')) {
+                        this.decrimentCount(listener);
+                    }
+                    listener.handler.call(listener.context);
+                }, this);
+            }, this);
+
+            return this;
         },
 
         /**
@@ -48,9 +115,21 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times > 0) {
+                this.listeners.push({
+                    event: event,
+                    context: context,
+                    handler: handler,
+                    count: times
+                });
+            } else {
+                this.on(event, context, handler);
+            }
+
+            return this;
         },
 
         /**
@@ -60,9 +139,22 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object} this
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (frequency > 0) {
+                this.listeners.push({
+                    event: event,
+                    context: context,
+                    handler: handler,
+                    module: frequency,
+                    countModule: 0
+                });
+            } else {
+                this.on(event, context, handler);
+            }
+
+            return this;
         }
     };
 }
