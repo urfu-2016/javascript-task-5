@@ -1,68 +1,84 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы several и through
- */
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-/**
- * Возвращает новый emitter
- * @returns {Object}
- */
 function getEmitter() {
+    var events = {};
+
+    function addEvent(eventName, eventInfo) {
+        if (!events.hasOwnProperty(eventName)) {
+            events[eventName] = [];
+        }
+        eventInfo.period = 0;
+        events[eventName].push(eventInfo);
+    }
+
+    var launch = function (event) {
+        if (event.period % event.frequency === 0 && event.times) {
+            event.callback.call(event.student);
+            event.times--;
+        }
+        event.period++;
+    };
+
     return {
-
-        /**
-         * Подписаться на событие
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            addEvent(event, {
+                student: context,
+                callback: handler,
+                times: -1,
+                frequency: 1
+            });
+
+            return this;
         },
 
-        /**
-         * Отписаться от события
-         * @param {String} event
-         * @param {Object} context
-         */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(events).forEach(function (eventObject) {
+                if (eventObject.startsWith(event + '.') || eventObject === event) {
+                    events[eventObject] = events[eventObject].filter(function (currentEvent) {
+                        return context !== currentEvent.student;
+                    });
+                }
+            });
+
+            return this;
         },
 
-        /**
-         * Уведомить о событии
-         * @param {String} event
-         */
         emit: function (event) {
-            console.info(event);
+            while (event) {
+                if (events.hasOwnProperty(event)) {
+                    events[event].forEach(function (eventObject) {
+                        launch(eventObject);
+                    });
+                }
+                event = event.replace(/\.\w+$/, '');
+            }
+
+            return this;
         },
 
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            addEvent(event, {
+                student: context,
+                callback: handler,
+                times: times || -1,
+                frequency: 1
+            });
+
+            return this;
         },
 
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            addEvent(event, {
+                student: context,
+                callback: handler,
+                times: -1,
+                frequency: frequency <= 0 ? 1 : frequency
+            });
+
+            return this;
         }
     };
 }
