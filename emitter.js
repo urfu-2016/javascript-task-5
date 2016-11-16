@@ -68,8 +68,8 @@ function addEventHandler(event, context, eventFunc) {
     var length = splittedEvent.length;
     for (var i = 0; i < length; i++) {
         var miniEvent = splittedEvent[i];
-        if (miniContext.hasOwnProperty(miniEvent) && i !== length - 1) {
-            miniContext = miniContext[miniEvent];
+        if (miniContext.hasOwnProperty(miniEvent)) {
+            miniContext = i === length - 1 ? miniContext[miniEvent] : miniContext;
         } else {
             miniContext[miniEvent] = wrapFunction(miniContext);
         }
