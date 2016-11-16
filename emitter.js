@@ -53,7 +53,7 @@ function getEmitter() {
                         launch(eventObject);
                     });
                 }
-                event = event.replace(/.(\w+)$/, '');
+                event = event.replace(/\.\w+$/, '');
             }
 
             return this;
