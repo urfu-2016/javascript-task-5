@@ -13,6 +13,7 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
+        callbacks: [],
 
         /**
          * Подписаться на событие
@@ -22,13 +23,9 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
-
             var callback = {};
 
-            callback.event = event;
-            callback.context = context;
-            callback.handler = handler;
+            callback = createCallback(event, context, handler);
 
             this.callbacks.push(callback);
 
@@ -42,16 +39,9 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            console.info(event, context);
-
-            for (var i = 0; i < this.callbacks.length; i++) {
-                var callback = this.callbacks[i];
-
-                if (callback.context === context && this.contains(callback.event, event)) {
-                    this.callbacks.splice(i, 1);
-                    i -= 1;
-                }
-            }
+            this.callbacks = this.callbacks.filter(function (callback) {
+                return !(callback.context === context && contains(callback.event, event));
+            });
 
             return this;
         },
@@ -62,53 +52,16 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            console.info(event);
+            var curEvent = event;
 
-            this.realApply(event);
+            realApply(curEvent, this.callbacks);
 
-            while (event.lastIndexOf('.') !== -1) {
-                event = event.substr(0, event.lastIndexOf('.'));
-                this.realApply(event);
+            while (curEvent.lastIndexOf('.') !== -1) {
+                curEvent = curEvent.substr(0, curEvent.lastIndexOf('.'));
+                realApply(curEvent, this.callbacks);
             }
 
             return this;
-        },
-
-        realApply: function (event) {
-            console.info(event);
-
-            for (var i = 0; i < this.callbacks.length; i++) {
-                var callback = this.callbacks[i];
-
-                if (callback.event === event) {
-                    this.doCallback(callback);
-                }
-            }
-        },
-
-        doCallback: function (callback) {
-            if (callback.times !== undefined) {
-                if (callback.times > 0) {
-                    callback.handler.apply(callback.context);
-                    callback.times -= 1;
-                }
-            } else if (callback.frequency !== undefined) {
-                callback.current += 1;
-                if (callback.current === callback.frequency) {
-                    callback.handler.apply(callback.context);
-                    callback.current = 0;
-                }
-            } else {
-                callback.handler.apply(callback.context);
-            }
-        },
-
-        callbacks: [],
-
-        contains: function (fullScope, scope) {
-            console.info('RegExp match:', fullScope.match(new RegExp('^' + scope + '(\\.|$)')));
-
-            return fullScope.match(new RegExp('^' + scope + '(\\.|$)')) !== null;
         },
 
         /**
@@ -121,8 +74,6 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
-
             times = times || 0;
 
             if (times <= 0) {
@@ -130,9 +81,7 @@ function getEmitter() {
             } else {
                 var callback = {};
 
-                callback.event = event;
-                callback.context = context;
-                callback.handler = handler;
+                callback = createCallback(event, context, handler);
                 callback.times = times;
 
                 this.callbacks.push(callback);
@@ -151,8 +100,6 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
-
             frequency = frequency || 0;
 
             if (frequency <= 0) {
@@ -160,9 +107,7 @@ function getEmitter() {
             } else {
                 var callback = {};
 
-                callback.event = event;
-                callback.context = context;
-                callback.handler = handler;
+                callback = createCallback(event, context, handler);
                 callback.frequency = frequency;
                 callback.current = frequency - 1;
 
@@ -171,5 +116,43 @@ function getEmitter() {
 
             return this;
         }
+    };
+}
+
+
+function contains(fullScope, scope) {
+    return fullScope.match(new RegExp('^' + scope + '(\\.|$)')) !== null;
+}
+
+function realApply(event, callbacks) {
+    callbacks.forEach(function (callback) {
+        if (callback.event === event) {
+            doCallback(callback);
+        }
+    });
+}
+
+function doCallback(callback) {
+    if (callback.times !== undefined) {
+        if (callback.times <= 0) {
+            return;
+        }
+        callback.times -= 1;
+    } else if (callback.frequency !== undefined) {
+        callback.current += 1;
+        if (callback.current !== callback.frequency) {
+            return;
+        }
+        callback.current = 0;
+    }
+
+    callback.handler.apply(callback.context);
+}
+
+function createCallback(event, context, handler) {
+    return {
+        event: event,
+        context: context,
+        handler: handler
     };
 }
