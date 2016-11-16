@@ -9,7 +9,6 @@ module.exports = getEmitter;
 
 function getEmitter() {
     var subscriptions = {};
-
     function searchNamespaces(event) {
 
         return Object.keys(subscriptions).filter(function (currentEvent) {
@@ -20,7 +19,7 @@ function getEmitter() {
     return {
 
         on: function (event, context, handler) {
-            if (!(event in subscriptions)) {
+            if (!subscriptions.hasOwnProperty(event)) {
                 subscriptions[event] = [];
             }
             subscriptions[event].push({
@@ -46,7 +45,7 @@ function getEmitter() {
         emit: function (event) {
             var currentEvent = event;
             while (currentEvent) {
-                if (currentEvent in subscriptions) {
+                if (subscriptions.hasOwnProperty(currentEvent)) {
                     subscriptions[currentEvent].forEach(function (events) {
                         events.handler.call(events.context);
                     });
