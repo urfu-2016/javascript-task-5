@@ -43,7 +43,7 @@ function getEmitter() {
         off: function (event, context) {
             var eventWithDot = event + '.';
             var eventsForOff = Object.keys(this.events).filter(function (value) {
-                return value === event || value.startsWith(eventWithDot);
+                return value === event || value.indexOf(eventWithDot) === 0;
             });
             eventsForOff.forEach(function (eventForOff) {
                 this.events[eventForOff] = this.events[eventForOff].filter(function (value) {
@@ -60,14 +60,12 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            while (event !== '') {
-                if (!this.events.hasOwnProperty(event)) {
-                    event = event.substring(0, event.lastIndexOf('.'));
-                    continue;
+            while (event) {
+                if (this.events.hasOwnProperty(event)) {
+                    this.events[event].forEach(function (contextAndHandler) {
+                        contextAndHandler.handler.call(contextAndHandler.context);
+                    });
                 }
-                this.events[event].forEach(function (contextAndHandler) {
-                    contextAndHandler.handler.call(contextAndHandler.context);
-                });
                 event = event.substring(0, event.lastIndexOf('.'));
             }
 
