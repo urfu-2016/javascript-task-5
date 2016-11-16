@@ -35,10 +35,10 @@ function getEmitter() {
         },
 
         off: function (event, context) {
-            Object.keys(events).forEach(function (e) {
-                if (e.startsWith(event + '.') || e === event) {
-                    events[e] = events[e].filter(function (ev) {
-                        return context !== ev.student;
+            Object.keys(events).forEach(function (eventObject) {
+                if (eventObject.startsWith(event + '.') || eventObject === event) {
+                    events[eventObject] = events[eventObject].filter(function (currentEvent) {
+                        return context !== currentEvent.student;
                     });
                 }
             });
@@ -49,8 +49,8 @@ function getEmitter() {
         emit: function (event) {
             while (event) {
                 if (events.hasOwnProperty(event)) {
-                    events[event].forEach(function (e) {
-                        launch(e);
+                    events[event].forEach(function (eventObject) {
+                        launch(eventObject);
                     });
                 }
                 event = event.replace(/.(\w+)$/, '');
