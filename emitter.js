@@ -7,11 +7,12 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function getAllNamespaces(str) {
+function generateAllNamespaces(str) {
     var namespacePart = str.split('.');
     var namespaces = [];
     for (var i = namespacePart.length; i > 0; i--) {
-        namespaces.push(namespacePart.slice(0, i).join('.'));
+        namespaces.push(namespacePart.join('.'));
+        namespacePart.pop();
     }
 
     return namespaces;
@@ -36,22 +37,21 @@ function isNotExpires(item) {
     return item.frequency === null;
 }
 
+function checkOneEventUsed(event) {
+    return event.filter(function (item) {
+        return item.expires === null || item.expires === undefined ||
+            item.expires > 0 || item.frequency !== null;
+    });
+}
 function removeUnusedEvents(events) {
-    for (var i in events) {
-        if (events.hasOwnProperty(i)) {
-            events[i] = events[i].filter(function (item) {
-                return item.expires === null || item.expires === undefined ||
-                    item.expires > 0 || item.frequency !== null;
-            });
-        }
-    }
+    Object.keys(events).map(function (i) {
+        return checkOneEventUsed(events[i]);
+    });
 }
 
-function filterOneEvent(eventToFilter, context, eventFilter, events) {
-    return events[eventToFilter].filter(function (item) {
-        return item.context !== context ||
-            getAllNamespaces(eventToFilter).indexOf(eventFilter) === -1;
-    });
+function checkOneEvent(eventToCheck, eventChecker, contextToCheck, contextChecker) {
+    return contextToCheck !== contextChecker ||
+        generateAllNamespaces(eventToCheck).indexOf(eventChecker) === -1;
 }
 
 /**
@@ -89,11 +89,11 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            for (var e in this.events) {
-                if (this.events.hasOwnProperty(e)) {
-                    this.events[e] = filterOneEvent(e, context, event, this.events);
-                }
-            }
+            Object.keys(this.events).map(function (e) {
+                return this.events[e].filter(function (item) {
+                    return checkOneEvent(e, event, item.context, context);
+                }, this);
+            }, this);
 
             return this;
         },
@@ -104,7 +104,7 @@ function getEmitter() {
          * @returns {Object}
          */
         emit: function (event) {
-            getAllNamespaces(event).forEach(function (eventNamespace) {
+            generateAllNamespaces(event).forEach(function (eventNamespace) {
                 if (!this.events[eventNamespace]) {
                     return;
                 }
