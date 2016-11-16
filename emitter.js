@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Сделано задание на звездочку
+ * Сделано задание на звездочку.
  * Реализованы методы several и through
  */
 getEmitter.isStar = false;
