@@ -75,6 +75,7 @@ function getEmitter() {
             return this;
         },
 
+
         /**
          * Уведомить о событии
          * @param {String} event
