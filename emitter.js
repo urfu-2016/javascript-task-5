@@ -48,7 +48,7 @@ function getEmitter() {
                             this._runHandler(infoItem);
                         }, this);
                     }
-                });
+                };
             }
 
             return this;
@@ -73,11 +73,11 @@ function getEmitter() {
          */
 
         off: function (event, context) {
-            for (key in this.events) {
+            for (var key in this.events) {
                 if (this._isSubName(event, key)) {
                     this.events[key].off(context);
                 }
-            }, this);
+            }
 
             return this;
         },
@@ -135,3 +135,4 @@ function getEmitter() {
         }
     };
 }
+
