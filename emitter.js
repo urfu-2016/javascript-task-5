@@ -60,7 +60,7 @@ function getEmitter() {
         emit: function (event) {
             var namesEvent = event.split('.');
 
-            for (var i = namesEvent.length; i > -1; i--) {
+            for (var i = namesEvent.length; i > 0; i--) {
                 var nameEvent = namesEvent.slice(0, i).join('.');
                 if (eventListeners.hasOwnProperty(nameEvent)) {
                     runEventHandlers(nameEvent);
