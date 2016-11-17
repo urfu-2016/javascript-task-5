@@ -7,13 +7,13 @@
 getEmitter.isStar = false;
 module.exports = getEmitter;
 
-var events = {};
-
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
+    var events = {};
+
     return {
 
         /**
@@ -39,9 +39,6 @@ function getEmitter() {
          */
         off: function (event, context) {
             console.info(event, context);
-            if (!events[event]) {
-                return this;
-            }
             var eventNames = Object.keys(events);
             var appropriateEvents = [];
             eventNames.forEach(function (eventName) {
