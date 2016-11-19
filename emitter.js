@@ -24,14 +24,12 @@ function getEventHandler(subscription, event) {
     breakableForEach.call(splittedEvent, function (miniEvent) {
         if (subscription.hasOwnProperty(miniEvent)) {
             subscription = subscription[miniEvent];
-
-            return true;
+        } else {
+            return false;
         }
-
-        return false;
     });
 
-    return subscription.func && subscription;
+    return subscription.callFuncs && subscription;
 }
 
 /**
@@ -43,14 +41,14 @@ function wrapFunction(parentContext) {
     return {
         eventFuncs: [],
 
-        func: function () {
+        callFuncs: function () {
             this.eventFuncs.forEach(function (eventFunc) {
                 execEventFunc(eventFunc);
             });
 
             /* корневой объект не является обработчиком */
-            if (parentContext.func) {
-                parentContext.func();
+            if (parentContext.callFuncs) {
+                parentContext.callFuncs();
             }
         }
     };
@@ -67,7 +65,7 @@ function execEventFunc(eventFunc) {
 function execLastEvent(subscription, event) {
     var lastEventHandler = getEventHandler(subscription, event);
     if (lastEventHandler) {
-        lastEventHandler.func();
+        lastEventHandler.callFuncs();
     }
 }
 
@@ -99,11 +97,16 @@ function addEventHandler(event, subscription, eventFunc) {
 }
 
 function getSubscriptionObject(subscriptionObjects, student) {
-    for (var i = 0; i < subscriptionObjects.length; i++) {
-        if (subscriptionObjects[i].student === student) {
-            return subscriptionObjects[i];
+    var result;
+    breakableForEach.call(subscriptionObjects, function (subscriptionObj) {
+        if (subscriptionObj.student === student) {
+            result = subscriptionObj;
+
+            return false;
         }
-    }
+    });
+
+    return result;
 }
 
 /**
@@ -124,7 +127,8 @@ function getEmitter() {
         handler = handler.bind(context);
         addEventHandler(event,
             subscrObj.subscription,
-            createEventFunc(handler, eventFuncParams));
+            createEventFunc(handler, eventFuncParams)
+        );
     }
 
     return {
@@ -159,11 +163,9 @@ function getEmitter() {
                     } else {
                         subscription = subscription[miniEvent];
                     }
-
-                    return true;
+                } else {
+                    return false;
                 }
-
-                return false;
             });
 
             return this;
