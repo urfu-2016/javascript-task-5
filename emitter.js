@@ -85,12 +85,12 @@ function addEventHandler(event, subscription, eventFunc) {
 }
 
 function getSubscriptionObject(subscriptionObjects, student) {
-    return subscriptionObjects.reduce(function (subscr, subscriptionObj) {
+    return subscriptionObjects.reduce(function (subscrObj, subscriptionObj) {
         if (subscriptionObj.student === student) {
-            subscr = subscriptionObj;
+            subscrObj = subscriptionObj;
         }
 
-        return subscr;
+        return subscrObj;
     }, undefined);
 }
 
@@ -107,8 +107,9 @@ function getEmitter() {
                 student: context,
                 subscription: {}
             });
+            subscrObj = subscriptionObjects[subscriptionObjects.length - 1];
         }
-        var subscription = subscriptionObjects[subscriptionObjects.length - 1].subscription;
+        var subscription = subscrObj.subscription;
         handler = handler.bind(context);
         addEventHandler(event, subscription, createEventFunc(handler, eventFuncParams));
     }
