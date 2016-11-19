@@ -7,15 +7,19 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
-function getLastEvent(context, event) {
+function getEventHandler(subscription, event) {
     var splittedEvent = event.split('.');
-    splittedEvent.forEach(function (miniEvent) {
-        if (context.hasOwnProperty(miniEvent)) {
-            context = context[miniEvent];
+    splittedEvent.every(function (miniEvent) {
+        if (subscription.hasOwnProperty(miniEvent)) {
+            subscription = subscription[miniEvent];
+
+            return true;
         }
+
+        return false;
     });
 
-    return context;
+    return subscription.func ? subscription : undefined;
 }
 
 /**
@@ -31,7 +35,7 @@ function wrapFunction(context) {
             this.eventFuncs.forEach(function (eventFunc) {
                 execEventFunc(eventFunc);
             });
-            if (context.hasOwnProperty('func')) {
+            if (context.func) {
                 context.func();
             }
         }
@@ -46,37 +50,48 @@ function execEventFunc(eventFunc) {
     eventFunc.callCounter++;
 }
 
-function execLastEvent(student, event) {
-    var lastEvent = getLastEvent(student, event);
-    if (lastEvent.func) {
-        lastEvent.func();
+function execLastEvent(subscription, event) {
+    var lastEventHandler = getEventHandler(subscription, event);
+    if (lastEventHandler) {
+        lastEventHandler.func();
     }
 }
 
 function createEventFunc(func, params) {
     return {
         func: func,
-        count: params ? params.count || Infinity : Infinity,
+        count: params && params.count > 0 && params.count || Infinity,
         callCounter: 0,
-        mod: params ? params.mod || 1 : 1
+        mod: params && params.mod > 0 && params.mod || 1
     };
 }
 
-function addEventHandler(event, context, eventFunc) {
+function addEventHandler(event, subscription, eventFunc) {
     var splittedEvent = event.split('.');
-    var miniContext = context;
+    var miniContext = subscription;
     var length = splittedEvent.length;
     for (var i = 0; i < length; i++) {
         var miniEvent = splittedEvent[i];
+        var isLast = i === length - 1;
         if (miniContext.hasOwnProperty(miniEvent)) {
-            miniContext = i === length - 1 ? miniContext : miniContext[miniEvent];
+            miniContext = isLast ? miniContext : miniContext[miniEvent];
         } else {
             miniContext[miniEvent] = wrapFunction(miniContext);
         }
-        if (i === length - 1) {
+        if (isLast) {
             miniContext[miniEvent].eventFuncs.push(eventFunc);
         }
     }
+}
+
+function getSubscriptionObject(subscriptionObjects, student) {
+    return subscriptionObjects.reduce(function (subscr, subscriptionObj) {
+        if (subscriptionObj.student === student) {
+            subscr = subscriptionObj;
+        }
+
+        return subscr;
+    }, undefined);
 }
 
 /**
@@ -84,14 +99,16 @@ function addEventHandler(event, context, eventFunc) {
  * @returns {Object}
  */
 function getEmitter() {
-    var students = [];
-    var subscriptions = [];
+    var subscriptionObjects = [];
     function on(event, context, handler, eventFuncParams) {
-        if (students.indexOf(context) === -1) {
-            students.push(context);
-            subscriptions.push({});
+        var subscrObj = getSubscriptionObject(subscriptionObjects, context);
+        if (!subscrObj) {
+            subscriptionObjects.push({
+                student: context,
+                subscription: {}
+            });
         }
-        var subscription = subscriptions[students.indexOf(context)];
+        var subscription = subscriptionObjects[subscriptionObjects.length - 1].subscription;
         handler = handler.bind(context);
         addEventHandler(event, subscription, createEventFunc(handler, eventFuncParams));
     }
@@ -119,14 +136,14 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context) {
-            context = subscriptions[students.indexOf(context)];
+            var subscription = getSubscriptionObject(subscriptionObjects, context).subscription;
             var splittedEvent = event.split('.');
             splittedEvent.every(function (miniEvent, index) {
-                if (context.hasOwnProperty(miniEvent)) {
+                if (subscription.hasOwnProperty(miniEvent)) {
                     if (index === splittedEvent.length - 1) {
-                        delete context[miniEvent];
+                        delete subscription[miniEvent];
                     } else {
-                        context = context[miniEvent];
+                        subscription = subscription[miniEvent];
                     }
 
                     return true;
@@ -144,8 +161,8 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            subscriptions.forEach(function (subscription) {
-                execLastEvent(subscription, event);
+            subscriptionObjects.forEach(function (subscriptionObject) {
+                execLastEvent(subscriptionObject.subscription, event);
             });
 
             return this;
@@ -161,7 +178,7 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            on(event, context, handler, { count: times <= 0 ? Infinity : times });
+            on(event, context, handler, { count: times });
 
             return this;
         },
@@ -176,7 +193,7 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            on(event, context, handler, { mod: frequency <= 0 ? 1 : frequency });
+            on(event, context, handler, { mod: frequency });
 
             return this;
         }
