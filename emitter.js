@@ -100,7 +100,7 @@ function addEventHandler(event, subscription, eventFunc) {
 
 function getSubscriptionObject(subscriptionObjects, student) {
     for (var i = 0; i < subscriptionObjects.length; i++) {
-        if (subscriptionObjects[i] === student) {
+        if (subscriptionObjects[i].student === student) {
             return subscriptionObjects[i];
         }
     }
