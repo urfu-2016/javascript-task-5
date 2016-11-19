@@ -7,9 +7,21 @@
 getEmitter.isStar = true;
 module.exports = getEmitter;
 
+/**
+ * @this Array
+ * @param {Function} callback
+ */
+function breakableForEach(callback) {
+    for (var i = 0; i < this.length; i++) {
+        if (callback(this[i], i) === false) {
+            break;
+        }
+    }
+}
+
 function getEventHandler(subscription, event) {
     var splittedEvent = event.split('.');
-    splittedEvent.every(function (miniEvent) {
+    breakableForEach.call(splittedEvent, function (miniEvent) {
         if (subscription.hasOwnProperty(miniEvent)) {
             subscription = subscription[miniEvent];
 
@@ -19,15 +31,15 @@ function getEventHandler(subscription, event) {
         return false;
     });
 
-    return subscription.func ? subscription : undefined;
+    return subscription.func && subscription;
 }
 
 /**
  * @this {Object}
- * @param {Object} context
+ * @param {Object} parentContext
  * @returns {Function}
  */
-function wrapFunction(context) {
+function wrapFunction(parentContext) {
     return {
         eventFuncs: [],
 
@@ -35,8 +47,10 @@ function wrapFunction(context) {
             this.eventFuncs.forEach(function (eventFunc) {
                 execEventFunc(eventFunc);
             });
-            if (context.func) {
-                context.func();
+
+            /* корневой объект не является обработчиком */
+            if (parentContext.func) {
+                parentContext.func();
             }
         }
     };
@@ -85,13 +99,11 @@ function addEventHandler(event, subscription, eventFunc) {
 }
 
 function getSubscriptionObject(subscriptionObjects, student) {
-    return subscriptionObjects.reduce(function (subscrObj, subscriptionObj) {
-        if (subscriptionObj.student === student) {
-            subscrObj = subscriptionObj;
+    for (var i = 0; i < subscriptionObjects.length; i++) {
+        if (subscriptionObjects[i] === student) {
+            return subscriptionObjects[i];
         }
-
-        return subscrObj;
-    }, undefined);
+    }
 }
 
 /**
@@ -103,15 +115,16 @@ function getEmitter() {
     function on(event, context, handler, eventFuncParams) {
         var subscrObj = getSubscriptionObject(subscriptionObjects, context);
         if (!subscrObj) {
-            subscriptionObjects.push({
+            subscrObj = {
                 student: context,
                 subscription: {}
-            });
-            subscrObj = subscriptionObjects[subscriptionObjects.length - 1];
+            };
+            subscriptionObjects.push(subscrObj);
         }
-        var subscription = subscrObj.subscription;
         handler = handler.bind(context);
-        addEventHandler(event, subscription, createEventFunc(handler, eventFuncParams));
+        addEventHandler(event,
+            subscrObj.subscription,
+            createEventFunc(handler, eventFuncParams));
     }
 
     return {
@@ -139,7 +152,7 @@ function getEmitter() {
         off: function (event, context) {
             var subscription = getSubscriptionObject(subscriptionObjects, context).subscription;
             var splittedEvent = event.split('.');
-            splittedEvent.every(function (miniEvent, index) {
+            breakableForEach.call(splittedEvent, function (miniEvent, index) {
                 if (subscription.hasOwnProperty(miniEvent)) {
                     if (index === splittedEvent.length - 1) {
                         delete subscription[miniEvent];
