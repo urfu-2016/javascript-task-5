@@ -86,7 +86,7 @@ lecturer
     .emit('slide.text')
     .emit('slide.text')
     .emit('slide.text')
-    .emit('slide.funny');
+    .emit('slide.funny.stuff');
 // Sam(75,79); Sally(95,118); Bill(65,63); Sharon(120,34)
 
 lecturer
@@ -144,7 +144,8 @@ if (getEmitter.isStar) {
             this.wisdom -= 10;
         });
 
-    lecturer.emit('begin');
+    lecturer.emit('begin')
+        .off('begin', students.Sam);
     // Sam(110,50); Bill(100,55)
 
     lecturer
