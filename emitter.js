@@ -85,13 +85,13 @@ function addEventHandler(event, subscription, eventFunc) {
     for (var i = 0; i < length; i++) {
         var miniEvent = splittedEvent[i];
         var isLast = i === length - 1;
-        if (miniContext.hasOwnProperty(miniEvent)) {
-            miniContext = isLast ? miniContext : miniContext[miniEvent];
-        } else {
+        if (!miniContext.hasOwnProperty(miniEvent)) {
             miniContext[miniEvent] = wrapFunction(miniContext);
         }
         if (isLast) {
             miniContext[miniEvent].eventFuncs.push(eventFunc);
+        } else {
+            miniContext = miniContext[miniEvent];
         }
     }
 }
