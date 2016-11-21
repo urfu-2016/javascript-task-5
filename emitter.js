@@ -23,9 +23,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            var callback = {};
-
-            callback = createCallback(event, context, handler);
+            var callback = createCallback(event, context, handler);
 
             this.callbacks.push(callback);
 
@@ -54,11 +52,11 @@ function getEmitter() {
         emit: function (event) {
             var curEvent = event;
 
-            realApply(curEvent, this.callbacks);
+            callCallbacks(curEvent, this.callbacks);
 
             while (curEvent.lastIndexOf('.') !== -1) {
                 curEvent = curEvent.substr(0, curEvent.lastIndexOf('.'));
-                realApply(curEvent, this.callbacks);
+                callCallbacks(curEvent, this.callbacks);
             }
 
             return this;
@@ -79,9 +77,7 @@ function getEmitter() {
             if (times <= 0) {
                 this.on(event, context, handler);
             } else {
-                var callback = {};
-
-                callback = createCallback(event, context, handler);
+                var callback = createCallback(event, context, handler);
                 callback.times = times;
 
                 this.callbacks.push(callback);
@@ -105,9 +101,7 @@ function getEmitter() {
             if (frequency <= 0) {
                 this.on(event, context, handler);
             } else {
-                var callback = {};
-
-                callback = createCallback(event, context, handler);
+                var callback = createCallback(event, context, handler);
                 callback.frequency = frequency;
                 callback.current = frequency - 1;
 
@@ -124,15 +118,15 @@ function contains(fullScope, scope) {
     return fullScope.match(new RegExp('^' + scope + '(\\.|$)')) !== null;
 }
 
-function realApply(event, callbacks) {
+function callCallbacks(event, callbacks) {
     callbacks.forEach(function (callback) {
         if (callback.event === event) {
-            doCallback(callback);
+            callCallback(callback);
         }
     });
 }
 
-function doCallback(callback) {
+function callCallback(callback) {
     if (callback.times !== undefined) {
         if (callback.times <= 0) {
             return;
