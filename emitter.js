@@ -13,7 +13,7 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
-        eventsObj: [],
+        eventsObj: {},
 
         /**
          * Подписаться на событие
@@ -25,7 +25,10 @@ function getEmitter() {
 
         on: function (event, context, handler) {
             this.eventsObj[event] = this.eventsObj[event] || [];
-            this.eventsObj[event].push({ context: context, handler: handler });
+            this.eventsObj[event].push({
+                context: context,
+                handler: handler
+            });
 
             return this;
         },
@@ -42,12 +45,12 @@ function getEmitter() {
                 return this;
             }
 
-            var _eventsObj = this.eventsObj;
+            var eventsObjScope = this.eventsObj;
             Object.keys(this.eventsObj).filter(function (item) {
                 return item.indexOf(event) !== -1;
             })
             .forEach(function (item) {
-                _eventsObj[item] = _eventsObj[item].filter(function (personal) {
+                eventsObjScope[item] = eventsObjScope[item].filter(function (personal) {
                     return personal.context !== context;
                 });
             });
@@ -62,14 +65,13 @@ function getEmitter() {
          */
 
         emit: function (event) {
-            var _eventsObj = this.eventsObj;
+            var eventsObjScope = this.eventsObj;
             var splitedEvent = event.split('.');
             splitedEvent.map(function (item, index) {
                 return splitedEvent.slice(0, splitedEvent.length - index).join('.');
-            })
-            .forEach(function (item) {
-                if (_eventsObj[item]) {
-                    _eventsObj[item].forEach(function (personalEvent) {
+            }).forEach(function (item) {
+                if (eventsObjScope[item]) {
+                    eventsObjScope[item].forEach(function (personalEvent) {
                         personalEvent.handler.call(personalEvent.context);
                     });
                 }
