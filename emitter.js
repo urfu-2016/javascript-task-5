@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -13,32 +13,71 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
+        eventsObj: {},
 
         /**
          * Подписаться на событие
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @return {Object} this
          */
+
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            this.eventsObj[event] = this.eventsObj[event] || [];
+            this.eventsObj[event].push({
+                context: context,
+                handler: handler
+            });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @return {Object} this
          */
+
         off: function (event, context) {
-            console.info(event, context);
+            if (!this.eventsObj[event]) {
+                return this;
+            }
+
+            var eventsObjScope = this.eventsObj;
+            Object.keys(this.eventsObj).filter(function (item) {
+                return item.indexOf(event) !== -1;
+            })
+            .forEach(function (item) {
+                eventsObjScope[item] = eventsObjScope[item].filter(function (personal) {
+                    return personal.context !== context;
+                });
+            });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @return {Object} this
          */
+
         emit: function (event) {
-            console.info(event);
+            var eventsObjScope = this.eventsObj;
+            var splitedEvent = event.split('.');
+            splitedEvent.map(function (item, index) {
+                return splitedEvent.slice(0, splitedEvent.length - index).join('.');
+            }).forEach(function (item) {
+                if (eventsObjScope[item]) {
+                    eventsObjScope[item].forEach(function (personalEvent) {
+                        personalEvent.handler.call(personalEvent.context);
+                    });
+                }
+            });
+
+            return this;
         },
 
         /**
