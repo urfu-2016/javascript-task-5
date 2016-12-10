@@ -39,6 +39,7 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object}
          */
         off: function (event, context) {
             var eventWithDot = event + '.';
@@ -46,7 +47,8 @@ function getEmitter() {
                 return value === event || value.indexOf(eventWithDot) === 0;
             });
             subscriptionsForOff.forEach(function (eventForOff) {
-                this.subscriptions[eventForOff] = this.subscriptions[eventForOff].filter(function (value) {
+                this.subscriptions[eventForOff] = this.subscriptions[eventForOff].filter(function
+                    (value) {
                     return value.context !== context;
                 });
             }, this);
@@ -57,6 +59,7 @@ function getEmitter() {
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object}
          */
         emit: function (event) {
             while (event) {
