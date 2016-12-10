@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-getEmitter.isStar = true;
+getEmitter.isStar = false;
 module.exports = getEmitter;
 
 /**
@@ -12,7 +12,9 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+
     return {
+        subscriptions: {},
 
         /**
          * Подписаться на событие
@@ -20,8 +22,17 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          */
+
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            if (!this.subscriptions.hasOwnProperty(event)) {
+                this.subscriptions[event] = [];
+            }
+            this.subscriptions[event].push({
+                context: context,
+                handler: handler
+            });
+
+            return this;
         },
 
         /**
@@ -30,7 +41,17 @@ function getEmitter() {
          * @param {Object} context
          */
         off: function (event, context) {
-            console.info(event, context);
+            var eventWithDot = event + '.';
+            var subscriptionsForOff = Object.keys(this.subscriptions).filter(function (value) {
+                return value === event || value.indexOf(eventWithDot) === 0;
+            });
+            subscriptionsForOff.forEach(function (eventForOff) {
+                this.subscriptions[eventForOff] = this.subscriptions[eventForOff].filter(function (value) {
+                    return value.context !== context;
+                });
+            }, this);
+
+            return this;
         },
 
         /**
@@ -38,7 +59,16 @@ function getEmitter() {
          * @param {String} event
          */
         emit: function (event) {
-            console.info(event);
+            while (event) {
+                if (this.subscriptions.hasOwnProperty(event)) {
+                    this.subscriptions[event].forEach(function (contextAndHandler) {
+                        contextAndHandler.handler.call(contextAndHandler.context);
+                    });
+                }
+                event = event.substring(0, event.lastIndexOf('.'));
+            }
+
+            return this;
         },
 
         /**
