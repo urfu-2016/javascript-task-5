@@ -117,7 +117,12 @@ if (getEmitter.isStar) {
         }
     };
 
-    lecturer = getEmitter()
+    lecturer = getEmitter();
+
+    console.info(lecturer);
+    console.info(students);
+
+    lecturer
         .several('begin', students.Sam, function () {
             this.focus += 10;
         }, 1)
@@ -145,6 +150,8 @@ if (getEmitter.isStar) {
         });
 
     lecturer.emit('begin');
+    console.info(students);
+
     // Sam(110,50); Bill(100,55)
 
     lecturer
@@ -152,6 +159,9 @@ if (getEmitter.isStar) {
         .emit('slide.text')
         .emit('slide.text')
         .emit('slide.funny');
+
+    console.info(students);
+
     // Sam(95,61); Bill(65,63)
 
     lecturer
