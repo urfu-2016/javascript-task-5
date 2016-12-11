@@ -13,7 +13,7 @@ module.exports = getEmitter;
  */
 function getEmitter() {
     return {
-        callbacks: [],
+        callbacks: {},
 
         /**
          * Подписаться на событие
@@ -23,9 +23,8 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            var callback = createCallback(event, context, handler);
-
-            this.callbacks.push(callback);
+            var callback = createCallback(context, handler);
+            saveCallback(event, callback, this.callbacks);
 
             return this;
         },
@@ -37,9 +36,14 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            this.callbacks = this.callbacks.filter(function (callback) {
-                return !(callback.context === context && contains(callback.event, event));
-            });
+            for (var savedEvent in this.callbacks) {
+                if (contains(savedEvent, event)) {
+                    this.callbacks[savedEvent] = this.callbacks[savedEvent]
+                    .filter(function (callback) {
+                        return callback.context !== context;
+                    });
+                }
+            }
 
             return this;
         },
@@ -77,10 +81,10 @@ function getEmitter() {
             if (times <= 0) {
                 this.on(event, context, handler);
             } else {
-                var callback = createCallback(event, context, handler);
+                var callback = createCallback(context, handler);
                 callback.times = times;
 
-                this.callbacks.push(callback);
+                saveCallback(event, callback, this.callbacks);
             }
 
             return this;
@@ -101,11 +105,11 @@ function getEmitter() {
             if (frequency <= 0) {
                 this.on(event, context, handler);
             } else {
-                var callback = createCallback(event, context, handler);
+                var callback = createCallback(context, handler);
                 callback.frequency = frequency;
                 callback.current = frequency - 1;
 
-                this.callbacks.push(callback);
+                saveCallback(event, callback, this.callbacks);
             }
 
             return this;
@@ -113,17 +117,16 @@ function getEmitter() {
     };
 }
 
-
 function contains(fullScope, scope) {
-    return fullScope.match(new RegExp('^' + scope + '(\\.|$)')) !== null;
+    return fullScope === scope || fullScope.indexOf(scope + '.') === 0;
 }
 
 function callCallbacks(event, callbacks) {
-    callbacks.forEach(function (callback) {
-        if (callback.event === event) {
+    if (callbacks[event] !== undefined) {
+        callbacks[event].forEach(function (callback) {
             callCallback(callback);
-        }
-    });
+        });
+    }
 }
 
 function callCallback(callback) {
@@ -143,10 +146,17 @@ function callCallback(callback) {
     callback.handler.apply(callback.context);
 }
 
-function createCallback(event, context, handler) {
+function createCallback(context, handler) {
     return {
-        event: event,
         context: context,
         handler: handler
     };
+}
+
+function saveCallback(event, callback, callbacks) {
+    if (!callbacks.hasOwnProperty(event)) {
+        callbacks[event] = [];
+    }
+
+    callbacks[event].push(callback);
 }
