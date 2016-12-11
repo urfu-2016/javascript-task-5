@@ -122,20 +122,18 @@ function contains(fullScope, scope) {
 }
 
 function callCallbacks(event, callbacks) {
-    if (callbacks[event] !== undefined) {
-        callbacks[event].forEach(function (callback) {
-            callCallback(callback);
-        });
+    if (callbacks.hasOwnProperty(event)) {
+        callbacks[event].forEach(callCallback);
     }
 }
 
 function callCallback(callback) {
-    if (callback.times !== undefined) {
+    if (callback.hasOwnProperty('times')) {
         if (callback.times <= 0) {
             return;
         }
         callback.times -= 1;
-    } else if (callback.frequency !== undefined) {
+    } else if (callback.hasOwnProperty('frequency')) {
         callback.current += 1;
         if (callback.current !== callback.frequency) {
             return;
